@@ -107,7 +107,7 @@ class DrawerScreenState extends State<DrawerScreen> {
             onTap: () {},
           ),
           DrawerListTile(
-            title: "Nostrim Features",
+            title: "Messages Features",
             icon: Icons.info_outline_rounded,
             onTap: () {},
           ),

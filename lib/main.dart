@@ -12,14 +12,14 @@ import 'src/db/sink.dart';
 void main() {
   EventSink sink = EventSink();
   sink.listen(); // is there a better place to put this
-  runApp(Nostrim());
+  runApp(MessagesApp());
 }
 
-class Nostrim extends StatelessWidget {
+class MessagesApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Nostrim',
+      title: 'Messages',
       theme: ThemeData(
         primaryColor: PacificBlue,
         brightness: Brightness.dark, // light
