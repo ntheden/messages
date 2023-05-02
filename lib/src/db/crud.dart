@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:nostr/nostr.dart' as nostr;
+import 'package:rxdart/rxdart.dart';
 
 import 'db.dart';
 import '../../config/settings.dart';
@@ -150,3 +151,181 @@ Stream<List<MessageEntry>> watchMessages(int index) async* {
     yield messages;
   }
 }
+
+Future<List<Npub>> getNpubs() async {
+  return database
+    .select(database.npubs)
+    .get();
+}
+
+Future<List<Npub>> getNpubsWithLabel(String label) async {
+  return (database
+    .select(database.npubs)
+    ..where((n) => n.label.equals(label)))
+    .get();
+}
+
+Future<List<DbContact>> getContacts() async {
+  return database
+    .select(database.dbContacts)
+    .get();
+}
+
+Future<List<DbContact>> getContactsWithName(String name) async {
+  return (database
+    .select(database.dbContacts)
+    ..where((c) => c.name.equals(name)))
+    .get();
+}
+
+void insertContactIfNew(String name, {bool isLocal=false}) async {
+  List<DbContact> entries = await getContactsWithName(name);
+
+  if (entries.length > 0) {
+    return;
+  }
+
+  database
+    .into(database.dbContacts)
+    .insert(DbContactsCompanion.insert(
+        name: name,
+        isLocal: isLocal,
+      ),
+    );
+}
+
+void insertNpub(String label, String pubkey) async {
+  NpubsCompanion npub = NpubsCompanion.insert(
+    pubkey: pubkey,
+    label: label,
+  );
+  database
+    .into(database.npubs)
+    .insert(
+      npub,
+      onConflict: DoUpdate(
+        (old) => npub,
+        target: [database.npubs.pubkey],
+      ),
+    );
+}
+
+
+Future<void> writeContact(entry) async {
+  DbContact contact = entry.contact;
+
+  await database
+    .into(database.dbContacts)
+    .insert(contact, mode: InsertMode.replace);
+
+  await (database
+    .delete(database.contactNpubs)
+    ..where((item) => item.contact.equals(contact.id))
+  ).go();
+
+  for (final npub in entry.npubs) {
+    await database
+      .into(database.contactNpubs)
+      .insert(ContactNpubsCompanion.insert(
+        contact: contact.id,
+        npub: npub.id,
+      )
+    );
+  }
+}
+
+Future<Contact> createEmptyContact(String name, {bool isLocal=false}) async {
+  final id = await database
+    .into(database.contactNpubs)
+    .insert(ContactNpubsCompanion());
+  final contact = DbContact(id: id, name: name, isLocal: isLocal);
+  return Contact(contact, []);
+}
+
+
+Stream<Contact> watchContact(int id) {
+  final contactQuery = database
+    .select(database.dbContacts)
+    ..where((contact) => contact.id.equals(id));
+
+  final npubsQuery = database
+    .select(database.contactNpubs)
+    .join(
+      [
+        innerJoin(
+          database.npubs,
+          database.npubs.id.equalsExp(database.contactNpubs.npub),
+        ),
+      ],
+    )
+    ..where(database.contactNpubs.contact.equals(id));
+
+  final contactStream = contactQuery.watchSingle();
+
+  final npubStream = npubsQuery.watch().map((rows) {
+    // we join the contactNpubs with the npubs, but we only care about
+    // the npub here
+    return rows.map((row) => row.readTable(database.npubs)).toList();
+  });
+
+  // now, we can merge the two queries together in one stream
+  return Rx.combineLatest2(contactStream, npubStream,
+      (DbContact contact, List<Npub> npubs) {
+    return Contact(contact, npubs);
+  });
+}
+
+Future<Contact> getContactFromNpub(String publickey) async {
+  final npubQuery = database
+    .select(database.npubs)
+    ..where((n) => n.pubkey.equals(publickey));
+
+  final npub = await npubQuery.getSingle();
+
+  final contactsQuery = database
+    .select(database.contactNpubs)
+    .join(
+      [
+        innerJoin(
+          database.dbContacts,
+          database.dbContacts.id.equalsExp(database.contactNpubs.contact),
+        ),
+      ],
+    )
+    ..where(database.contactNpubs.npub.equals(npub.id));
+
+  // BUG: https://github.com/adamlofts/mysql1_dart/issues/106
+  await contactsQuery.get();
+  List<TypedResult> result = await contactsQuery.get();
+
+  final contacts = result.map((row) {
+    return row.readTable(database.dbContacts);
+  }).toList();
+
+  return Contact(contacts[0], [npub]);
+}
+
+Future<Contact> getContact(int id) async {
+  final contactQuery = database
+    .select(database.dbContacts)
+    ..where((t) => t.id.equals(id));
+
+  final npubsQuery = database
+    .select(database.contactNpubs)
+    .join(
+      [
+        innerJoin(
+          database.npubs,
+          database.npubs.id.equalsExp(database.contactNpubs.npub),
+        ),
+      ],
+    )
+    ..where(database.contactNpubs.contact.equals(id));
+
+  final npubs = (await npubsQuery.get()).map((row) {
+    return row.readTable(database.npubs);
+  }).toList();
+
+  return Contact(await contactQuery.getSingle(), npubs);
+}
+

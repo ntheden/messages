@@ -3,7 +3,7 @@ import 'package:intl/date_symbol_data_local.dart'; // for other locales
 import 'package:timezone/timezone.dart';
 import 'package:timezone/data/latest.dart';
 
-import '../../config/settings.dart';
+import '../config/settings.dart';
 
 //initializeDateFormatting('fr_FR', null).then((_) => runMyCode());
 
