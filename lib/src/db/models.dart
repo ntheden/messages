@@ -14,8 +14,8 @@ class Relays extends Table {
 
 class Npubs extends Table {
   IntColumn get id => integer().autoIncrement()();
-  TextColumn get pubkey => text().unique().withLength(min: 0, max: 64)();
-  TextColumn get label => text().withLength(min: 0, max: 64)();
+  TextColumn get pubkey => text().unique().withLength(min: 64, max: 64)();
+  TextColumn? get label => text().withLength(min: 0, max: 64)();
 }
 
 class ContactNpubs extends Table {

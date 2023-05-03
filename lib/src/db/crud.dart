@@ -9,7 +9,30 @@ import '../contact.dart' as contact;
 import '../logging.dart';
 
 
-Future<void> createContact(String npub, {String? name,}) async {
+Future<void> createContact(
+    List<String> npubs,
+    String name, {
+    bool isLocal=false
+  }) async {
+
+  for (String npub in npubs) {
+    int npubId = await insertNpub(npub, name);
+  }
+  
+  final contactId = await database
+    .into(database.dbContacts)
+    .insert(DbContactsCompanion.insert(
+        name: name,
+        isLocal: isLocal,
+      ),
+    );
+
+  final List<Npub> npubEntries = [];
+  for (String npub in npubs) {
+    npubEntries.add(await getNpub(npub));
+  }
+
+  writeContact(Contact(DbContact(id: contactId, name: name, isLocal: isLocal), npubEntries));
 }
 
 
@@ -152,16 +175,16 @@ Stream<List<MessageEntry>> watchMessages(int index) async* {
   }
 }
 
+Future<Npub> getNpub(String publickey) async {
+  return (database
+    .select(database.npubs)
+    ..where((n) => n.pubkey.equals(publickey)))
+    .getSingle();
+}
+
 Future<List<Npub>> getNpubs() async {
   return database
     .select(database.npubs)
-    .get();
-}
-
-Future<List<Npub>> getNpubsWithLabel(String label) async {
-  return (database
-    .select(database.npubs)
-    ..where((n) => n.label.equals(label)))
     .get();
 }
 
@@ -178,28 +201,12 @@ Future<List<DbContact>> getContactsWithName(String name) async {
     .get();
 }
 
-void insertContactIfNew(String name, {bool isLocal=false}) async {
-  List<DbContact> entries = await getContactsWithName(name);
-
-  if (entries.length > 0) {
-    return;
-  }
-
-  database
-    .into(database.dbContacts)
-    .insert(DbContactsCompanion.insert(
-        name: name,
-        isLocal: isLocal,
-      ),
-    );
-}
-
-void insertNpub(String label, String pubkey) async {
+Future<int> insertNpub(String pubkey, String label) async {
   NpubsCompanion npub = NpubsCompanion.insert(
     pubkey: pubkey,
     label: label,
   );
-  database
+  return database
     .into(database.npubs)
     .insert(
       npub,
@@ -211,7 +218,7 @@ void insertNpub(String label, String pubkey) async {
 }
 
 
-Future<void> writeContact(entry) async {
+Future<void> writeContact(Contact entry) async {
   DbContact contact = entry.contact;
 
   await database
