@@ -1,4 +1,4 @@
-# Messages over nostr protocol
+# Messages over nostr protocol (WIP, no release yet)
 
 Built upon nip04 encrypted directed messages. Nostr channels are next up.
 
