@@ -1,8 +1,9 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:nostr/nostr.dart';
  
 class Login extends StatefulWidget {
-  const Login({Key? key}) : super(key: key);
+  Login({Key? key}) : super(key: key);
 
   @override
   State<Login> createState() => _LoginState();
@@ -11,6 +12,13 @@ class Login extends StatefulWidget {
 class _LoginState extends State<Login> {
   TextEditingController nameController = TextEditingController();
   TextEditingController nsecController = TextEditingController();
+  final borderDecoration = InputDecoration(
+    labelText: 'User Name',
+    labelStyle: TextStyle(color: Colors.grey),
+    border: OutlineInputBorder(),
+  );
+  bool missingName = false;
+  bool invalidNsec = false;
 
   double screenAwareHeight(double size, BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
@@ -24,7 +32,16 @@ class _LoginState extends State<Login> {
            - (mediaQuery.padding.left + mediaQuery.padding.right);
     return size * drawingWidth;
   }
- 
+
+  bool validateNsec() {
+    String text = nsecController.text;
+    var regexp = RegExp(r'[a-zA-Z0-9]+');
+    if (text.length == 64 && text.startsWith('nsec') && text.contains(regexp)) {
+      return true;
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,8 +54,8 @@ class _LoginState extends State<Login> {
             children: <Widget>[
               Container(
                   alignment: Alignment.center,
-                  padding: const EdgeInsets.all(10),
-                  child: const Text(
+                  padding: EdgeInsets.all(10),
+                  child: Text(
                     'Messages',
                     style: TextStyle(
                         color: Colors.blue,
@@ -47,36 +64,73 @@ class _LoginState extends State<Login> {
                   )),
               Container(
                   alignment: Alignment.center,
-                  padding: const EdgeInsets.all(10),
-                  child: const Text(
+                  padding: EdgeInsets.all(10),
+                  child: Text(
                     'Sign in',
                     style: TextStyle(fontSize: 20),
                   )),
               Container(
-                padding: const EdgeInsets.all(10),
-                child: TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'User Name',
+                padding: EdgeInsets.all(10),
+                child: Focus(
+                  onFocusChange: (hasFocus) {
+                    if (missingName == true && !nameController.text.isEmpty) {
+                      setState(() => missingName = false);
+                    }
+                  },
+                  child: TextField(
+                    controller: nameController,
+                    decoration: missingName
+                      ? borderDecoration.copyWith(
+                          labelText: "User Name required",
+                          labelStyle: TextStyle(
+                            color: Colors.red,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.red),
+                          ),
+                        )
+                      : borderDecoration
                   ),
                 ),
               ),
               Container(
-                padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
-                child: TextField(
-                  obscureText: true,
-                  controller: nsecController,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Nsec',
+                padding: EdgeInsets.all(10),
+                child: Focus(
+                  onFocusChange: (hasFocus) {
+                    if (invalidNsec == true && validateNsec()) {
+                      setState(() => invalidNsec = false);
+                    }
+                  },
+                  child: TextField(
+                    controller: nsecController,
+                    obscureText: true,
+                    decoration: invalidNsec
+                      ? borderDecoration.copyWith(
+                          labelText: "Nsec is invalid",
+                          labelStyle: TextStyle(
+                            color: Colors.red,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.red),
+                          ),
+                        )
+                      : borderDecoration.copyWith(labelText: "Nsec"),
                   ),
                 ),
               ),
               TextButton(
                 onPressed: () {
+                  if (nameController.text.isEmpty) {
+                    setState(() => missingName = true);
+                    setState(() => invalidNsec = false);
+                    return;
+                  } else {
+                    setState(() => missingName = false);
+                  }
+                  setState(() => invalidNsec = false);
+                  Keychain keys = Keychain.generate();
                 },
-                child: const Text('Create new Nsec',),
+                child: Text('Create new Nsec',),
               ),
               Container(
                 height: 50,
@@ -85,8 +139,19 @@ class _LoginState extends State<Login> {
                 child: ElevatedButton(
                   child: Text('Login'),
                   onPressed: () {
-                    print(nameController.text);
-                    print(nsecController.text);
+                    if (nameController.text.isEmpty) {
+                      setState(() => missingName = true);
+                    } else {
+                      setState(() => missingName = false);
+                    }
+                    if (!validateNsec()) {
+                      setState(() => invalidNsec = true);
+                    } else {
+                      setState(() => invalidNsec = false);
+                    }
+                    if (invalidNsec || missingName) {
+                      return;
+                    }
                   },
                 )
               ),
