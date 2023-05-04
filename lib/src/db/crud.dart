@@ -9,7 +9,7 @@ import '../contact.dart' as contact;
 import '../logging.dart';
 
 
-Future<void> createContact(
+Future<Contact> createContact(
     List<String> npubs,
     String name, {
     bool isLocal=false
@@ -32,7 +32,16 @@ Future<void> createContact(
     npubEntries.add(await getNpub(npub));
   }
 
-  writeContact(Contact(DbContact(id: contactId, name: name, isLocal: isLocal), npubEntries));
+  Contact contact = Contact(
+    DbContact(
+      id: contactId,
+      name: name,
+      isLocal: isLocal
+    ),
+    npubEntries
+  );
+  writeContact(contact);
+  return contact;
 }
 
 /*
@@ -163,16 +172,19 @@ Future<List<NostrEvent>> readEvent(String id) async {
   return nostrEvents(entries);
 }
 
-List<MessageEntry> messageEntries(List<NostrEvent> events) {
+Future<List<MessageEntry>> messageEntries(List<NostrEvent> events) async {
   List<MessageEntry> messages = [];
   for (final event in events) {
-    // TODO put in the contact, start using ref id's
+    Contact? contact = await getContactFromNpub(event.pubkey);
+    if (contact == null) {
+      contact = await createContact([event.pubkey], "no name");
+    }
     messages.add(MessageEntry(
         content: event.plaintext,
         // check for if the pubkey is bob then he is the sender, ie local, sending to self
-        source: (event.pubkey != getKey('bob', 'pub')) ? "remote" : "local",
+        source: contact.isLocal ? "local" : "remote",
         timestamp: DateTime.fromMillisecondsSinceEpoch(event.createdAt * 1000),
-        contact: contact.Contact(event.pubkey),
+        contact: contact,
         index: event.index,
       )
     );
@@ -189,7 +201,7 @@ Future<List<MessageEntry>> readMessages(int index) async {
            expression: t.createdAt,
            mode: OrderingMode.desc,
       )])).get();
-  List<MessageEntry> messages = messageEntries(await nostrEvents(entries));
+  List<MessageEntry> messages = await messageEntries(await nostrEvents(entries));
   return messages;
 }
 
@@ -202,7 +214,7 @@ Stream<List<MessageEntry>> watchMessages(int index) async* {
   await for (final entryList in entries) {
     // intermediate step of converting to nostr events in order to
     // perform the decryption
-    List<MessageEntry> messages = messageEntries(await nostrEvents(entryList));
+    List<MessageEntry> messages = await messageEntries(await nostrEvents(entryList));
     yield messages;
   }
 }
@@ -321,7 +333,7 @@ Stream<Contact> watchContact(int id) {
   });
 }
 
-Future<Contact> getContactFromNpub(String publickey) async {
+Future<Contact?> getContactFromNpub(String publickey) async {
   final npubQuery = database
     .select(database.npubs)
     ..where((n) => n.pubkey.equals(publickey));
@@ -348,7 +360,9 @@ Future<Contact> getContactFromNpub(String publickey) async {
     return row.readTable(database.dbContacts);
   }).toList();
 
-  return Contact(contacts[0], [npub]);
+  if (contacts.length > 0) {
+    return Contact(contacts[0], [npub]);
+  }
 }
 
 Future<Contact> getContact(int id) async {

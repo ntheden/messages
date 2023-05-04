@@ -1,4 +1,4 @@
-import '../src/contact.dart';
+import '../src/db/db.dart';
 
 class MessageEntry {
   String content;

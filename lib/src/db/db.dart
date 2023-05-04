@@ -16,6 +16,8 @@ class Contact {
 
   Contact(this.contact, this.npubs);
 
+  bool get isLocal => contact.isLocal;
+
   @override
   String toString() {
     return (StringBuffer('Contact(')
