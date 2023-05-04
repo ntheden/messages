@@ -8,8 +8,8 @@ import 'package:path_provider/path_provider.dart';
 
 class Relays extends Table {
   IntColumn get id => integer().autoIncrement()();
-  TextColumn get name => text().withLength(min: 0, max: 64)();
   TextColumn get url => text().withLength(min: 0, max: 256)();
+  TextColumn? get name => text().withLength(min: 0, max: 64)();
 }
 
 class Npubs extends Table {
@@ -23,9 +23,26 @@ class ContactNpubs extends Table {
   IntColumn get npub => integer().references(Npubs, #id)();
 }
 
+class Etags extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  // event id may or may not be in db
+  TextColumn get eventId => text().withLength(min: 0, max: 64)();
+  // marker is one of "reply", "root", "mention"
+  TextColumn? get marker => text().withLength(min: 0, max: 20)();
+  IntColumn get relayRef => integer()();
+}
+
+class EventEtags extends Table {
+  IntColumn get event => integer().references(DbEvents, #id)();
+  IntColumn get etag => integer().references(Etags, #id)();
+}
+
+class EventPtags extends Table {
+  IntColumn get event => integer().references(DbEvents, #id)();
+  IntColumn get ptag => integer().references(Npubs, #id)();
+}
+
 class DbContacts extends Table {
-  /// Can have multiple users, only one active at a time. A user
-  /// can have multiple npubs
   /// isLocal:
   ///   When false, then this is in the contacts list and not a local user
   ///   When true, then this is one of the user "accounts"
@@ -34,12 +51,12 @@ class DbContacts extends Table {
   BoolColumn get isLocal => boolean()(); // Whether this is associated with a User
 }
 
-class Events extends Table {
+class DbEvents extends Table {
   /// All events table
-  IntColumn get rowId => integer().autoIncrement()();
-  TextColumn get id => text().unique().withLength(min: 0, max: 64)();
-  TextColumn get pubkey => text().withLength(min: 64, max: 64)();
-  TextColumn get receiver => text().withLength(min: 64, max: 64)(); // still have to do tags!
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get eventId => text().unique().withLength(min: 0, max: 64)();
+  IntColumn get pubkeyRef => integer()();
+  IntColumn get receiverRef => integer()();
   TextColumn get fromRelay => text().withLength(min: 0, max: 64)();
   TextColumn get content => text().withLength(min: 0, max: 1024)();
   // TODO: Consider not storing the plaintext.

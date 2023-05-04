@@ -35,7 +35,7 @@ Future<void> createContact(
   writeContact(Contact(DbContact(id: contactId, name: name, isLocal: isLocal), npubEntries));
 }
 
-
+/*
 Future<void> createEventHELPER(nostr.Event event, {String? plaintext, String? fromRelay,}) async {
   bool locallySent = (event.pubkey == getKey('bob', 'pub'));
   if (plaintext == null && !locallySent) {
@@ -51,42 +51,13 @@ Future<void> createEventHELPER(nostr.Event event, {String? plaintext, String? fr
   logEvent(event, plaintext);
 }
 
-
-Future<void> createEvent(nostr.Event event, {String? plaintext, String? fromRelay,}) async {
-  fromRelay ??= "";
-  database.into(database.events).insert(
-    EventsCompanion.insert(
-      id: event.id,
-      pubkey: event.pubkey,
-      receiver: (event as nostr.EncryptedDirectMessage).receiver!,
-      content: event.content,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(event.createdAt * 1000),
-      fromRelay: fromRelay,
-      kind: event.kind,
-      plaintext: (plaintext != null) ? plaintext : "",
-      decryptError: false,
-    ),
-    onConflict: DoNothing(),
-  ).then((_) {
-    // TODO: Either decrypt them later, on demand, OR do this in a separate thread.
-    createEventHELPER(event, plaintext: plaintext, fromRelay: fromRelay);
-  }).catchError((err) {
-    if (err.toString().contains("UNIQUE constraint failed")) {
-      // the entry already exists.
-      return;
-    }
-    print(err);
-    createEventHELPER(event, plaintext: plaintext, fromRelay: fromRelay);
-  });
-}
-
 Future<void> updateEventPlaintext(
     nostr.Event event,
     String plaintext,
     bool decryptError,
     String fromRelay,
   ) async {
-  final insert = EventsCompanion.insert(
+  final insert = DbEventsCompanion.insert(
       id: event.id,
       pubkey: event.pubkey,
       receiver: (event as nostr.EncryptedDirectMessage).receiver!,
@@ -98,9 +69,69 @@ Future<void> updateEventPlaintext(
       decryptError: decryptError,
   );
   database
-    .into(database.events)
+    .into(database.dbEvents)
     .insert(insert, mode: InsertMode.insertOrReplace)
     .catchError((err) => print(err));
+}
+*/
+
+
+Future<DbEvent> getEvent(String id) async {
+  return (database
+    .select(database.dbEvents)
+    ..where((e) => e.eventId.equals(id)))
+    .getSingle();
+}
+
+
+Future<int> createEvent(nostr.Event event, {String? plaintext, String? fromRelay,}) async {
+  fromRelay ??= "";
+  try {
+    DbEvent entry = await getEvent(event.id);
+    // If it's there then nothing to do
+    return entry.id;
+  } catch (err) {
+    print('Creating event ${event.id}');
+  }
+
+  int pubkeyRef;
+  try {
+    Npub npub = await getNpub(event.pubkey);
+    pubkeyRef = npub.id;
+  } catch (err) {
+    pubkeyRef = await insertNpub(event.pubkey, "no name");
+  }
+
+  String? receivePubkey = (event as nostr.EncryptedDirectMessage).receiver;
+  int receiverId = 0;
+  if (receivePubkey != null) {
+    try {
+      Npub receiver = await getNpub(receivePubkey);
+      receiverId = receiver.id;
+    } catch (err) {
+      receiverId = await insertNpub(receivePubkey, "no name");
+    }
+  }
+
+  logEvent(event, plaintext ?? "<not decrypted>");
+
+  final insert = DbEventsCompanion.insert(
+    eventId: event.id,
+    pubkeyRef: pubkeyRef,
+    receiverRef: receiverId,
+    content: event.content,
+    createdAt: DateTime.fromMillisecondsSinceEpoch(event.createdAt * 1000),
+    fromRelay: fromRelay, // relay this event is received from, should be ref
+    kind: event.kind,
+    plaintext: (plaintext != null) ? plaintext : "",
+    decryptError: false,
+  );
+
+  return database
+    .into(database.dbEvents).insert(
+      insert,
+      onConflict: DoNothing(),
+    );
 }
 
 class NostrEvent extends nostr.EncryptedDirectMessage {
@@ -109,25 +140,25 @@ class NostrEvent extends nostr.EncryptedDirectMessage {
   NostrEvent(nostr.Event event, this.plaintext, this.index): super(event, verify: false);
 }
 
-List<NostrEvent> nostrEvents(List<Event> entries) {
+Future<List<NostrEvent>> nostrEvents(List<DbEvent> entries) async {
   List<NostrEvent> events = [];
   for (final entry in entries) {
     nostr.Event event = nostr.Event.partial();
-    event.id = entry.id;
-    event.pubkey = entry.pubkey;
+    event.id = entry.eventId;
+    event.pubkey = (await getNpubFromId(entry.pubkeyRef)).pubkey;
     event.content = entry.content;
     event.createdAt = entry.createdAt.millisecondsSinceEpoch;
     event.kind = entry.kind;
     assert(event.kind == 4);
     // TODO: Need TAGS for id to pass isValid()
-    events.add(NostrEvent(event, entry.plaintext!, entry.rowId));
+    events.add(NostrEvent(event, entry.plaintext!, entry.id));
   }
   return events;
 }
 
 Future<List<NostrEvent>> readEvent(String id) async {
-  List<Event> entries = await (database.select(database.events)
-        ..where((t) => t.id.equals(id)))
+  List<DbEvent> entries = await (database.select(database.dbEvents)
+        ..where((t) => t.eventId.equals(id)))
       .get();
   return nostrEvents(entries);
 }
@@ -135,6 +166,7 @@ Future<List<NostrEvent>> readEvent(String id) async {
 List<MessageEntry> messageEntries(List<NostrEvent> events) {
   List<MessageEntry> messages = [];
   for (final event in events) {
+    // TODO put in the contact, start using ref id's
     messages.add(MessageEntry(
         content: event.plaintext,
         // check for if the pubkey is bob then he is the sender, ie local, sending to self
@@ -149,28 +181,28 @@ List<MessageEntry> messageEntries(List<NostrEvent> events) {
 }
 
 Future<List<MessageEntry>> readMessages(int index) async {
-  List<Event> entries = await
+  List<DbEvent> entries = await
     (database
-      .select(database.events)
-      ..where((t) => t.rowId.isBiggerOrEqualValue(index))
+      .select(database.dbEvents)
+      ..where((t) => t.id.isBiggerOrEqualValue(index))
       ..orderBy([(t) => OrderingTerm(
            expression: t.createdAt,
            mode: OrderingMode.desc,
       )])).get();
-  List<NostrEvent> events = nostrEvents(entries);
-  List<MessageEntry> messages = messageEntries(events);
+  List<MessageEntry> messages = messageEntries(await nostrEvents(entries));
   return messages;
 }
 
 Stream<List<MessageEntry>> watchMessages(int index) async* {
-  Stream<List<Event>> entries = await (
+  Stream<List<DbEvent>> entries = await (
     database
-      .select(database.events)
-      ..where((t) => t.rowId.isBiggerOrEqualValue(index))
+      .select(database.dbEvents)
+      ..where((t) => t.id.isBiggerOrEqualValue(index))
     ).watch();
   await for (final entryList in entries) {
-    List<NostrEvent> events = nostrEvents(entryList);
-    List<MessageEntry> messages = messageEntries(events);
+    // intermediate step of converting to nostr events in order to
+    // perform the decryption
+    List<MessageEntry> messages = messageEntries(await nostrEvents(entryList));
     yield messages;
   }
 }
@@ -186,6 +218,13 @@ Future<List<Npub>> getNpubs() async {
   return database
     .select(database.npubs)
     .get();
+}
+
+Future<Npub> getNpubFromId(int id) async {
+  return (database
+    .select(database.npubs)
+    ..where((n) => n.id.equals(id)))
+    .getSingle();
 }
 
 Future<List<DbContact>> getContacts() async {

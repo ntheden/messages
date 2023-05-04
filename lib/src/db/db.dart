@@ -28,14 +28,39 @@ class Contact {
 }
 
 
-class User {
-  final Contact contact;
+class Event {
+  final DbEvent event;
+  final Npub npub;
+  final List<Etag> etags;
+  final List<Npub> ptags;
 
-  User(this.contact);
+  Event(this.event, this.npub, this.etags, this.ptags);
+
+  @override
+  String toString() {
+    return (StringBuffer('Event(')
+          ..write('id: ${event.id}, ')
+          ..write('plaintext: ${event.plaintext}, ')
+          ..write('npub: ${npub}, ')
+          ..write('etags: ${etags}, ')
+          ..write('ptags: ${ptags}, ')
+          ..write(')'))
+        .toString();
+  }
 }
 
 
-@DriftDatabase(tables: [DbContacts, Npubs, Events, ContactNpubs])
+@DriftDatabase(
+    tables: [
+      DbContacts,
+      DbEvents,
+      Npubs,
+      ContactNpubs,
+      Etags,
+      EventPtags,
+      EventEtags,
+      Relays,
+    ])
 class AppDatabase extends _$AppDatabase {
     AppDatabase() : super(_openConnection());
 
