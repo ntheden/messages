@@ -175,6 +175,7 @@ Future<List<NostrEvent>> readEvent(String id) async {
 Future<List<MessageEntry>> messageEntries(List<NostrEvent> events) async {
   List<MessageEntry> messages = [];
   for (final event in events) {
+    await getContactFromNpub(event.pubkey);
     Contact? contact = await getContactFromNpub(event.pubkey);
     if (contact == null) {
       contact = await createContact([event.pubkey], "no name");
