@@ -16,7 +16,7 @@ dependencies:
     git:
       url: https://github.com/no-prob/dart-nostr.git
       ref: message-types
-      resolved-ref: "4e4de5bbe420d338b23f43b85084c0610020100c"
+      resolved-ref: "e20ac81cceb9853923cfa83a7f5e2d0f86100990"
   drift: ^2.7.0
   badges: ^3.1.1
   intl: ^0.18.1

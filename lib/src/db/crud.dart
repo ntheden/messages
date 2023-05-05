@@ -9,14 +9,46 @@ import '../contact.dart' as contact;
 import '../logging.dart';
 
 
+Future<Contact> createContactFromNpubs(List<Npub> npubs, String name) async {
+  bool isLocal = false;
+  npubs.forEach((npub) {
+    if (npub.privkey.length > 0) {
+      isLocal = true;
+    }
+  });
+
+  final contactId = await database
+    .into(database.dbContacts)
+    .insert(DbContactsCompanion.insert(
+        name: name,
+        isLocal: isLocal,
+      ),
+    );
+
+  Contact contact = Contact(
+    DbContact(
+      id: contactId,
+      name: name,
+      isLocal: isLocal
+    ),
+    npubs,
+  );
+  writeContact(contact);
+  return contact;
+}
+
 Future<Contact> createContact(
     List<String> npubs,
     String name, {
     bool isLocal=false
   }) async {
 
-  for (String npub in npubs) {
-    int npubId = await insertNpub(npub, name);
+  for (String npubStr in npubs) {
+    try {
+      Npub npub = await getNpub(npubStr);
+    } catch (err) {
+      int npubId = await insertNpub(npubStr, name);
+    }
   }
   
   final contactId = await database
@@ -28,8 +60,12 @@ Future<Contact> createContact(
     );
 
   final List<Npub> npubEntries = [];
-  for (String npub in npubs) {
-    npubEntries.add(await getNpub(npub));
+  for (String npubStr in npubs) {
+    Npub npub = (await getNpub(npubStr))!;
+    if (npub.privkey.length > 0) {
+      isLocal = true;
+    }
+    npubEntries.add(npub);
   }
 
   Contact contact = Contact(
@@ -253,10 +289,11 @@ Future<List<DbContact>> getContactsWithName(String name) async {
     .get();
 }
 
-Future<int> insertNpub(String pubkey, String label) async {
+Future<int> insertNpub(String pubkey, String label, {String? privkey}) async {
   NpubsCompanion npub = NpubsCompanion.insert(
     pubkey: pubkey,
     label: label,
+    privkey: privkey ?? "",
   );
   return database
     .into(database.npubs)
@@ -339,7 +376,12 @@ Future<Contact?> getContactFromNpub(String publickey) async {
     .select(database.npubs)
     ..where((n) => n.pubkey.equals(publickey));
 
-  final npub = await npubQuery.getSingle();
+  Npub npub;
+  try {
+    npub = await npubQuery.getSingle();
+  } catch (error) {
+    return null;
+  }
 
   final contactsQuery = database
     .select(database.contactNpubs)

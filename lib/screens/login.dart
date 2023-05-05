@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:nostr/nostr.dart';
+import '../src/db/crud.dart';
  
 class Login extends StatefulWidget {
   Login({Key? key}) : super(key: key);
@@ -35,11 +36,26 @@ class _LoginState extends State<Login> {
 
   bool validateNsec() {
     String text = nsecController.text;
-    var regexp = RegExp(r'[a-zA-Z0-9]+');
-    if (text.length == 64 && text.startsWith('nsec') && text.contains(regexp)) {
+    var regexp = RegExp(r'[a-zA-Z0-9]+$');
+    if (text.startsWith('nsec') && text.contains(regexp)) {
       return true;
     }
     return false;
+  }
+
+  void newUser(Keychain keys, String name) {
+    insertNpub(
+      keys.public,
+      nameController.text,
+      privkey: keys.private
+    ).then((id) =>
+      getNpubFromId(id).then((npub) =>
+        createContactFromNpubs(
+          [npub],
+          nameController.text,
+        )
+      )
+    );
   }
 
   @override
@@ -128,7 +144,8 @@ class _LoginState extends State<Login> {
                     setState(() => missingName = false);
                   }
                   setState(() => invalidNsec = false);
-                  Keychain keys = Keychain.generate();
+                  newUser(Keychain.generate(), nameController.text);
+                  print('Success!');
                 },
                 child: Text('Create new Nsec',),
               ),
@@ -149,8 +166,12 @@ class _LoginState extends State<Login> {
                     } else {
                       setState(() => invalidNsec = false);
                     }
-                    if (invalidNsec || missingName) {
-                      return;
+                    if (!invalidNsec && !missingName) {
+                      newUser(
+                        Keychain.from_bech32(nsecController.text),
+                        nameController.text,
+                      );
+                      print('Successful login!');
                     }
                   },
                 )
