@@ -6,8 +6,27 @@ import 'package:drift/native.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
+import 'crud.dart';
 import 'models.dart';
 part 'db.g.dart';
+
+
+class Context {
+  final DbContext context;
+  final List<Relay> defaultRelays;
+  final Contact user; 
+
+  Context(this.context, this.defaultRelays, this.user);
+
+  @override
+  String toString() {
+    return (StringBuffer('Context(')
+          ..write('user: $user, ')
+          ..write('defaultRelays: ${defaultRelays}, ')
+          ..write(')'))
+        .toString();
+  }
+}
 
 
 class Contact {
@@ -55,6 +74,8 @@ class Event {
 @DriftDatabase(
     tables: [
       DbContacts,
+      DbContexts,
+      DefaultRelays,
       DbEvents,
       Npubs,
       ContactNpubs,

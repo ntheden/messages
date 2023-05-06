@@ -306,7 +306,6 @@ Future<int> insertNpub(String pubkey, String label, {String? privkey}) async {
     );
 }
 
-
 Future<void> writeContact(Contact entry) async {
   DbContact contact = entry.contact;
 
@@ -411,7 +410,7 @@ Future<Contact?> getContactFromNpub(String publickey) async {
 Future<Contact> getContact(int id) async {
   final contactQuery = database
     .select(database.dbContacts)
-    ..where((t) => t.id.equals(id));
+    ..where((c) => c.id.equals(id));
 
   final npubsQuery = database
     .select(database.contactNpubs)
@@ -432,3 +431,85 @@ Future<Contact> getContact(int id) async {
   return Contact(await contactQuery.getSingle(), npubs);
 }
 
+Future<Context> getContext({int id=1}) async {
+  final contextQuery = database
+    .select(database.dbContexts)
+    ..where((c) => c.id.equals(id));
+
+  final relaysQuery = database
+    .select(database.defaultRelays)
+    .join(
+      [
+        innerJoin(
+          database.relays,
+          database.relays.id.equalsExp(database.defaultRelays.relay),
+        ),
+      ],
+    )
+    ..where(database.defaultRelays.context.equals(id));
+
+  final relays = (await relaysQuery.get()).map((row) {
+    return row.readTable(database.relays);
+  }).toList();
+
+  DbContext context = await contextQuery.getSingle();
+
+  return Context(context, relays, await(getContact(context.currentUser)));
+}
+
+Future<void> createContext(List<Relay> relays, Contact currentUser) async {
+  Context context = Context(
+    DbContext(
+      id: 1,
+      currentUser: currentUser.contact.id,
+    ),
+    relays,
+    currentUser,
+  );
+  writeContext(context);
+}
+
+Future<void> writeContext(Context entry) async {
+  DbContext context = entry.context;
+
+  await database
+    .into(database.dbContexts)
+    .insert(context, mode: InsertMode.replace);
+
+  await (database
+    .delete(database.defaultRelays)
+    ..where((item) => item.context.equals(context.id))
+  ).go();
+
+  for (final relay in entry.defaultRelays) {
+    await database
+      .into(database.defaultRelays)
+      .insert(DefaultRelaysCompanion.insert(
+        context: context.id,
+        relay: relay.id,
+      )
+    );
+  }
+}
+
+Future<int> createRelay(String url, String name) {
+  RelaysCompanion relay = RelaysCompanion.insert(
+    url: url,
+    name: name,
+  );
+  return database
+    .into(database.relays)
+    .insert(
+      relay,
+      onConflict: DoUpdate(
+        (old) => relay,
+        target: [database.relays.id],
+      ),
+    );
+}
+
+Future<List<Relay>> getDefaultRelays() {
+  return database
+    .select(database.relays)
+    .get();
+}

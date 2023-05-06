@@ -6,6 +6,17 @@ import 'package:drift/native.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
+
+class DbContexts extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get currentUser => integer().references(DbContacts, #id)();
+}
+
+class DefaultRelays extends Table {
+  IntColumn get context => integer().references(DbContexts, #id)();
+  IntColumn get relay => integer().references(Relays, #id)();
+}
+
 class Relays extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get url => text().withLength(min: 0, max: 256)();
