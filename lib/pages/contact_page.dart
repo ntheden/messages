@@ -1,7 +1,7 @@
 import 'package:after_layout/after_layout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
-import 'package:flutter_contacts_example/util/avatar.dart';
+import 'package:messages/util/avatar.dart';
 
 class ContactPage extends StatefulWidget {
   @override

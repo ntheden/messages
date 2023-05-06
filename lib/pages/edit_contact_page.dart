@@ -1,16 +1,16 @@
 import 'package:after_layout/after_layout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
-import 'package:flutter_contacts_example/pages/form_components/address_form.dart';
-import 'package:flutter_contacts_example/pages/form_components/email_form.dart';
-import 'package:flutter_contacts_example/pages/form_components/event_form.dart';
-import 'package:flutter_contacts_example/pages/form_components/name_form.dart';
-import 'package:flutter_contacts_example/pages/form_components/note_form.dart';
-import 'package:flutter_contacts_example/pages/form_components/organization_form.dart';
-import 'package:flutter_contacts_example/pages/form_components/phone_form.dart';
-import 'package:flutter_contacts_example/pages/form_components/social_media_form.dart';
-import 'package:flutter_contacts_example/pages/form_components/website_form.dart';
-import 'package:flutter_contacts_example/util/avatar.dart';
+import 'package:messages/pages/form_components/address_form.dart';
+import 'package:messages/pages/form_components/email_form.dart';
+import 'package:messages/pages/form_components/event_form.dart';
+import 'package:messages/pages/form_components/name_form.dart';
+import 'package:messages/pages/form_components/note_form.dart';
+import 'package:messages/pages/form_components/organization_form.dart';
+import 'package:messages/pages/form_components/phone_form.dart';
+import 'package:messages/pages/form_components/social_media_form.dart';
+import 'package:messages/pages/form_components/website_form.dart';
+import 'package:messages/util/avatar.dart';
 
 class EditContactPage extends StatefulWidget {
   @override

@@ -25,7 +25,7 @@ class _GroupsPageState extends State<GroupsPage>
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(
-          title: Text('flutter_contacts_example - groups'),
+          title: Text('messages - groups'),
         ),
         body: _body(),
         floatingActionButton: FloatingActionButton(
