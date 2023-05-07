@@ -419,10 +419,11 @@ Future<Contact?> getContactFromNpub(String publickey) async {
   }
 }
 
-/* TODO
 Future<Contact> getUser() async {
+  final contactQuery = database.select(database.dbContacts)
+    ..where((c) => c.active.equals(true));
+  return getContact(await contactQuery.getSingle());
 }
-*/
 
 Future<List<Contact>> getUsers() async {
   final contactQuery = database.select(database.dbContacts)
@@ -430,15 +431,19 @@ Future<List<Contact>> getUsers() async {
 
   List<Contact> contacts = [];
   for (DbContact contact in await contactQuery.get()) {
-    contacts.add(await getContact(contact.id));
+    contacts.add(await getContact(contact));
   }
   return contacts;
 }
 
-Future<Contact> getContact(int id) async {
+Future<Contact> getContactFromId(int id) async {
   final contactQuery = database.select(database.dbContacts)
     ..where((c) => c.id.equals(id));
 
+  return getContact(await contactQuery.getSingle());
+}
+
+Future<Contact> getContact(DbContact contact) async {
   final npubsQuery = database.select(database.contactNpubs).join(
     [
       innerJoin(
@@ -446,13 +451,13 @@ Future<Contact> getContact(int id) async {
         database.npubs.id.equalsExp(database.contactNpubs.npub),
       ),
     ],
-  )..where(database.contactNpubs.contact.equals(id));
+  )..where(database.contactNpubs.contact.equals(contact.id));
 
   final npubs = (await npubsQuery.get()).map((row) {
     return row.readTable(database.npubs);
   }).toList();
 
-  return Contact(await contactQuery.getSingle(), npubs);
+  return Contact(contact, npubs);
 }
 
 Future<Context> getContext({int id = 1}) async {
@@ -474,7 +479,7 @@ Future<Context> getContext({int id = 1}) async {
 
   DbContext context = await contextQuery.getSingle();
 
-  return Context(context, relays, await (getContact(context.currentUser)));
+  return Context(context, relays, await getContactFromId(context.currentUser));
 }
 
 Future<void> createContext(List<Relay> relays, Contact currentUser) async {

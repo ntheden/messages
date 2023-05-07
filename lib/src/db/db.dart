@@ -37,6 +37,8 @@ class Contact {
 
   bool get isLocal => contact.isLocal;
   bool get active => contact.active;
+  String get name => contact.name;
+  String get pubkey => npubs[0].pubkey;
 
   @override
   String toString() {

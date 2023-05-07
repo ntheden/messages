@@ -13,9 +13,9 @@ class DrawerScreen extends StatefulWidget {
 }
 
 class DrawerScreenState extends State<DrawerScreen> {
-  bool showOtherUsers = false;
-  int selectedUser = 0;
+  bool showOtherUsersFlag = false;
   List<Contact> users = [];
+  Contact? currentUser;
  
   @override
   void initState() {
@@ -25,7 +25,40 @@ class DrawerScreenState extends State<DrawerScreen> {
 
   void queryUsers() async {
     List<Contact> myUsers = await getUsers();
-    setState(() => users = myUsers);
+    Contact myUser = myUsers.singleWhere((user) => user.active == true);
+    setState(() {
+      users = myUsers;
+      currentUser = myUser;
+    });
+  }
+
+  List<DrawerUserListTile> otherUserTiles() {
+    List<DrawerUserListTile> tiles = [];
+    users.asMap().forEach((index, user) =>
+        tiles.add(DrawerUserListTile(
+          name: user.name,
+          picture: "https://avatars.githubusercontent.com/u/75714882",
+          selected: user.active,
+          onTap: () {
+            switchUser(user.contact.id).then((_) => queryUsers());
+          },
+        ),
+      ),
+    );
+    return tiles;
+  }
+
+  
+  List<dynamic> showOtherUsers() {
+    return [
+      ...otherUserTiles(),
+      DrawerUserListTile(
+        name: "New User Identity",
+        icon: Icons.person_add_outlined,
+        onTap: () => Navigator.of(context).pushNamed('/login'),
+      ),
+      Divider(),
+    ];
   }
 
   @override
@@ -34,11 +67,11 @@ class DrawerScreenState extends State<DrawerScreen> {
       child: ListView(
         children: [
           UserAccountsDrawerHeader(
-            accountName: Text("ofarukbicer"),
-            accountEmail: Text("npub..."), // Not an email address!!
+            accountName: currentUser == null ? Text("?") : Text(currentUser!.name),
+            accountEmail: currentUser == null ? Text("npub...") : Text(currentUser!.pubkey),
             onDetailsPressed: () {
               setState(() {
-                showOtherUsers = showOtherUsers ? false : true;
+                showOtherUsersFlag = showOtherUsersFlag ? false : true;
               });
             },
             currentAccountPicture: CircleAvatar(
@@ -58,36 +91,8 @@ class DrawerScreenState extends State<DrawerScreen> {
               )
             ],
           ),
-          if (showOtherUsers)
-            DrawerUserListTile(
-              name: "ofarukbicer",
-              picture: "https://avatars.githubusercontent.com/u/75714882",
-              selected: selectedUser == 0 ? true : false,
-              onTap: () {
-                setState(() {
-                  selectedUser = 0;
-                });
-              },
-            ),
-          if (showOtherUsers)
-            DrawerUserListTile(
-              name: "keyifleroslun",
-              picture:
-                  "https://avatars.githubusercontent.com/u/57468649",
-              selected: selectedUser == 2 ? true : false,
-              onTap: () {
-                setState(() {
-                  selectedUser = 2;
-                });
-              },
-            ),
-          if (showOtherUsers)
-            DrawerUserListTile(
-              name: "New User Identity",
-              icon: Icons.person_add_outlined,
-              onTap: () {},
-            ),
-          if (showOtherUsers) Divider(),
+          if (showOtherUsersFlag)
+            ...showOtherUsers(),
           DrawerListTile(
             title: "Messages",
             icon: Icons.person_outline_rounded,
