@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../src/db/db.dart';
+import '../../src/db/crud.dart';
 import 'drawer_list_tile.dart';
 import 'drawer_user_list_tile.dart';
 
@@ -13,13 +15,24 @@ class DrawerScreen extends StatefulWidget {
 class DrawerScreenState extends State<DrawerScreen> {
   bool showOtherUsers = false;
   int selectedUser = 0;
+  List<Contact> users = [];
+ 
+  @override
+  void initState() {
+    super.initState();
+    queryUsers();
+  }
+
+  void queryUsers() async {
+    List<Contact> myUsers = await getUsers();
+    setState(() => users = myUsers);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Drawer(
       child: ListView(
         children: [
-          // These are not "accounts" ...
           UserAccountsDrawerHeader(
             accountName: Text("ofarukbicer"),
             accountEmail: Text("npub..."), // Not an email address!!

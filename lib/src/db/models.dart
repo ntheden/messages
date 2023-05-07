@@ -61,6 +61,7 @@ class DbContacts extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text().withLength(min: 0, max: 64)();
   BoolColumn get isLocal => boolean()(); // Whether this is associated with a User
+  BoolColumn get active => boolean()(); // Whether this is the active user
 }
 
 class DbEvents extends Table {

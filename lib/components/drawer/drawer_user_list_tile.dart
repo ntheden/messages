@@ -26,9 +26,10 @@ class DrawerUserListTile extends StatelessWidget {
     return ListTile(
       leading: selected
           ? badges.Badge(
-              //badgeColor: Colors.green,
-              //position: badges.BadgePosition(bottom: -3, end: 0),
-              //toAnimate: false,
+              position: badges.BadgePosition.bottomEnd(bottom: -3, end: 0),
+              badgeStyle: badges.BadgeStyle(
+                badgeColor: Colors.green,
+              ),
               badgeContent: Icon(
                 Icons.done_rounded,
                 color: Colors.white,

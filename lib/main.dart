@@ -17,7 +17,7 @@ void main() {
     EventSink sink = EventSink();
     sink.listen(); // is there a better place to put this
     runApp(MessagesApp(user: context.user));
-  }).catchError((err) => runApp(MessagesApp()));
+  }).catchError((error) => runApp(MessagesApp()));
 }
 
 class MessagesApp extends StatelessWidget {

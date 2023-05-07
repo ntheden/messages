@@ -1,6 +1,9 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:nostr/nostr.dart';
+
+import '../config/settings.dart';
+import '../src/db/db.dart';
 import '../src/db/crud.dart';
  
 class Login extends StatefulWidget {
@@ -43,19 +46,26 @@ class _LoginState extends State<Login> {
     return false;
   }
 
-  void newUser(Keychain keys, String name) {
-    insertNpub(
+  void createUserAndLogin(Keychain keys, String name) async {
+    int id = await insertNpub(
       keys.public,
       nameController.text,
       privkey: keys.private
-    ).then((id) =>
-      getNpubFromId(id).then((npub) =>
-        createContactFromNpubs(
-          [npub],
-          nameController.text,
-        )
-      )
     );
+    Contact? user;
+    try {
+      user = await createContactFromNpubs(
+        [await getNpubFromId(id)],
+        nameController.text,
+        active: true,
+      );
+    } catch (error) {
+      print(error);
+    }
+    await switchUser(user!.contact.id);
+    createContext(await getDefaultRelays(), user!);
+    print('Successful login!');
+    Navigator.of(context).pushNamed('/chats');
   }
 
   @override
@@ -144,8 +154,7 @@ class _LoginState extends State<Login> {
                     setState(() => missingName = false);
                   }
                   setState(() => invalidNsec = false);
-                  newUser(Keychain.generate(), nameController.text);
-                  print('Success!');
+                  createUserAndLogin(Keychain.generate(), nameController.text);
                 },
                 child: Text('Create new Nsec',),
               ),
@@ -167,11 +176,10 @@ class _LoginState extends State<Login> {
                       setState(() => invalidNsec = false);
                     }
                     if (!invalidNsec && !missingName) {
-                      newUser(
+                      createUserAndLogin(
                         Keychain.from_bech32(nsecController.text),
                         nameController.text,
                       );
-                      print('Successful login!');
                     }
                   },
                 )

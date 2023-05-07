@@ -36,6 +36,7 @@ class Contact {
   Contact(this.contact, this.npubs);
 
   bool get isLocal => contact.isLocal;
+  bool get active => contact.active;
 
   @override
   String toString() {
