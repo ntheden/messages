@@ -68,6 +68,7 @@ class DrawerScreenState extends State<DrawerScreen> {
         children: [
           UserAccountsDrawerHeader(
             accountName: currentUser == null ? Text("?") : Text(currentUser!.name),
+            // TODO: This should display bech32 not hex
             accountEmail: currentUser == null ? Text("npub...") : Text(currentUser!.pubkey),
             onDetailsPressed: () {
               setState(() {

@@ -156,50 +156,25 @@ Future<DbEvent> getEvent(String id) async {
       .getSingle();
 }
 
-Future<int> createEvent(
-  nostr.Event event, {
+// Locally sourced events call this directly
+Future<int> insertEvent(
+  nostr.Event event, 
+  Contact fromContact,
+  Contact toContact, {
   String? plaintext,
   String? fromRelay,
 }) async {
-  fromRelay ??= "";
-  try {
-    DbEvent entry = await getEvent(event.id);
-    // If it's there then nothing to do
-    return entry.id;
-  } catch (err) {
-    print('Creating event ${event.id}');
-  }
-
-  int pubkeyRef;
-  try {
-    Npub npub = await getNpub(event.pubkey);
-    pubkeyRef = npub.id;
-  } catch (err) {
-    pubkeyRef = await insertNpub(event.pubkey, "no name");
-  }
-
-  String? receivePubkey = (event as nostr.EncryptedDirectMessage).receiver;
-  int receiverId = 0;
-  if (receivePubkey != null) {
-    try {
-      Npub receiver = await getNpub(receivePubkey);
-      receiverId = receiver.id;
-    } catch (err) {
-      receiverId = await insertNpub(receivePubkey, "no name");
-    }
-  }
-
-  logEvent(event, plaintext ?? "<not decrypted>");
-
   final insert = DbEventsCompanion.insert(
     eventId: event.id,
-    pubkeyRef: pubkeyRef,
-    receiverRef: receiverId,
+    pubkeyRef: fromContact.npubs[0].id,
+    receiverRef: toContact.npubs[0].id,
+    fromContact: fromContact.contact.id,
+    toContact: toContact.contact.id,
     content: event.content,
     createdAt: DateTime.fromMillisecondsSinceEpoch(event.createdAt * 1000),
-    fromRelay: fromRelay, // relay this event is received from, should be ref
+    fromRelay: fromRelay ?? "", // relay this event is received from, should be ref
     kind: event.kind,
-    plaintext: (plaintext != null) ? plaintext : "",
+    plaintext: plaintext ?? "",
     decryptError: false,
   );
 
@@ -209,30 +184,97 @@ Future<int> createEvent(
       );
 }
 
+
+// called by pages/chat
+Future<int> storeSentEvent(
+    nostr.Event event, 
+    Contact fromContact,
+    Contact toContact, {
+    String? plaintext,
+    String? fromRelay,
+  }) async {
+  logEvent(event.createdAt * 1000, fromContact, toContact, plaintext ?? "<not decrypted>", rx: false);
+  return insertEvent(
+    event,
+    fromContact,
+    toContact,
+    plaintext: plaintext,
+    fromRelay: fromRelay,
+  );
+}
+
+// called by relay socket
+Future<void> storeReceivedEvent(
+  nostr.Event event, {
+  String? plaintext,
+  String? fromRelay,
+}) async {
+  try {
+    DbEvent entry = await getEvent(event.id);
+    // If it's there then nothing to do
+    return;
+  } catch (err) {
+    // event hasn't been seen/stored
+  }
+  String? receiver = (event as nostr.EncryptedDirectMessage).receiver;
+  if (receiver == null) {
+    print('Filter: event destination (tag p) is not present');
+    return;
+  }
+  Contact? toContact = await getContactFromNpub(receiver!);
+  if (toContact == null || !toContact.isLocal) {
+    // TODO: This must be optimized.
+    // Current idea: relay watches a stream of local users' npubs, and
+    // filters event if the receiver npub is not in the list
+    print('Filter: event destination is not a local user');
+    return;
+  }
+  print('Received event ${event.id}');
+
+  Contact? fromContact = await getContactFromNpub(event.pubkey);
+  if (fromContact == null) {
+    // TODO: SPAM/DOS Protection
+    fromContact = await createContact([event.pubkey], "no name");
+  }
+
+  logEvent(event.createdAt * 1000, fromContact, toContact, plaintext ?? "<not decrypted>", rx: true);
+  insertEvent(
+    event,
+    fromContact,
+    toContact,
+    plaintext: plaintext,
+    fromRelay: fromRelay
+  );
+}
+
 class NostrEvent extends nostr.EncryptedDirectMessage {
   final String plaintext;
+  final DbEvent dbEvent;
+  final bool isLocal;
   final int index;
-  NostrEvent(nostr.Event event, this.plaintext, this.index)
+  NostrEvent(nostr.Event event, this.plaintext, this.dbEvent, this.index, this.isLocal)
       : super(event, verify: false);
 }
 
 Future<List<NostrEvent>> nostrEvents(List<DbEvent> entries) async {
   List<NostrEvent> events = [];
   for (final entry in entries) {
+    Npub npub = await getNpubFromId(entry.pubkeyRef);
+    bool isLocal = (npub.privkey.length > 0);
     nostr.Event event = nostr.Event.partial();
     event.id = entry.eventId;
-    event.pubkey = (await getNpubFromId(entry.pubkeyRef)).pubkey;
+    event.pubkey = npub.pubkey;
     event.content = entry.content;
     event.createdAt = entry.createdAt.millisecondsSinceEpoch;
     event.kind = entry.kind;
     assert(event.kind == 4);
     // TODO: Need TAGS for id to pass isValid()
-    events.add(NostrEvent(event, entry.plaintext!, entry.id));
+    events.add(NostrEvent(event, entry.plaintext!, entry, entry.id, isLocal));
   }
   return events;
 }
 
-Future<List<NostrEvent>> readEvent(String id) async {
+Future<List<NostrEvent>> getNostrEvents(String id) async {
   List<DbEvent> entries = await (database.select(database.dbEvents)
         ..where((t) => t.eventId.equals(id)))
       .get();
@@ -242,24 +284,18 @@ Future<List<NostrEvent>> readEvent(String id) async {
 Future<List<MessageEntry>> messageEntries(List<NostrEvent> events) async {
   List<MessageEntry> messages = [];
   for (final event in events) {
-    await getContactFromNpub(event.pubkey);
-    Contact? contact = await getContactFromNpub(event.pubkey);
-    if (contact == null) {
-      contact = await createContact([event.pubkey], "no name");
-    }
     messages.add(MessageEntry(
       content: event.plaintext,
       // check for if the pubkey is bob then he is the sender, ie local, sending to self
-      source: contact.isLocal ? "local" : "remote",
-      timestamp: DateTime.fromMillisecondsSinceEpoch(event.createdAt * 1000),
-      contact: contact,
+      source: event.isLocal ? "local" : "remote",
+      timestamp: DateTime.fromMillisecondsSinceEpoch(event.createdAt * 1000), // needed?
       index: event.index,
     ));
   }
   return messages;
 }
 
-Future<List<MessageEntry>> readMessages(int index) async {
+Future<List<MessageEntry>> getMessages(int index) async {
   List<DbEvent> entries = await (database.select(database.dbEvents)
         ..where((t) => t.id.isBiggerOrEqualValue(index))
         ..orderBy([

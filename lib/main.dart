@@ -13,6 +13,9 @@ import 'src/db/db.dart';
 import 'src/db/sink.dart';
 
 void main() {
+  // I may get rid of "context", just get the active user,
+  // store the list of relays in the user - switch to
+  // them when the user changes
   getContext().then((context) {
     EventSink sink = EventSink();
     sink.listen(); // is there a better place to put this
@@ -28,13 +31,27 @@ class MessagesApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
       title: 'Messages',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primaryColor: PacificBlue,
         brightness: Brightness.dark, // light
         accentColor: PacificBlue,
       ),
+      /*
+      home: Navigator(
+        pages: [
+          ...initialPage(),
+        ],
+        onPopPage: (route, result) {
+          if (!route.didPop(result)) {
+            return false;
+          }
+          // call setState?
+          return true;
+        },
+      ),
+      */
       initialRoute: user == null ? '/login' : '/chats',
       routes: {
         '/chats': (context) => ChatsList(),
@@ -46,5 +63,22 @@ class MessagesApp extends StatelessWidget {
         '/groups': (context) => GroupsPage(),
       },
     );
+  }
+
+  List<MaterialPage> initialPage() {
+    if (user == null) {
+      return [
+        MaterialPage(
+          key: ValueKey('LoginPage'),
+          child: Login(),
+        ),
+      ];
+    }
+    return [
+      MaterialPage(
+        key: ValueKey('ChatsList'),
+        child: ChatsList(),
+      ),
+    ];
   }
 }

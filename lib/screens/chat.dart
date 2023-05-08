@@ -9,35 +9,44 @@ import '../constants/messages.dart';
 import '../src/db/crud.dart';
 import '../src/relays.dart';
 import '../config/settings.dart';
+import '../src/db/db.dart';
 
 class Chat extends StatefulWidget {
-  const Chat({Key? key, this.title='Messages with specific peer'}) : super(key: key);
-  final String title;
 
   @override
-  _ChatState createState() => _ChatState();
+  ChatState createState() => ChatState();
 }
 
-class _ChatState extends State<Chat> {
+class ChatState extends State<Chat> {
   int _index = 0;
   final List<MessageEntry> _messages = [];
-  final TextEditingController _textEntryField = TextEditingController();
-  final FocusNode _focusNode = FocusNode();
-  final ScrollController _scrollController = ScrollController();
+  final TextEditingController textEntryField = TextEditingController();
+  final FocusNode focusNode = FocusNode();
+  final ScrollController scrollController = ScrollController();
+  Contact? currentUser;
+
+  void queryUsers() async {
+    List<Contact> myUsers = await getUsers();
+    Contact myUser = myUsers.singleWhere((user) => user.active == true);
+    setState(() {
+      currentUser = myUser;
+    });
+  }
 
   @override
   void initState() {
     super.initState();
-    _textEntryField.addListener(() {
-      final String text = _textEntryField.text;
-      _textEntryField.value = _textEntryField.value.copyWith(
+    queryUsers();
+    textEntryField.addListener(() {
+      final String text = textEntryField.text;
+      textEntryField.value = textEntryField.value.copyWith(
         text: text,
         selection:
             TextSelection(baseOffset: text.length, extentOffset: text.length),
         composing: TextRange.empty,
       );
     });
-    readMessages(0).then((messages) {
+    getMessages(0).then((messages) {
       for (final message in messages) {
         _messages.add(message);
         if (message.index > _index) {
@@ -55,7 +64,7 @@ class _ChatState extends State<Chat> {
 
   @override
   void dispose() {
-    _textEntryField.dispose();
+    textEntryField.dispose();
     super.dispose();
   }
 
@@ -102,9 +111,7 @@ class _ChatState extends State<Chat> {
           ),
         ),
       ),
-      //body: CustomMultiChildLayout(
       body: Stack(
-        //delegate: MultiChildLayoutDelegate(),
         children: <Widget>[
           StreamBuilder(
             stream: _chat.stream,
@@ -114,7 +121,7 @@ class _ChatState extends State<Chat> {
 
                 return ListView.builder(
                   reverse: true,
-                  controller: _scrollController,
+                  controller: scrollController,
                   itemCount: _messages.length,
                   shrinkWrap: true,
                   padding: EdgeInsets.only(top: 10, bottom: 10),
@@ -164,8 +171,8 @@ class _ChatState extends State<Chat> {
                   SizedBox(width: 15,),
                   Expanded(
                     child: TextField(
-                      focusNode: _focusNode,
-                      controller: _textEntryField,
+                      focusNode: focusNode,
+                      controller: textEntryField,
                       decoration: InputDecoration(
                         hintText: "Write message...",
                         hintStyle: TextStyle(color: Colors.black54),
@@ -173,11 +180,11 @@ class _ChatState extends State<Chat> {
                       ),
                       onSubmitted: (String value) {
                         sendMessage(value);
-                        _textEntryField.clear();
-                        _focusNode.requestFocus();
+                        textEntryField.clear();
+                        focusNode.requestFocus();
                         /*
-                        _scrollController.animateTo(
-                          _scrollController.position.maxScrollExtent,
+                        scrollController.animateTo(
+                          scrollController.position.maxScrollExtent,
                           duration: const Duration(milliseconds: 100),
                           curve: Curves.easeOut
                         );
@@ -203,7 +210,7 @@ class _ChatState extends State<Chat> {
 
   sendMessage(String content) {
     Relays relays = getRelays();
-    relays.sendMessage(content);
+    relays.sendMessage(content, from: currentUser!, to: currentUser!); // TODO
   }
 
   void addMessage(MessageEntry entry) {

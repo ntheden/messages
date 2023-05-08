@@ -11,6 +11,7 @@ import 'models.dart';
 part 'db.g.dart';
 
 
+// This class might be going away
 class Context {
   final DbContext context;
   final List<Relay> defaultRelays;
@@ -39,6 +40,7 @@ class Contact {
   bool get active => contact.active;
   String get name => contact.name;
   String get pubkey => npubs[0].pubkey;
+  String get privkey => npubs[0].privkey;
 
   @override
   String toString() {

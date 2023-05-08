@@ -4,6 +4,7 @@ import 'package:timezone/timezone.dart';
 import 'package:timezone/data/latest.dart';
 
 import '../config/settings.dart';
+import '../src/db/db.dart';
 
 //initializeDateFormatting('fr_FR', null).then((_) => runMyCode());
 
@@ -16,12 +17,11 @@ DateTime timezoned(DateTime date) {
 }
 
 
-void logEvent(event, text) {
-  String to = whoseKey(event.receiver) ?? "unknown";
-  String from = whoseKey(event.pubkey) ?? "unknown";
-  DateTime timestamp = timezoned(DateTime.fromMillisecondsSinceEpoch(event.createdAt * 1000));
-  String date = DateFormat('yyyy-MM-dd').format(timestamp);
-  String time = DateFormat('hh:mm:ss').format(timestamp);
-  print('Message to $to from $from on $date at $time "$text"');
+void logEvent(timestamp, Contact from, Contact to, String text, {required bool rx}) {
+  DateTime stamp = timezoned(DateTime.fromMillisecondsSinceEpoch(timestamp));
+  String date = DateFormat('yyyy-MM-dd').format(stamp);
+  String time = DateFormat('hh:mm:ss').format(stamp);
+  String direction = rx ? "RX" : "TX";
+  print('$direction: Message to ${to.name} from ${from.name} on $date at $time "$text"');
 }
 

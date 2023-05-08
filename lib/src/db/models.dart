@@ -68,8 +68,10 @@ class DbEvents extends Table {
   /// All events table
   IntColumn get id => integer().autoIncrement()();
   TextColumn get eventId => text().unique().withLength(min: 0, max: 64)();
-  IntColumn get pubkeyRef => integer()();
-  IntColumn get receiverRef => integer()();
+  IntColumn get pubkeyRef => integer().references(Npubs, #id)();
+  IntColumn get receiverRef => integer().references(Npubs, #id)();
+  IntColumn get toContact => integer().references(DbContacts, #id)();
+  IntColumn get fromContact => integer().references(DbContacts, #id)();
   TextColumn get fromRelay => text().withLength(min: 0, max: 64)();
   TextColumn get content => text().withLength(min: 0, max: 1024)();
   // TODO: Consider not storing the plaintext.

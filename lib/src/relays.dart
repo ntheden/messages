@@ -4,6 +4,7 @@ import 'package:nostr/nostr.dart';
 
 import '../config/settings.dart';
 import 'db/crud.dart';
+import 'db/db.dart' as db;
 
 
 class Relay {
@@ -53,7 +54,7 @@ class Relay {
       Message m = Message.deserialize(data);
       if ([m.type,].contains("EVENT")) {
         Event event = m.message;
-        createEvent(event, fromRelay: name);
+        storeReceivedEvent(event, fromRelay: name);
       }
     };
     socket.stream.listen(
@@ -77,10 +78,15 @@ class Relay {
     // TODO: check the return OK if relay supports that NIP
   }
 
-  Future<void> sendEvent(Event event, [String? plaintext]) async {
+  Future<void> sendEvent(
+    Event event,
+    db.Contact from,
+    db.Contact to, [
+    String? plaintext
+    ]) async {
     // we don't await it, but we might want to to get confirmation
     send(event.serialize());
-    createEvent(event, plaintext: plaintext, fromRelay: name);
+    insertEvent(event, from, to, plaintext: plaintext, fromRelay: name);
   }
 }
 
@@ -118,18 +124,22 @@ class Relays {
     });
   }
 
-  sendMessage(String content) {
+  sendMessage(
+    String content, {
+    required db.Contact from,
+    required db.Contact to
+  }) {
     EncryptedDirectMessage event = EncryptedDirectMessage.redact(
-      getKey('bob', 'priv'), // senderPrivkey
-      getKey('alice', 'pub'), // receiverPubkey
+      from.privkey,
+      to.pubkey,
       content,
     );
-    sendEvent(event, content);
+    sendEvent(event, from, to, content);
   }
 
-  sendEvent(Event event, [String? plaintext]) {
+  sendEvent(Event event, from, to, [String? plaintext]) {
     relays?.forEach((relay) {
-      relay.sendEvent(event, plaintext);
+      relay.sendEvent(event, from, to, plaintext);
     });
   }
 
