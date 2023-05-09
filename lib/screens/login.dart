@@ -1,19 +1,22 @@
 import 'dart:math';
+import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:nostr/nostr.dart';
 
-import '../config/settings.dart';
 import '../src/db/db.dart';
 import '../src/db/crud.dart';
- 
+import '../router/delegate.dart';
+
 class Login extends StatefulWidget {
   Login({Key? key}) : super(key: key);
 
   @override
   State<Login> createState() => _LoginState();
 }
- 
+
 class _LoginState extends State<Login> {
+  final routerDelegate = Get.put(MyRouterDelegate());
+
   TextEditingController nameController = TextEditingController();
   TextEditingController nsecController = TextEditingController();
   final borderDecoration = InputDecoration(
@@ -32,8 +35,8 @@ class _LoginState extends State<Login> {
 
   double screenAwareWidth(double size, BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
-    double drawingWidth = mediaQuery.size.width
-           - (mediaQuery.padding.left + mediaQuery.padding.right);
+    double drawingWidth = mediaQuery.size.width -
+        (mediaQuery.padding.left + mediaQuery.padding.right);
     return size * drawingWidth;
   }
 
@@ -47,11 +50,8 @@ class _LoginState extends State<Login> {
   }
 
   void createUserAndLogin(Keychain keys, String name) async {
-    int id = await insertNpub(
-      keys.public,
-      nameController.text,
-      privkey: keys.private
-    );
+    int id = await insertNpub(keys.public, nameController.text,
+        privkey: keys.private);
     Contact? user;
     try {
       user = await createContactFromNpubs(
@@ -65,7 +65,10 @@ class _LoginState extends State<Login> {
     await switchUser(user!.contact.id);
     createContext(await getDefaultRelays(), user!);
     print('Successful login!');
-    Navigator.of(context).pushNamed('/chats');
+    print(
+        '@@@@@@@@@@@@@@@@@@@@@@@@@@ routerDelegate.pages: ${routerDelegate.pages}');
+    //routerDelegate.popRoute();
+    routerDelegate.pushPage(name: '/chats');
   }
 
   @override
@@ -104,19 +107,18 @@ class _LoginState extends State<Login> {
                     }
                   },
                   child: TextField(
-                    controller: nameController,
-                    decoration: missingName
-                      ? borderDecoration.copyWith(
-                          labelText: "User Name required",
-                          labelStyle: TextStyle(
-                            color: Colors.red,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.red),
-                          ),
-                        )
-                      : borderDecoration
-                  ),
+                      controller: nameController,
+                      decoration: missingName
+                          ? borderDecoration.copyWith(
+                              labelText: "User Name required",
+                              labelStyle: TextStyle(
+                                color: Colors.red,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.red),
+                              ),
+                            )
+                          : borderDecoration),
                 ),
               ),
               Container(
@@ -131,16 +133,16 @@ class _LoginState extends State<Login> {
                     controller: nsecController,
                     obscureText: true,
                     decoration: invalidNsec
-                      ? borderDecoration.copyWith(
-                          labelText: "Nsec is invalid",
-                          labelStyle: TextStyle(
-                            color: Colors.red,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.red),
-                          ),
-                        )
-                      : borderDecoration.copyWith(labelText: "Nsec"),
+                        ? borderDecoration.copyWith(
+                            labelText: "Nsec is invalid",
+                            labelStyle: TextStyle(
+                              color: Colors.red,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.red),
+                            ),
+                          )
+                        : borderDecoration.copyWith(labelText: "Nsec"),
                   ),
                 ),
               ),
@@ -156,34 +158,35 @@ class _LoginState extends State<Login> {
                   setState(() => invalidNsec = false);
                   createUserAndLogin(Keychain.generate(), nameController.text);
                 },
-                child: Text('Create new Nsec',),
+                child: Text(
+                  'Create new Nsec',
+                ),
               ),
               Container(
-                height: 50,
-                width: screenAwareWidth(0.5, context),
-                padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
-                child: ElevatedButton(
-                  child: Text('Login'),
-                  onPressed: () {
-                    if (nameController.text.isEmpty) {
-                      setState(() => missingName = true);
-                    } else {
-                      setState(() => missingName = false);
-                    }
-                    if (!validateNsec()) {
-                      setState(() => invalidNsec = true);
-                    } else {
-                      setState(() => invalidNsec = false);
-                    }
-                    if (!invalidNsec && !missingName) {
-                      createUserAndLogin(
-                        Keychain.from_bech32(nsecController.text),
-                        nameController.text,
-                      );
-                    }
-                  },
-                )
-              ),
+                  height: 50,
+                  width: screenAwareWidth(0.5, context),
+                  padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+                  child: ElevatedButton(
+                    child: Text('Login'),
+                    onPressed: () {
+                      if (nameController.text.isEmpty) {
+                        setState(() => missingName = true);
+                      } else {
+                        setState(() => missingName = false);
+                      }
+                      if (!validateNsec()) {
+                        setState(() => invalidNsec = true);
+                      } else {
+                        setState(() => invalidNsec = false);
+                      }
+                      if (!invalidNsec && !missingName) {
+                        createUserAndLogin(
+                          Keychain.from_bech32(nsecController.text),
+                          nameController.text,
+                        );
+                      }
+                    },
+                  )),
             ],
           ),
         ),

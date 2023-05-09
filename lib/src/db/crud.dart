@@ -83,6 +83,7 @@ Future<Contact> createContact(
           isLocal: isLocal,
           active: active,
         ),
+        onConflict: DoNothing(),
       );
 
   final List<Npub> npubEntries = [];

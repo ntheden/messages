@@ -1,7 +1,10 @@
 import 'package:after_layout/after_layout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
+import 'package:get/get.dart';
 import 'package:messages/util/avatar.dart';
+
+import '../router/delegate.dart';
 
 class ContactPage extends StatefulWidget {
   @override
@@ -11,6 +14,7 @@ class ContactPage extends StatefulWidget {
 class _ContactPageState extends State<ContactPage>
     with AfterLayoutMixin<ContactPage> {
   late Contact _contact;
+  final routerDelegate = Get.put(MyRouterDelegate());
 
   @override
   void afterFirstLayout(BuildContext context) {
@@ -73,7 +77,7 @@ class _ContactPageState extends State<ContactPage>
       body: _body(_contact),
       floatingActionButton: FloatingActionButton(
         onPressed: () =>
-            Navigator.of(context).pushNamed('/editContact', arguments: {
+          routerDelegate.pushPage(name: '/edit_contact', arguments: {
           'contact': _contact,
           // A better solution would be to make [ContactPage] listen to DB
           // changes, but this will do for now

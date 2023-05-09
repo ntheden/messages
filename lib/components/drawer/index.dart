@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../../src/db/db.dart';
 import '../../src/db/crud.dart';
 import 'drawer_list_tile.dart';
 import 'drawer_user_list_tile.dart';
+import '../../router/delegate.dart';
 
 class DrawerScreen extends StatefulWidget {
   DrawerScreen({Key? key}) : super(key: key);
@@ -16,6 +18,7 @@ class DrawerScreenState extends State<DrawerScreen> {
   bool showOtherUsersFlag = false;
   List<Contact> users = [];
   Contact? currentUser;
+  final routerDelegate = Get.put(MyRouterDelegate());
  
   @override
   void initState() {
@@ -55,7 +58,7 @@ class DrawerScreenState extends State<DrawerScreen> {
       DrawerUserListTile(
         name: "New User Identity",
         icon: Icons.person_add_outlined,
-        onTap: () => Navigator.of(context).pushNamed('/login'),
+        onTap: () => routerDelegate.pushPage(name: '/login'),
       ),
       Divider(),
     ];
@@ -97,12 +100,14 @@ class DrawerScreenState extends State<DrawerScreen> {
           DrawerListTile(
             title: "Messages",
             icon: Icons.person_outline_rounded,
-            onTap: () => Navigator.of(context).pushNamed('/chats'),
+            //onTap: () => routerDelegate.pushPage(name: '/chats'),
+            //onTap: () => routerDelegate.popRoute(),
+            onTap: () => Navigator.of(context).pop(),
           ),
           DrawerListTile(
             title: "Channels",
             icon: Icons.people_outline_rounded,
-            onTap: () => Navigator.of(context).pushNamed('/channels'),
+            onTap: () {},//=> routerDelegate.pushPage(name: '/channels'),
           ),
           DrawerListTile(
             title: "Bookmarks",
@@ -110,9 +115,9 @@ class DrawerScreenState extends State<DrawerScreen> {
             onTap: () {},
           ),
           DrawerListTile(
-            title: "Contacts", // This will be a separate app in the future!
+            title: "Contacts", // Maybe a separate app in the future?
             icon: Icons.contacts_rounded,
-            onTap: () => Navigator.of(context).pushNamed('/contacts'),
+            onTap: () {},//=> routerDelegate.pushPage(name: '/contacts'),
           ),
           DrawerListTile(
             title: "Settings",

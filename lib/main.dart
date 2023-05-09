@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import 'constants/color.dart';
 import 'pages/contact_list_page.dart';
@@ -11,22 +12,33 @@ import 'screens/chats_list.dart';
 import 'src/db/crud.dart';
 import 'src/db/db.dart';
 import 'src/db/sink.dart';
+import 'router/delegate.dart';
 
-void main() {
+void main() async {
   // I may get rid of "context", just get the active user,
   // store the list of relays in the user - switch to
   // them when the user changes
   getContext().then((context) {
-    EventSink sink = EventSink();
-    sink.listen(); // is there a better place to put this
+    runEventSink();
     runApp(MessagesApp(user: context.user));
   }).catchError((error) => runApp(MessagesApp()));
 }
 
+void runEventSink() async {
+  List<Contact> users = await getUsers();
+  List<Npub> npubs = [];
+  users.forEach((user) => npubs = [...npubs, ...user.npubs]);
+  EventSink sink = EventSink(npubs);
+  sink.listen(); // is there a better place to put this
+}
+
 class MessagesApp extends StatelessWidget {
+  final routerDelegate = Get.put(MyRouterDelegate());
   Contact? user;
 
-  MessagesApp({super.key, Contact? this.user});
+  MessagesApp({super.key, Contact? this.user}) {
+    routerDelegate.pushPage(name: user == null ? '/login' : '/chats');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +49,10 @@ class MessagesApp extends StatelessWidget {
         primaryColor: PacificBlue,
         brightness: Brightness.dark, // light
         accentColor: PacificBlue,
+      ),
+      home: Router(
+        routerDelegate: routerDelegate,
+        backButtonDispatcher: RootBackButtonDispatcher(),
       ),
       /*
       home: Navigator(
@@ -51,7 +67,6 @@ class MessagesApp extends StatelessWidget {
           return true;
         },
       ),
-      */
       initialRoute: user == null ? '/login' : '/chats',
       routes: {
         '/chats': (context) => ChatsList(),
@@ -62,6 +77,7 @@ class MessagesApp extends StatelessWidget {
         '/login': (context) => Login(),
         '/groups': (context) => GroupsPage(),
       },
+      */
     );
   }
 

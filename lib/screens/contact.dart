@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
 import '../models/events.dart';
@@ -6,6 +7,7 @@ import '../models/message_entry.dart';
 import '../components/channels/channels_entry.dart';
 import '../components/drawer/index.dart';
 import '../constants/messages.dart';
+import '../router/delegate.dart';
 
 class Contact extends StatefulWidget {
   const Contact({Key? key, required this.npub, this.title='<Name of Contact>'}) : super(key: key);
@@ -17,6 +19,7 @@ class Contact extends StatefulWidget {
 }
 
 class _ContactState extends State<Contact> {
+  final RouterDelegate routerDelegate = Get.put(MyRouterDelegate());
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +34,7 @@ class _ContactState extends State<Contact> {
             child: Row(
               children: <Widget>[
                 IconButton(
-                  onPressed: (){
+                  onPressed: () {
                     Navigator.pop(context);
                   },
                   icon: Icon(Icons.arrow_back,color: Colors.black,),

@@ -1,7 +1,9 @@
 import 'package:badges/badges.dart' as badges;
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import '../../constants/color.dart';
+import '../../router/delegate.dart';
 
 class ChatsEntry extends StatelessWidget {
   const ChatsEntry({
@@ -114,7 +116,8 @@ class ChatsEntry extends StatelessWidget {
         ),
       ),
       onTap: () {
-        Navigator.of(context).pushNamed('/chat');
+        final routerDelegate = Get.put(MyRouterDelegate());
+        routerDelegate.pushPage(name: '/chat');
       },
     );
   }

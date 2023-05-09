@@ -209,7 +209,7 @@ class ChatState extends State<Chat> {
   }
 
   sendMessage(String content) {
-    Relays relays = getRelays();
+    Relays relays = getRelays({});
     relays.sendMessage(content, from: currentUser!, to: currentUser!); // TODO
   }
 

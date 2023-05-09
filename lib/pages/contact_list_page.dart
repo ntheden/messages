@@ -1,7 +1,10 @@
 import 'package:after_layout/after_layout.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:messages/util/avatar.dart';
+
+import '../router/delegate.dart';
 
 class ContactListPage extends StatefulWidget {
   @override
@@ -12,6 +15,7 @@ class _ContactListPageState extends State<ContactListPage>
     with AfterLayoutMixin<ContactListPage> {
   List<Contact> _contacts = [];
   bool _permissionDenied = false;
+  final routerDelegate = Get.put(MyRouterDelegate());
 
   @override
   void initState() {
@@ -83,7 +87,7 @@ class _ContactListPageState extends State<ContactListPage>
         ),
         body: _body(),
         floatingActionButton: FloatingActionButton(
-          onPressed: () => Navigator.of(context).pushNamed('/editContact'),
+          onPressed: () => routerDelegate.pushPage(name: '/edit_contact'),
           child: Icon(Icons.add),
         ),
       );
@@ -103,14 +107,14 @@ class _ContactListPageState extends State<ContactListPage>
             leading: avatar(contact, 18.0),
             title: Text(contact.displayName),
             onTap: () =>
-                Navigator.of(context).pushNamed('/contact', arguments: contact),
+                routerDelegate.pushPage(name: '/contact', arguments: contact),
           );
         });
   }
 
   void _handleOverflowSelected(String value) {
     if (value == 'Groups') {
-      Navigator.of(context).pushNamed('/groups');
+      routerDelegate.pushPage(name: '/groups');
     }
   }
 }

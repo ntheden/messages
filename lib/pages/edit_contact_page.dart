@@ -378,7 +378,7 @@ class _EditContactPageState extends State<EditContactPage>
               title: Text(groups[i].name),
               onTap: () {
                 selectedGroup = groups[i];
-                Navigator.of(ctx).pop();
+                Navigator.of(context).pop();
               },
             ),
           ),

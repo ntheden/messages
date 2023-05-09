@@ -34,18 +34,18 @@ String? whoseKey(String key) {
   return null;
 }
 
-
 Relays? relays;
 
-Relays getRelays() {
+// Maybe getRelays should be off of a Contact
+Relays getRelays(Set<String> pubkeys) {
   if (relays != null) {
     return relays!;
   }
-  relays = Relays();
+  relays = Relays(pubkeys);
+  // TODO: Maybe Relays should decide which relays to connect to
+  // based on the passed in pubkeys
   relaySettings.forEach((name, url) {
     relays?.add(name, url);
   });
   return relays!;
 }
-
-
