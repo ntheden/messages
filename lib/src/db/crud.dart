@@ -240,7 +240,7 @@ Future<void> storeReceivedEvent(
     // TODO: This must be optimized.
     // Current idea: relay watches a stream of local users' npubs, and
     // filters event if the receiver npub is not in the list
-    print('Filter: event destination is not a local user');
+    print('Filter: event destination is not a local user: ${receiver}');
     return;
   }
   print('Received event ${event.id}');

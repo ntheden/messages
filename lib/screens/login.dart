@@ -5,6 +5,7 @@ import 'package:nostr/nostr.dart';
 
 import '../src/db/db.dart';
 import '../src/db/crud.dart';
+import '../src/db/sink.dart';
 import '../router/delegate.dart';
 
 class Login extends StatefulWidget {
@@ -65,10 +66,8 @@ class _LoginState extends State<Login> {
     await switchUser(user!.contact.id);
     createContext(await getDefaultRelays(), user!);
     print('Successful login!');
-    print(
-        '@@@@@@@@@@@@@@@@@@@@@@@@@@ routerDelegate.pages: ${routerDelegate.pages}');
-    //routerDelegate.popRoute();
-    routerDelegate.pushPage(name: '/chats');
+    routerDelegate.pushPage(name: '/chats', arguments: user!);
+    runEventSink();
   }
 
   @override

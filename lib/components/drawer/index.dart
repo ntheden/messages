@@ -100,9 +100,9 @@ class DrawerScreenState extends State<DrawerScreen> {
           DrawerListTile(
             title: "Messages",
             icon: Icons.person_outline_rounded,
-            //onTap: () => routerDelegate.pushPage(name: '/chats'),
-            //onTap: () => routerDelegate.popRoute(),
-            onTap: () => Navigator.of(context).pop(),
+            onTap: () {
+              routerDelegate.pushPage(name: '/chats', arguments: currentUser);
+            }
           ),
           DrawerListTile(
             title: "Channels",

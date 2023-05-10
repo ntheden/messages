@@ -16,20 +16,9 @@ import 'router/delegate.dart';
 
 void main() async {
   // I may get rid of "context", just get the active user,
-  // store the list of relays in the user - switch to
-  // them when the user changes
   getContext().then((context) {
-    runEventSink();
     runApp(MessagesApp(user: context.user));
   }).catchError((error) => runApp(MessagesApp()));
-}
-
-void runEventSink() async {
-  List<Contact> users = await getUsers();
-  List<Npub> npubs = [];
-  users.forEach((user) => npubs = [...npubs, ...user.npubs]);
-  EventSink sink = EventSink(npubs);
-  sink.listen(); // is there a better place to put this
 }
 
 class MessagesApp extends StatelessWidget {
@@ -37,7 +26,10 @@ class MessagesApp extends StatelessWidget {
   Contact? user;
 
   MessagesApp({super.key, Contact? this.user}) {
-    routerDelegate.pushPage(name: user == null ? '/login' : '/chats');
+    routerDelegate.pushPage(name: user == null ? '/login' : '/chats', arguments: user);
+    if (user != null) {
+      runEventSink();
+    }
   }
 
   @override
@@ -54,47 +46,6 @@ class MessagesApp extends StatelessWidget {
         routerDelegate: routerDelegate,
         backButtonDispatcher: RootBackButtonDispatcher(),
       ),
-      /*
-      home: Navigator(
-        pages: [
-          ...initialPage(),
-        ],
-        onPopPage: (route, result) {
-          if (!route.didPop(result)) {
-            return false;
-          }
-          // call setState?
-          return true;
-        },
-      ),
-      initialRoute: user == null ? '/login' : '/chats',
-      routes: {
-        '/chats': (context) => ChatsList(),
-        '/chat': (context) => Chat(),
-        '/contactList': (context) => ContactListPage(),
-        '/contact': (context) => ContactPage(),
-        '/editContact': (context) => EditContactPage(),
-        '/login': (context) => Login(),
-        '/groups': (context) => GroupsPage(),
-      },
-      */
     );
-  }
-
-  List<MaterialPage> initialPage() {
-    if (user == null) {
-      return [
-        MaterialPage(
-          key: ValueKey('LoginPage'),
-          child: Login(),
-        ),
-      ];
-    }
-    return [
-      MaterialPage(
-        key: ValueKey('ChatsList'),
-        child: ChatsList(),
-      ),
-    ];
   }
 }
