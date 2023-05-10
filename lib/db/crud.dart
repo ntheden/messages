@@ -55,6 +55,7 @@ Future<Contact> createContactFromNpubs(List<Npub> npubs, String name,
           name: name,
           isLocal: isLocal,
           active: active,
+          npub: npubs[0].pubkey,
         ),
       );
 
@@ -68,6 +69,7 @@ Future<Contact> createContactFromNpubs(List<Npub> npubs, String name,
       name: name,
       isLocal: isLocal,
       active: active,
+      npub: npubs[0].pubkey,
     ),
     npubs,
   );
@@ -94,6 +96,7 @@ Future<Contact> createContact(
           name: name,
           isLocal: isLocal,
           active: active,
+          npub: npubs[0],
         ),
         onConflict: DoNothing(),
       );
@@ -117,6 +120,7 @@ Future<Contact> createContact(
         name: name,
         isLocal: isLocal,
         active: active,
+        npub: npubEntries[0].pubkey,
       ),
       npubEntries);
   writeContact(contact);
@@ -397,13 +401,15 @@ Future<void> writeContact(Contact entry) async {
   }
 }
 
+String npubPlaceHolder = "0000000000000000000000000000000000000000000000000000000000000000";
+
 Future<Contact> createEmptyContact(String name,
     {bool isLocal = false, bool active = false}) async {
   final id = await database
       .into(database.contactNpubs)
       .insert(ContactNpubsCompanion());
   final contact =
-      DbContact(id: id, name: name, isLocal: isLocal, active: active);
+      DbContact(id: id, name: name, isLocal: isLocal, active: active, npub: npubPlaceHolder);
   return Contact(contact, []);
 }
 

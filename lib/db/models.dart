@@ -62,6 +62,9 @@ class DbContacts extends Table {
   TextColumn get name => text().withLength(min: 0, max: 64)();
   BoolColumn get isLocal => boolean()(); // Whether this is associated with a User
   BoolColumn get active => boolean()(); // Whether this is the active user
+  // There can be more in Contact.npubs (see db/db.dart), but we will
+  // use a primary npub here to maintain uniqueness of DbContact entries
+  TextColumn get npub => text().unique().withLength(min: 64, max: 64)();
 }
 
 class DbEvents extends Table {
