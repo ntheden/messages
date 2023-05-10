@@ -62,18 +62,9 @@ class Relays {
     });
   }
 
-  void listen({bool Function(dynamic)? action=null}) {
+  void listen([void Function(dynamic)? func=null]) {
     relays?.forEach((relay) {
-      relay.listen(
-        (data) {
-          if (data == null || data == 'null') {
-              return false;
-            }
-          if (action?.call(data) ?? false)
-            return false;
-          return true;
-        },
-      );
+      relay.listen(func);
     });
   }
 }

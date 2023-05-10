@@ -46,13 +46,10 @@ class Relay {
     socket.sink.add(requestWithFilter.serialize());
   }
 
-  void listen(
-    bool Function(dynamic)? defaultAction, {
-    bool Function(dynamic)? action=null
-  }) {
-    void Function(dynamic)? func = (data) {
-      if (defaultAction?.call(data) ?? false) {
-        return;
+  void listen(void Function(dynamic)? func) {
+    func ??= (data) {
+      if (data == null || data == 'null') {
+          return;
       }
       nostr.Message m = nostr.Message.deserialize(data);
       if ([m.type,].contains("EVENT")) {
