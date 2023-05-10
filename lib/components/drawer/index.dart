@@ -26,7 +26,7 @@ class DrawerScreenState extends State<DrawerScreen> {
     queryUsers();
   }
 
-  void queryUsers() async {
+  Future<void> queryUsers() async {
     List<Contact> myUsers = await getUsers();
     Contact myUser = myUsers.singleWhere((user) => user.active == true);
     setState(() {
@@ -43,7 +43,12 @@ class DrawerScreenState extends State<DrawerScreen> {
           picture: "https://avatars.githubusercontent.com/u/75714882",
           selected: user.active,
           onTap: () {
-            switchUser(user.contact.id).then((_) => queryUsers());
+            switchUser(user.contact.id).then(
+              (_) => queryUsers().then(
+              // TODO: Need to remove pages that have the old user, pushing does it for
+              // chats, but once we have channels working, then we can't just push
+              // chats here.
+              (_) => routerDelegate.pushPage(name: '/chats', arguments: currentUser)));
           },
         ),
       ),
