@@ -9,9 +9,9 @@ import 'pages/groups_page.dart';
 import 'screens/login.dart';
 import 'screens/chat.dart';
 import 'screens/chats_list.dart';
-import 'src/db/crud.dart';
-import 'src/db/db.dart';
-import 'src/db/sink.dart';
+import 'db/crud.dart';
+import 'db/db.dart';
+import 'db/sink.dart';
 import 'router/delegate.dart';
 
 void main() async {

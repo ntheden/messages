@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../src/db/db.dart';
-import '../../src/db/crud.dart';
+import '../../db/db.dart';
+import '../../db/crud.dart';
 import 'drawer_list_tile.dart';
 import 'drawer_user_list_tile.dart';
 import '../../router/delegate.dart';

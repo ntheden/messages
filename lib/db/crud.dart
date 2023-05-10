@@ -3,10 +3,9 @@ import 'package:nostr/nostr.dart' as nostr;
 import 'package:rxdart/rxdart.dart';
 
 import 'db.dart';
-import '../../config/settings.dart';
-import '../../models/message_entry.dart';
-import '../contact.dart' as contact;
-import '../logging.dart';
+import '../config/settings.dart';
+import '../components/message_entry.dart';
+import '../util/logging.dart';
 
 Stream<Contact> watchUserChanges() async* {
   Stream<List<DbContact>> entries = await (database.select(database.dbContacts)

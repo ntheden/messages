@@ -2,8 +2,8 @@ import 'package:nostr/nostr.dart';
 
 import 'db.dart';
 import 'crud.dart';
-import '../relays.dart';
-import '../../config/settings.dart';
+import '../nostr/relays.dart';
+import '../config/settings.dart';
 
 class EventSink {
   //late User user;

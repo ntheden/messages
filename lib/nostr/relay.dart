@@ -3,8 +3,8 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:nostr/nostr.dart' as nostr;
 
 import '../config/settings.dart';
-import 'db/crud.dart';
-import 'db/db.dart' as db;
+import '../db/crud.dart';
+import '../db/db.dart' as db;
 
 
 class Relay {

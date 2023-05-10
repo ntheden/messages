@@ -4,9 +4,9 @@ import 'package:nostr/nostr.dart';
 
 import '../components/chats/chats_entry.dart';
 import '../components/drawer/index.dart';
-import '../src/relays.dart';
-import '../src/db/crud.dart';
-import '../src/db/db.dart';
+import '../nostr/relays.dart';
+import '../db/crud.dart';
+import '../db/db.dart';
 
 class ChatsList extends StatefulWidget {
   const ChatsList({Key? key, this.title='Messages'}) : super(key: key);

@@ -3,9 +3,9 @@ import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:nostr/nostr.dart';
 
-import '../src/db/db.dart';
-import '../src/db/crud.dart';
-import '../src/db/sink.dart';
+import '../db/db.dart';
+import '../db/crud.dart';
+import '../db/sink.dart';
 import '../router/delegate.dart';
 
 class Login extends StatefulWidget {

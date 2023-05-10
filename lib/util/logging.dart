@@ -4,7 +4,7 @@ import 'package:timezone/timezone.dart';
 import 'package:timezone/data/latest.dart';
 
 import '../config/settings.dart';
-import '../src/db/db.dart';
+import '../db/db.dart';
 
 //initializeDateFormatting('fr_FR', null).then((_) => runMyCode());
 

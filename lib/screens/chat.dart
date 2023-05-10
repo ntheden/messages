@@ -2,14 +2,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:nostr/nostr.dart';
 
-import '../models/message_entry.dart';
+import '../config/settings.dart';
 import '../components/chats/chats_entry.dart';
 import '../components/drawer/index.dart';
+import '../components/message_entry.dart';
 import '../constants/messages.dart';
-import '../src/db/crud.dart';
-import '../src/relays.dart';
-import '../config/settings.dart';
-import '../src/db/db.dart';
+import '../db/crud.dart';
+import '../db/db.dart';
+import '../nostr/relays.dart';
 
 class Chat extends StatefulWidget {
   Contact currentUser;

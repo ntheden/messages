@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 
 import '../../constants/color.dart';
 import '../../router/delegate.dart';
-import '../../src/db/db.dart';
+import '../../db/db.dart';
 
 class ChatsEntry extends StatelessWidget {
   const ChatsEntry({
