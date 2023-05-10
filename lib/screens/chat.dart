@@ -12,9 +12,12 @@ import '../config/settings.dart';
 import '../src/db/db.dart';
 
 class Chat extends StatefulWidget {
+  Contact currentUser;
+
+  Chat(this.currentUser);
 
   @override
-  ChatState createState() => ChatState();
+  ChatState createState() => ChatState(currentUser);
 }
 
 class ChatState extends State<Chat> {
@@ -23,20 +26,20 @@ class ChatState extends State<Chat> {
   final TextEditingController textEntryField = TextEditingController();
   final FocusNode focusNode = FocusNode();
   final ScrollController scrollController = ScrollController();
-  Contact? currentUser;
+  Contact currentUser;
 
-  void queryUsers() async {
-    List<Contact> myUsers = await getUsers();
-    Contact myUser = myUsers.singleWhere((user) => user.active == true);
-    setState(() {
-      currentUser = myUser;
-    });
+  ChatState(this.currentUser);
+/*
+  void queryUser() async {
+    Contact myUser = await getUser();
+    setState(() => currentUser = myUser);
   }
+*/
 
   @override
   void initState() {
     super.initState();
-    queryUsers();
+    //queryUser();
     textEntryField.addListener(() {
       final String text = textEntryField.text;
       textEntryField.value = textEntryField.value.copyWith(

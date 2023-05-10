@@ -6,6 +6,7 @@ import '../components/chats/chats_entry.dart';
 import '../components/drawer/index.dart';
 import '../src/relays.dart';
 import '../src/db/crud.dart';
+import '../src/db/db.dart';
 
 class ChatsList extends StatefulWidget {
   const ChatsList({Key? key, this.title='Messages'}) : super(key: key);
@@ -15,53 +16,19 @@ class ChatsList extends StatefulWidget {
   _ChatsListState createState() => _ChatsListState();
 }
 
-List<Widget> myChatsEntries = [];
-
-List<Widget> getSome() {
-  List<Widget> newEntries = [
-    ChatsEntry(
-      name: "John Jacob",
-      picture: NetworkImage(
-        "https://i.ytimg.com/vi/D7h9UMADesM/maxresdefault.jpg",
-      ),
-      type: "group",
-      sending: "Your",
-      lastTime: "02:45",
-      seeing: 2,
-      lastMessage: "https://github.com/",
-    ),
-    Divider(height: 0),
-    ChatsEntry(
-      name: "Jinkle Hiemer",
-      picture: NetworkImage(
-        "https://i.ytimg.com/vi/D7h9UMADesM/maxresdefault.jpg",
-      ),
-      lastTime: "02:16",
-      type: "group",
-      sending: "Mesud",
-      lastMessage: "gece gece sinirim bozuldu.",
-    ),
-    Divider(height: 0),
-  ];
-
-  myChatsEntries.addAll(newEntries);
-  return myChatsEntries;
-}
-
 class _ChatsListState extends State<ChatsList> {
-  bool showOtherUsers = false;
-  int selectedUser = 0;
+  Contact? currentUser;
 
   @override
   void initState() {
     super.initState();
-  }
-
-  final bool _running = true;
-
-  Stream<String> _event() async* {
-    while (!_running) {
-    }
+    getUser().then((user) => setState(() => currentUser = user));
+    // why doesn't this work???
+    watchUserChanges().listen((user) {
+      setState(() {
+        currentUser = user;
+      });
+    });
   }
 
   @override
@@ -109,4 +76,43 @@ class _ChatsListState extends State<ChatsList> {
       ),
     );
   }
+
+  List<Widget> myChatsEntries = [];
+
+  List<Widget> getSome() {
+    if (currentUser == null) {
+      return [];
+    }
+    List<Widget> newEntries = [
+      ChatsEntry(
+        name: "John Jacob",
+        picture: NetworkImage(
+          "https://i.ytimg.com/vi/D7h9UMADesM/maxresdefault.jpg",
+        ),
+        type: "group",
+        sending: "Your",
+        lastTime: "02:45",
+        seeing: 2,
+        lastMessage: "https://github.com/",
+        currentUser: currentUser,
+      ),
+      Divider(height: 0),
+      ChatsEntry(
+        name: "Jinkle Hiemer",
+        picture: NetworkImage(
+          "https://i.ytimg.com/vi/D7h9UMADesM/maxresdefault.jpg",
+        ),
+        lastTime: "02:16",
+        type: "group",
+        sending: "Mesud",
+        lastMessage: "gece gece sinirim bozuldu.",
+        currentUser: currentUser,
+      ),
+      Divider(height: 0),
+    ];
+
+    myChatsEntries.addAll(newEntries);
+    return myChatsEntries;
+  }
 }
+

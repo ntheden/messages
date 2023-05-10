@@ -8,6 +8,19 @@ import '../../models/message_entry.dart';
 import '../contact.dart' as contact;
 import '../logging.dart';
 
+Stream<Contact> watchUserChanges() async* {
+  Stream<List<DbContact>> entries = await (database.select(database.dbContacts)
+        ..where((c) => c.active.equals(true)))
+      .watch();
+  await for (final items in entries) {
+    List<Contact> contacts = [];
+    items.forEach((contact) async => contacts.add(await getContact(contact)));
+    for (final contact in contacts) {
+      yield contact;
+    }
+  }
+}
+
 Future<void> switchUser(int id) async {
   final allUsers = database
     .update(database.dbContacts)

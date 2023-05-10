@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import '../../constants/color.dart';
 import '../../router/delegate.dart';
+import '../../src/db/db.dart';
 
 class ChatsEntry extends StatelessWidget {
   const ChatsEntry({
@@ -12,6 +13,7 @@ class ChatsEntry extends StatelessWidget {
     required this.picture,
     this.lastMessage,
     required this.lastTime,
+    required this.currentUser,
     this.type = "user",
     this.sending = "İsimsiz Hesap",
     this.seeing = 0,
@@ -34,6 +36,7 @@ class ChatsEntry extends StatelessWidget {
   final String badge;
   final GestureTapCallback? onTap;
   final GestureLongPressCallback? onLongPress;
+  final currentUser;
 
   @override
   Widget build(BuildContext context) {
@@ -117,7 +120,7 @@ class ChatsEntry extends StatelessWidget {
       ),
       onTap: () {
         final routerDelegate = Get.put(MyRouterDelegate());
-        routerDelegate.pushPage(name: '/chat');
+        routerDelegate.pushPage(name: '/chat', arguments: currentUser);
       },
     );
   }
