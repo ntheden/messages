@@ -23,12 +23,6 @@ class _ChatsListState extends State<ChatsList> {
   void initState() {
     super.initState();
     getUser().then((user) => setState(() => currentUser = user));
-    // why doesn't this work???
-    watchUserChanges().listen((user) {
-      setState(() {
-        currentUser = user;
-      });
-    });
   }
 
   @override

@@ -7,6 +7,9 @@ import '../config/settings.dart';
 import '../components/message_entry.dart';
 import '../util/logging.dart';
 
+
+// why doesn't this work??? anyways, we don't need it, as the chats_list
+// gets rebuilt with the user passed in from either /login or the drawer
 Stream<Contact> watchUserChanges() async* {
   Stream<List<DbContact>> entries = await (database.select(database.dbContacts)
         ..where((c) => c.active.equals(true)))
