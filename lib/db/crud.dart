@@ -53,12 +53,18 @@ Future<Contact> createContactFromNpubs(List<Npub> npubs, String name,
     }
   });
 
-  final contactId = await database.into(database.dbContacts).insert(
-        DbContactsCompanion.insert(
+  DbContactsCompanion db_contact = DbContactsCompanion.insert(
           name: name,
           isLocal: isLocal,
           active: active,
           npub: npubs[0].pubkey,
+        );
+
+  final contactId = await database.into(database.dbContacts).insert(
+        db_contact,
+        onConflict: DoUpdate(
+          (old) => db_contact,
+          target: [database.dbContacts.npub],
         ),
       );
 

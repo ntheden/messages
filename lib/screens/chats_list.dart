@@ -9,20 +9,21 @@ import '../db/crud.dart';
 import '../db/db.dart';
 
 class ChatsList extends StatefulWidget {
-  const ChatsList({Key? key, this.title='Messages'}) : super(key: key);
   final String title;
+  final Contact currentUser;
+  const ChatsList(this.currentUser, {Key? key, this.title='Messages'}) : super(key: key);
 
   @override
-  _ChatsListState createState() => _ChatsListState();
+  _ChatsListState createState() => _ChatsListState(currentUser);
 }
 
 class _ChatsListState extends State<ChatsList> {
-  Contact? currentUser;
+  final Contact currentUser;
+  _ChatsListState(this.currentUser);
 
   @override
   void initState() {
     super.initState();
-    getUser().then((user) => setState(() => currentUser = user));
   }
 
   @override
@@ -74,9 +75,6 @@ class _ChatsListState extends State<ChatsList> {
   List<Widget> myChatsEntries = [];
 
   List<Widget> getSome() {
-    if (currentUser == null) {
-      return [];
-    }
     List<Widget> newEntries = [
       ChatsEntry(
         name: "John Jacob",

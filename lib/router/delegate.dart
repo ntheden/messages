@@ -55,7 +55,7 @@ class MyRouterDelegate extends RouterDelegate<List<RouteSettings>>
         child = Chat(routeSettings.arguments as Contact);
         break;
       case '/chats':
-        child = ChatsList();
+        child = ChatsList(routeSettings.arguments as Contact);
         break;
       case '/contactList':
         child = ContactListPage();
