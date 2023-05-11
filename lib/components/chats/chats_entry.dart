@@ -120,7 +120,7 @@ class ChatsEntry extends StatelessWidget {
       ),
       onTap: () {
         final routerDelegate = Get.put(MyRouterDelegate());
-        routerDelegate.pushPage(name: '/chat', arguments: currentUser);
+        routerDelegate.pushPage(name: '/chat', arguments: {'user': currentUser, 'peer': currentUser});
       },
     );
   }

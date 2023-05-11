@@ -51,16 +51,12 @@ class _LoginState extends State<Login> {
   }
 
   void createUserAndLogin(Keychain keys, String name) async {
-    int id = await insertNpub(keys.public, nameController.text,
+    await insertNpub(keys.public, nameController.text,
         privkey: keys.private);
-    if (id == 0) {
-      // entry was there and it got updated
-      id = (await getNpub(keys.public)).id;
-    }
     Contact? user;
     try {
       user = await createContactFromNpubs(
-        [await getNpubFromId(id)],
+        [await getNpub(keys.public)],
         nameController.text,
         active: true,
       );

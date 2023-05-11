@@ -52,7 +52,7 @@ class MyRouterDelegate extends RouterDelegate<List<RouteSettings>>
 
     switch (routeSettings.name) {
       case '/chat':
-        child = Chat(routeSettings.arguments as Contact);
+        child = Chat(routeSettings.arguments as Map<String, dynamic>);
         break;
       case '/chats':
         child = ChatsList(routeSettings.arguments as Contact);

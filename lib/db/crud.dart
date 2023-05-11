@@ -321,9 +321,27 @@ Future<List<MessageEntry>> messageEntries(List<NostrEvent> events) async {
   return messages;
 }
 
-Future<List<MessageEntry>> getMessages(int index) async {
+Future<List<MessageEntry>> getUserMessages(Contact user, int index) async {
   List<DbEvent> entries = await (database.select(database.dbEvents)
         ..where((t) => t.id.isBiggerOrEqualValue(index))
+        ..where((t) => t.toContact.equals(user.id) | t.fromContact.equals(user.id))
+        ..orderBy([
+          (t) => OrderingTerm(
+                expression: t.createdAt,
+                mode: OrderingMode.desc,
+              )
+        ]))
+      .get();
+  List<MessageEntry> messages =
+      await messageEntries(await nostrEvents(entries));
+  return messages;
+}
+
+Future<List<MessageEntry>> getChatMessages(Contact user, Contact peer, int index) async {
+  List<DbEvent> entries = await (database.select(database.dbEvents)
+        ..where((t) => t.id.isBiggerOrEqualValue(index))
+        ..where((t) => (t.toContact.equals(user.id) & t.fromContact.equals(peer.id)) |
+                        (t.toContact.equals(peer.id) & t.fromContact.equals(user.id)))
         ..orderBy([
           (t) => OrderingTerm(
                 expression: t.createdAt,

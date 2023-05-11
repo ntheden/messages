@@ -41,6 +41,7 @@ class Contact {
   String get name => contact.name;
   String get pubkey => npubs[0].pubkey;
   String get privkey => npubs[0].privkey;
+  int get id => contact.id;
 
   @override
   String toString() {

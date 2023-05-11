@@ -12,12 +12,16 @@ import '../db/db.dart';
 import '../nostr/relays.dart';
 
 class Chat extends StatefulWidget {
-  Contact currentUser;
+  late Contact currentUser;
+  late Contact peerContact;
 
-  Chat(this.currentUser);
+  Chat(Map<String, dynamic> args, {Key? key}) : super(key: key) {
+    currentUser = args['user'];
+    peerContact = args['peer'];
+  }
 
   @override
-  ChatState createState() => ChatState(currentUser);
+  ChatState createState() => ChatState(currentUser, peerContact);
 }
 
 class ChatState extends State<Chat> {
@@ -27,19 +31,13 @@ class ChatState extends State<Chat> {
   final FocusNode focusNode = FocusNode();
   final ScrollController scrollController = ScrollController();
   Contact currentUser;
+  Contact peerContact;
 
-  ChatState(this.currentUser);
-/*
-  void queryUser() async {
-    Contact myUser = await getUser();
-    setState(() => currentUser = myUser);
-  }
-*/
+  ChatState(this.currentUser, this.peerContact);
 
   @override
   void initState() {
     super.initState();
-    //queryUser();
     textEntryField.addListener(() {
       final String text = textEntryField.text;
       textEntryField.value = textEntryField.value.copyWith(
@@ -49,7 +47,7 @@ class ChatState extends State<Chat> {
         composing: TextRange.empty,
       );
     });
-    getMessages(0).then((messages) {
+    getChatMessages(currentUser, peerContact, 0).then((messages) {
       for (final message in messages) {
         _messages.add(message);
         if (message.index > _index) {
