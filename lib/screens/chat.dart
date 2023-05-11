@@ -24,7 +24,6 @@ class Chat extends StatefulWidget {
 }
 
 class ChatState extends State<Chat> {
-  int _index = 0;
   final List<MessageEntry> _messages = [];
   final TextEditingController textEntryField = TextEditingController();
   final FocusNode focusNode = FocusNode();
@@ -46,17 +45,13 @@ class ChatState extends State<Chat> {
         composing: TextRange.empty,
       );
     });
-    getChatMessages(currentUser, peerContact, 0).then((messages) {
+    getChatMessages(currentUser, peerContact).then((messages) {
       for (final message in messages) {
         _messages.add(message);
-        if (message.index > _index) {
-          _index = message.index;
-        }
       }
     }).catchError((err) => print(err));
-    watchMessages(_index).listen((entries) {
+    watchMessages().listen((entries) {
       for (final message in entries) {
-        _index = message.index;
         _chat.add(message);
       }
     });
@@ -129,11 +124,11 @@ class ChatState extends State<Chat> {
                     return Container(
                       padding: EdgeInsets.only(left: 14,right: 14,top: 10,bottom: 10),
                       child: Align(
-                        alignment: (_messages[index].source == "remote" ? Alignment.topLeft:Alignment.topRight),
+                        alignment: (_messages[index].toId == currentUser.id ? Alignment.topLeft : Alignment.topRight),
                         child: Container(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(20),
-                            color: (_messages[index].source == "remote" ? Colors.green.shade400:Colors.blue[400]),
+                            color: (_messages[index].toId == currentUser.id ? Colors.green.shade400 : Colors.blue[400]),
                           ),
                           padding: EdgeInsets.all(16),
                           child: Text(_messages[index].content, style: TextStyle(fontSize: 15),),

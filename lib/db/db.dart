@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:core';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:nostr/nostr.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -12,31 +13,29 @@ part 'db.g.dart';
 
 
 class MessageEntry {
-  final String content;
-  final String source;
-  final DbEvent event;
-  final int timestamp;
-  final int index;
+  final Npub npub; // public key in nostr event
+  final DbEvent dbEvent;
+  final EncryptedDirectMessage nostrEvent;
 
-  const MessageEntry({
-    required this.content,
-    required this.event,
-    required this.source,
-    required this.timestamp,
-    required this.index,
-  });
+  MessageEntry(this.npub, this.dbEvent, this.nostrEvent);
+
+  String get content => dbEvent.plaintext;//nostrEvent.getPlaintext();
+  int get fromId => dbEvent.fromContact;
+  int get toId => dbEvent.toContact;
+  int get timestamp => nostrEvent.createdAt;
 
   @override
   String toString() {
     return (StringBuffer('MessageEntry(')
           ..write('content: $content, ')
-          ..write('source: $source, ')
+          ..write('fromId: $fromId, ')
+          ..write('toId: $toId, ')
           ..write('timestamp: $timestamp, ')
-          ..write('index: $index, ')
           ..write(')'))
         .toString();
   }
 }
+
 
 // This class might be going away
 class Context {

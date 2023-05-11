@@ -25,7 +25,7 @@ class _ChatsListState extends State<ChatsList> {
   @override
   void initState() {
     super.initState();
-    getUserMessages(currentUser, 0).then((messages) {
+    getUserMessages(currentUser).then((messages) {
       // sort messages by peer and timestamp
       print('@@@@@@@@@@@@@@@@@@@@@@ messages $messages');
     });

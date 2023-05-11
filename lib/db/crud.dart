@@ -272,59 +272,34 @@ Future<void> storeReceivedEvent(
   );
 }
 
-class NostrEvent extends nostr.EncryptedDirectMessage {
-  final String plaintext;
-  final DbEvent dbEvent;
-  final bool isLocal;
-  final int index;
-  NostrEvent(nostr.Event event, this.plaintext, this.dbEvent, this.index, this.isLocal)
-      : super(event, verify: false);
+nostr.EncryptedDirectMessage nostrEvent(Npub npub, DbEvent event) {
+  nostr.Event nEvent = nostr.Event.partial();
+  nEvent.id = event.eventId;
+  nEvent.pubkey = npub.pubkey;
+  nEvent.content = event.content;
+  nEvent.createdAt = event.createdAt.millisecondsSinceEpoch;
+  nEvent.kind = event.kind;
+  // TODO: Need TAGS for id to pass isValid()
+  return nostr.EncryptedDirectMessage(nEvent, verify: false);
 }
 
-Future<List<NostrEvent>> nostrEvents(List<DbEvent> entries) async {
-  List<NostrEvent> events = [];
-  for (final entry in entries) {
-    Npub npub = await getNpubFromId(entry.pubkeyRef);
-    bool isLocal = (npub.privkey.length > 0);
-    nostr.Event event = nostr.Event.partial();
-    event.id = entry.eventId;
-    event.pubkey = npub.pubkey;
-    event.content = entry.content;
-    event.createdAt = entry.createdAt.millisecondsSinceEpoch;
-    event.kind = entry.kind;
-    assert(event.kind == 4);
-    // TODO: Need TAGS for id to pass isValid()
-    events.add(NostrEvent(event, entry.plaintext!, entry, entry.id, isLocal));
-  }
-  return events;
-}
-
-Future<List<NostrEvent>> getNostrEvents(String id) async {
-  List<DbEvent> entries = await (database.select(database.dbEvents)
-        ..where((t) => t.eventId.equals(id)))
-      .get();
-  return nostrEvents(entries);
-}
-
-Future<List<MessageEntry>> messageEntries(List<NostrEvent> events) async {
+Future<List<MessageEntry>> messageEntries(List<DbEvent> events) async {
   List<MessageEntry> messages = [];
   for (final event in events) {
-    messages.add(MessageEntry(
-      content: event.plaintext,
-      // check for if the pubkey is bob then he is the sender, ie local, sending to self
-      source: event.isLocal ? "local" : "remote",
-      event: event.dbEvent,
-      //timestamp: DateTime.fromMillisecondsSinceEpoch(event.createdAt * 1000), // needed?
-      timestamp: event.createdAt,
-      index: event.index, // probably shouldn't rely on this, consider deleting.
-    ));
+    Npub npub = await getNpubFromId(event.pubkeyRef);
+    messages.add(
+      MessageEntry(
+        npub,
+        event,
+        nostrEvent(npub, event),
+      )
+    );
   }
   return messages;
 }
 
-Future<List<MessageEntry>> getUserMessages(Contact user, int index) async {
+Future<List<MessageEntry>> getUserMessages(Contact user) async {
   List<DbEvent> entries = await (database.select(database.dbEvents)
-        ..where((t) => t.id.isBiggerOrEqualValue(index))
         ..where((t) => t.toContact.equals(user.id) | t.fromContact.equals(user.id))
         ..orderBy([
           (t) => OrderingTerm(
@@ -333,14 +308,12 @@ Future<List<MessageEntry>> getUserMessages(Contact user, int index) async {
               )
         ]))
       .get();
-  List<MessageEntry> messages =
-      await messageEntries(await nostrEvents(entries));
+  List<MessageEntry> messages = await messageEntries(entries);
   return messages;
 }
 
-Future<List<MessageEntry>> getChatMessages(Contact user, Contact peer, int index) async {
+Future<List<MessageEntry>> getChatMessages(Contact user, Contact peer) async {
   List<DbEvent> entries = await (database.select(database.dbEvents)
-        ..where((t) => t.id.isBiggerOrEqualValue(index))
         ..where((t) => (t.toContact.equals(user.id) & t.fromContact.equals(peer.id)) |
                         (t.toContact.equals(peer.id) & t.fromContact.equals(user.id)))
         ..orderBy([
@@ -350,20 +323,17 @@ Future<List<MessageEntry>> getChatMessages(Contact user, Contact peer, int index
               )
         ]))
       .get();
-  List<MessageEntry> messages =
-      await messageEntries(await nostrEvents(entries));
+  List<MessageEntry> messages = await messageEntries(entries);
   return messages;
 }
 
-Stream<List<MessageEntry>> watchMessages(int index) async* {
-  Stream<List<DbEvent>> entries = await (database.select(database.dbEvents)
-        ..where((t) => t.id.isBiggerOrEqualValue(index)))
+Stream<List<MessageEntry>> watchMessages() async* {
+  Stream<List<DbEvent>> entries = await database.select(database.dbEvents)
       .watch();
   await for (final entryList in entries) {
     // intermediate step of converting to nostr events in order to
     // perform the decryption
-    List<MessageEntry> messages =
-        await messageEntries(await nostrEvents(entryList));
+    List<MessageEntry> messages = await messageEntries(entryList);
     yield messages;
   }
 }
