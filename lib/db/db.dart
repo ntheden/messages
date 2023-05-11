@@ -11,6 +11,33 @@ import 'models.dart';
 part 'db.g.dart';
 
 
+class MessageEntry {
+  final String content;
+  final String source;
+  final DbEvent event;
+  final int timestamp;
+  final int index;
+
+  const MessageEntry({
+    required this.content,
+    required this.event,
+    required this.source,
+    required this.timestamp,
+    required this.index,
+  });
+
+  @override
+  String toString() {
+    return (StringBuffer('MessageEntry(')
+          ..write('content: $content, ')
+          ..write('source: $source, ')
+          ..write('timestamp: $timestamp, ')
+          ..write('index: $index, ')
+          ..write(')'))
+        .toString();
+  }
+}
+
 // This class might be going away
 class Context {
   final DbContext context;

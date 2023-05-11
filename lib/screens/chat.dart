@@ -5,7 +5,6 @@ import 'package:nostr/nostr.dart';
 import '../config/settings.dart';
 import '../components/chats/chats_entry.dart';
 import '../components/drawer/index.dart';
-import '../components/message_entry.dart';
 import '../constants/messages.dart';
 import '../db/crud.dart';
 import '../db/db.dart';
@@ -216,12 +215,5 @@ class ChatState extends State<Chat> {
 
   void addMessage(MessageEntry entry) {
     _messages.insert(0, entry);
-  }
-
-  void addMessages1(List<MessageEntry> entries) {
-    for (final message in entries.sublist(_index)) {
-      _messages.add(message);
-    }
-    _index = entries.length;
   }
 }

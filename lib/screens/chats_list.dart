@@ -19,11 +19,16 @@ class ChatsList extends StatefulWidget {
 
 class _ChatsListState extends State<ChatsList> {
   final Contact currentUser;
+  final List<Widget> _entries = [];
   _ChatsListState(this.currentUser);
 
   @override
   void initState() {
     super.initState();
+    getUserMessages(currentUser, 0).then((messages) {
+      // sort messages by peer and timestamp
+      print('@@@@@@@@@@@@@@@@@@@@@@ messages $messages');
+    });
   }
 
   @override
@@ -58,7 +63,7 @@ class _ChatsListState extends State<ChatsList> {
           */
           builder: (context, AsyncSnapshot<String> snapshot) {
             return Column(
-              children: getSome(),
+              children: getChatEntries(),
             );
           },
         ),
@@ -74,7 +79,7 @@ class _ChatsListState extends State<ChatsList> {
 
   List<Widget> myChatsEntries = [];
 
-  List<Widget> getSome() {
+  List<Widget> getChatEntries() {
     List<Widget> newEntries = [
       ChatsEntry(
         name: "John Jacob",

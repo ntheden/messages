@@ -4,7 +4,6 @@ import 'package:rxdart/rxdart.dart';
 
 import 'db.dart';
 import '../config/settings.dart';
-import '../components/message_entry.dart';
 import '../util/logging.dart';
 
 
@@ -314,8 +313,10 @@ Future<List<MessageEntry>> messageEntries(List<NostrEvent> events) async {
       content: event.plaintext,
       // check for if the pubkey is bob then he is the sender, ie local, sending to self
       source: event.isLocal ? "local" : "remote",
-      timestamp: DateTime.fromMillisecondsSinceEpoch(event.createdAt * 1000), // needed?
-      index: event.index,
+      event: event.dbEvent,
+      //timestamp: DateTime.fromMillisecondsSinceEpoch(event.createdAt * 1000), // needed?
+      timestamp: event.createdAt,
+      index: event.index, // probably shouldn't rely on this, consider deleting.
     ));
   }
   return messages;
