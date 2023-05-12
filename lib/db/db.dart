@@ -16,13 +16,19 @@ class MessageEntry {
   final Npub npub; // public key in nostr event
   final DbEvent dbEvent;
   final EncryptedDirectMessage nostrEvent;
+  Contact? from;
+  Contact? to;
 
-  MessageEntry(this.npub, this.dbEvent, this.nostrEvent);
+  MessageEntry(this.npub, this.dbEvent, this.nostrEvent, {
+    Contact? from,
+    Contact? to,
+  });
 
-  String get content => dbEvent.plaintext;//nostrEvent.getPlaintext();
+  String get content => getPlaintext();
   int get fromId => dbEvent.fromContact;
   int get toId => dbEvent.toContact;
   int get timestamp => nostrEvent.createdAt;
+  int get id => dbEvent.id;
 
   @override
   String toString() {
@@ -33,6 +39,29 @@ class MessageEntry {
           ..write('timestamp: $timestamp, ')
           ..write(')'))
         .toString();
+  }
+
+  String getPlaintext() {
+    // We cannot decrypt messages sent to others, so if a message
+    // was sent from our privkey on another device, we cannot
+    // decrypt it. A naive approach would be to send to self
+    // a copy of every message that is sent to someone else.
+    if (dbEvent.plaintext.length > 0) {
+      return dbEvent.plaintext;
+    }
+    if (to == null) {
+      return "<Failed to decrypt>";
+    }
+    String content = "";
+    return content;
+    /*
+    if (npub.privkey.length) {
+      try {
+        String content = nostrEvent.getPlaintext();
+      } catch (error) {
+      }
+    }
+    */
   }
 }
 
@@ -74,7 +103,7 @@ class Contact {
     return (StringBuffer('Contact(')
           ..write('id: ${contact.id}, ')
           ..write('name: ${contact.name}, ')
-          ..write('npubs: ${npubs}, ')
+          ..write('npubs: ${npubs}, ') // TODO: mask privkey
           ..write(')'))
         .toString();
   }

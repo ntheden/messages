@@ -7,19 +7,11 @@ import '../config/settings.dart';
 import '../util/logging.dart';
 
 
-// why doesn't this work??? anyways, we don't need it, as the chats_list
-// gets rebuilt with the user passed in from either /login or the drawer
-Stream<Contact> watchUserChanges() async* {
+// why doesn't this work???
+Stream<List<DbContact>> watchUser() async* {
   Stream<List<DbContact>> entries = await (database.select(database.dbContacts)
         ..where((c) => c.active.equals(true)))
       .watch();
-  await for (final items in entries) {
-    List<Contact> contacts = [];
-    items.forEach((contact) async => contacts.add(await getContact(contact)));
-    for (final contact in contacts) {
-      yield contact;
-    }
-  }
 }
 
 Future<void> switchUser(int id) async {
@@ -283,15 +275,54 @@ nostr.EncryptedDirectMessage nostrEvent(Npub npub, DbEvent event) {
   return nostr.EncryptedDirectMessage(nEvent, verify: false);
 }
 
-Future<List<MessageEntry>> messageEntries(List<DbEvent> events) async {
+Future<List<MessageEntry>> messageEntries(
+    List<DbEvent> events, [
+    Contact? userHint,
+    Contact? peerHint,
+  ]) async {
   List<MessageEntry> messages = [];
   for (final event in events) {
+    Contact? from;
+    Contact? to;
+    if (userHint != null) {
+      Npub? npub;
+      try {
+        npub = userHint?.npubs.singleWhere((npub) => npub.id == event.pubkeyRef);
+      } catch (error) {
+        // orElse was giving error:
+        // The value 'null' can't be returned from a function with return type 'Npub'
+        // because 'Npub' is not nullable.
+      }
+      from = npub != null ? userHint : peerHint;
+      if (peerHint == null) {
+        Npub? npub;
+        try {
+          npub = userHint?.npubs.singleWhere((npub) => npub.id == event.receiverRef);
+        } catch (error) {
+        }
+        to = npub != null ? userHint : peerHint;
+      } else {
+        Npub? npub;
+        try {
+          npub = peerHint?.npubs.singleWhere((npub) => npub.id == event.receiverRef);
+        } catch (error) {
+        }
+        to = npub != null ? peerHint : userHint;
+      }
+    }
+    String toStr = to?.id == userHint?.id ? "Me" : "unknown";
+    if (toStr == "Me") toStr += '(${userHint?.name})';
+
+    print('@@@@@@@@@@@@@@@@@@@@@@@@@@ from ${from?.name}');
+    print('@@@@@@@@@@@@@@@@@@@@@@@@@@ to $toStr');
     Npub npub = await getNpubFromId(event.pubkeyRef);
     messages.add(
       MessageEntry(
         npub,
         event,
         nostrEvent(npub, event),
+        from: from,
+        to: to,
       )
     );
   }
@@ -308,7 +339,7 @@ Future<List<MessageEntry>> getUserMessages(Contact user) async {
               )
         ]))
       .get();
-  List<MessageEntry> messages = await messageEntries(entries);
+  List<MessageEntry> messages = await messageEntries(entries, user);
   return messages;
 }
 
@@ -323,7 +354,7 @@ Future<List<MessageEntry>> getChatMessages(Contact user, Contact peer) async {
               )
         ]))
       .get();
-  List<MessageEntry> messages = await messageEntries(entries);
+  List<MessageEntry> messages = await messageEntries(entries, user, peer);
   return messages;
 }
 
@@ -351,10 +382,6 @@ Future<List<Npub>> getNpubs() async {
 Future<Npub> getNpubFromId(int id) async {
   return (database.select(database.npubs)..where((n) => n.id.equals(id)))
       .getSingle();
-}
-
-Future<List<DbContact>> getContacts() async {
-  return database.select(database.dbContacts).get();
 }
 
 Future<List<DbContact>> getContactsWithName(String name) async {
@@ -494,6 +521,17 @@ Future<Contact> getContactFromId(int id) async {
     ..where((c) => c.id.equals(id));
 
   return getContact(await contactQuery.getSingle());
+}
+
+Future<List<Contact>> getContacts(List<int> ids) async {
+  final contactQuery = database.select(database.dbContacts)
+    ..where((c) => c.id.isIn(ids));
+
+  List<Contact> contacts = [];
+  for (final contact in await contactQuery.get()) {
+    contacts.add(await getContact(contact));
+  }
+  return contacts;
 }
 
 Future<Contact> getContact(DbContact contact) async {

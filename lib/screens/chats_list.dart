@@ -19,16 +19,44 @@ class ChatsList extends StatefulWidget {
 
 class _ChatsListState extends State<ChatsList> {
   final Contact currentUser;
-  final List<Widget> _entries = [];
+  List<Widget> _chats = [];
   _ChatsListState(this.currentUser);
+  StreamController<DbContact> _users = StreamController<DbContact>();
+
+  void updateChatsList() {
+    print('@@@@@@@@@@@@@@@@@@@@@ updateChatsList: currentUser is $currentUser');
+    getUserMessages(currentUser).then((messages) {
+      // sort messages by peer and timestamp.
+      // can I use a sort function here
+      Map<int, dynamic> peers = {};
+      messages.forEach((message) {
+        for (final id in [message.fromId, message.toId]) {
+          int? timestamp = peers[id]?.timestamp;
+          if (timestamp == null || timestamp < message.timestamp) {
+            peers[id] = message;
+          }
+        }
+      });
+      print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ updateChatsList: peers $peers');
+      getContacts(peers.keys.toList()).then((contacts) {
+        setState(() {
+          _chats = getChatEntries(peers, contacts);
+        });
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 
   @override
   void initState() {
     super.initState();
-    getUserMessages(currentUser).then((messages) {
-      // sort messages by peer and timestamp
-      print('@@@@@@@@@@@@@@@@@@@@@@ messages $messages');
-    });
+    updateChatsList();
+    print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ why doesnt watchUser work??');
+    watchUser().listen((contact) => updateChatsList());
   }
 
   @override
@@ -63,7 +91,7 @@ class _ChatsListState extends State<ChatsList> {
           */
           builder: (context, AsyncSnapshot<String> snapshot) {
             return Column(
-              children: getChatEntries(),
+              children: _chats,
             );
           },
         ),
@@ -77,39 +105,25 @@ class _ChatsListState extends State<ChatsList> {
     );
   }
 
-  List<Widget> myChatsEntries = [];
-
-  List<Widget> getChatEntries() {
-    List<Widget> newEntries = [
-      ChatsEntry(
-        name: "John Jacob",
-        picture: NetworkImage(
-          "https://i.ytimg.com/vi/D7h9UMADesM/maxresdefault.jpg",
-        ),
-        type: "group",
-        sending: "Your",
-        lastTime: "02:45",
-        seeing: 2,
-        lastMessage: "https://github.com/",
-        currentUser: currentUser,
-      ),
-      Divider(height: 0),
-      ChatsEntry(
-        name: "Jinkle Hiemer",
-        picture: NetworkImage(
-          "https://i.ytimg.com/vi/D7h9UMADesM/maxresdefault.jpg",
-        ),
-        lastTime: "02:16",
-        type: "group",
-        sending: "Mesud",
-        lastMessage: "gece gece sinirim bozuldu.",
-        currentUser: currentUser,
-      ),
-      Divider(height: 0),
-    ];
-
-    myChatsEntries.addAll(newEntries);
-    return myChatsEntries;
+  List<Widget> getChatEntries(Map<int, dynamic> peers, List<Contact> contacts) {
+    List<Widget> newEntries = [];
+    contacts.forEach((contact) {
+      newEntries = [...newEntries, ...[
+          ChatsEntry(
+            name: contact.id == currentUser.id ? "Me" : contact.name,
+            picture: NetworkImage(
+              "https://i.ytimg.com/vi/D7h9UMADesM/maxresdefault.jpg",
+            ),
+            type: "group",
+            sending: "Your",
+            lastTime: "02:45",
+            seeing: 2,
+            lastMessage: "https://github.com/",
+            currentUser: currentUser,
+          ),
+          Divider(height: 0),
+        ]];
+    });
+    return newEntries;
   }
 }
-

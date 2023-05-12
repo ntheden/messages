@@ -15,9 +15,8 @@ import 'db/sink.dart';
 import 'router/delegate.dart';
 
 void main() async {
-  // I may get rid of "context", just get the active user,
-  getContext().then((context) {
-    runApp(MessagesApp(user: context.user));
+  getUser().then((user) {
+    runApp(MessagesApp(user: user));
   }).catchError((error) => runApp(MessagesApp()));
 }
 
