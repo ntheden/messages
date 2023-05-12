@@ -28,6 +28,7 @@ class ChatState extends State<Chat> {
   final TextEditingController textEntryField = TextEditingController();
   final FocusNode focusNode = FocusNode();
   final ScrollController scrollController = ScrollController();
+  StreamController<MessageEntry> _chat = StreamController<MessageEntry>();
   Contact currentUser;
   Contact peerContact;
 
@@ -62,8 +63,6 @@ class ChatState extends State<Chat> {
     textEntryField.dispose();
     super.dispose();
   }
-
-  StreamController<MessageEntry> _chat = StreamController<MessageEntry>();
 
   @override
   Widget build(BuildContext context) {
