@@ -310,11 +310,6 @@ Future<List<MessageEntry>> messageEntries(
         to = npub != null ? peerHint : userHint;
       }
     }
-    String toStr = to?.id == userHint?.id ? "Me" : "unknown";
-    if (toStr == "Me") toStr += '(${userHint?.name})';
-
-    print('@@@@@@@@@@@@@@@@@@@@@@@@@@ from ${from?.name}');
-    print('@@@@@@@@@@@@@@@@@@@@@@@@@@ to $toStr');
     Npub npub = await getNpubFromId(event.pubkeyRef);
     messages.add(
       MessageEntry(
