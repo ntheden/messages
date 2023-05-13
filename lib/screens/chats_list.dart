@@ -40,7 +40,6 @@ class _ChatsListState extends State<ChatsList> {
     watchMessages().listen((entries) {
       // TODO: This stream should be from not far back in time and
       // has to add its data to the existing list
-      print("@@@@@@@@@@@@@@@@@@@@@@ saw ${entries.length} entries");
       getChats(widget.currentUser, entries).then(
         (widgets) => widget.chats = List.from(widgets.reversed));
       setState(() => newChatToggle = !newChatToggle);
@@ -67,7 +66,16 @@ class _ChatsListState extends State<ChatsList> {
           )
         ],
       ),
-      body: ChatsWidgetList(),
+      body: ListView.builder(
+        itemCount: widget.chats.length,
+        itemBuilder: (BuildContext context, int index) {
+          return Column(
+            children: [
+              widget.chats[index],
+              Divider(height: 0),
+            ]);
+        },
+      ),
       drawer: DrawerScreen(),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -76,21 +84,6 @@ class _ChatsListState extends State<ChatsList> {
       ),
     );
   }
-
-
-  ListView ChatsWidgetList() {
-    return ListView.builder(
-      itemCount: widget.chats.length,
-      itemBuilder: (BuildContext context, int index) {
-        return Column(
-          children: [
-            widget.chats[index],
-            Divider(height: 0),
-          ]);
-      },
-    );
-  }
-
 }
 
 
@@ -111,17 +104,21 @@ Future<List<Widget>> getChats(user, messages) async {
 
   List<Widget> entries = [];
   for (final contact in contacts) {
+    MessageEntry message = peers[contact.id];
+    String name = contact.id == user.id ? "Me" : contact.name;
+    String pubkey = message.npub.pubkey;
+    String npubHint = pubkey.substring(0, 5) + '...' + pubkey.substring(59, 63);
     entries.add(
       ChatsEntry(
-        name: contact.id == user.id ? "Me" : contact.name,
+        name: '$name ($npubHint)',
         picture: NetworkImage(
           "https://i.ytimg.com/vi/D7h9UMADesM/maxresdefault.jpg",
         ),
-        type: "group",
-        sending: "Your",
-        lastTime: "02:45",
+        //type: "group",
+        //sending: message.from?.id == user.id ? "You" : "Them",
+        lastTime: "02:45", // get from timestamp
         seeing: 2,
-        lastMessage: "https://github.com/",
+        lastMessage: peers[contact.id].content,
         currentUser: user,
       )
     );
