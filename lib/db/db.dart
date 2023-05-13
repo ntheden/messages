@@ -24,7 +24,6 @@ class MessageEntry {
     Contact? to,
   });
 
-  String get content => getPlaintext();
   int get fromId => dbEvent.fromContact;
   int get toId => dbEvent.toContact;
   int get timestamp => nostrEvent.createdAt;
@@ -33,7 +32,6 @@ class MessageEntry {
   @override
   String toString() {
     return (StringBuffer('MessageEntry(')
-          ..write('content: $content, ')
           ..write('fromId: $fromId, ')
           ..write('toId: $toId, ')
           ..write('timestamp: $timestamp, ')
@@ -41,7 +39,7 @@ class MessageEntry {
         .toString();
   }
 
-  String getPlaintext() {
+  String getContent(String privkey) {
     // We cannot decrypt messages sent to others, so if a message
     // was sent from our privkey on another device, we cannot
     // decrypt it. A naive approach would be to send to self
@@ -49,19 +47,15 @@ class MessageEntry {
     if (dbEvent.plaintext.length > 0) {
       return dbEvent.plaintext;
     }
-    if (to == null) {
-      return "<Failed to decrypt>";
-    }
     String content = "";
-    return content;
-    /*
-    if (npub.privkey.length) {
-      try {
-        String content = nostrEvent.getPlaintext();
-      } catch (error) {
-      }
+    try {
+      content = nostrEvent.getPlaintext(privkey);
+      // TODO: Update database with the plaintext
+    } catch (error) {
+      //decryptError = true;
+      content = "<Failed to decrypt>";
     }
-    */
+    return content;
   }
 }
 
@@ -94,7 +88,7 @@ class Contact {
   bool get isLocal => contact.isLocal;
   bool get active => contact.active;
   String get name => contact.name;
-  String get pubkey => npubs[0].pubkey;
+  String get pubkey => npubs[0].pubkey; // FIXME
   String get privkey => npubs[0].privkey;
   int get id => contact.id;
 

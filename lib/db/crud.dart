@@ -196,6 +196,7 @@ Future<int> insertEvent(
 
   return database.into(database.dbEvents).insert(
         insert,
+        mode: InsertMode.insertOrReplace,
         onConflict: DoNothing(),
       );
 }

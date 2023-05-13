@@ -130,7 +130,7 @@ class ChatState extends State<Chat> {
                             color: (_messages[index].toId == currentUser.id ? Colors.green.shade400 : Colors.blue[400]),
                           ),
                           padding: EdgeInsets.all(16),
-                          child: Text(_messages[index].content, style: TextStyle(fontSize: 15),),
+                          child: Text(_messages[index].getContent(currentUser.privkey), style: TextStyle(fontSize: 15),),
                         ),
                       ),
                     );
