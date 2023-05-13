@@ -13,53 +13,21 @@ class ChatsList extends StatefulWidget {
   final Contact currentUser;
   List<Widget> chats = [];
   ChatsList(this.currentUser, {Key? key, this.title='Messages'}) : super(key: key) {
-    getChats().then((widgets) => chats = widgets);
+    // most recent on top - XXX Not sure if it's working
+    getUserMessages(currentUser).then(
+      (messages) => getChats(currentUser, messages).then(
+        (widgets) => chats = List.from(widgets.reversed)
+      )
+    );
   }
 
   @override
   _ChatsListState createState() => _ChatsListState();
-
-  Future<List<Widget>> getChats() async {
-    List<MessageEntry> messages = await getUserMessages(currentUser);
-
-    // sort messages by peer and timestamp.
-    // can I use a sort function here
-    Map<int, dynamic> peers = {};
-    messages.forEach((message) {
-      for (final id in [message.fromId, message.toId]) {
-        int? timestamp = peers[id]?.timestamp;
-        if (timestamp == null || timestamp < message.timestamp) {
-          peers[id] = message;
-        }
-      }
-    });
- 
-    List<Contact> contacts = await getContacts(peers.keys.toList());
-
-    List<Widget> entries = [];
-    for (final contact in contacts) {
-      entries.add(
-        ChatsEntry(
-          name: contact.id == currentUser.id ? "Me" : contact.name,
-          picture: NetworkImage(
-            "https://i.ytimg.com/vi/D7h9UMADesM/maxresdefault.jpg",
-          ),
-          type: "group",
-          sending: "Your",
-          lastTime: "02:45",
-          seeing: 2,
-          lastMessage: "https://github.com/",
-          currentUser: currentUser,
-        )
-      );
-    };
-    return entries;
-  }
 }
 
 class _ChatsListState extends State<ChatsList> {
-  @override
-  ChatsList get widget => super.widget;
+  @override ChatsList get widget => super.widget;
+  bool newChatToggle = false;
 
   @override
   void dispose() {
@@ -69,6 +37,14 @@ class _ChatsListState extends State<ChatsList> {
   @override
   void initState() {
     super.initState();
+    watchMessages().listen((entries) {
+      // TODO: This stream should be from not far back in time and
+      // has to add its data to the existing list
+      print("@@@@@@@@@@@@@@@@@@@@@@ saw ${entries.length} entries");
+      getChats(widget.currentUser, entries).then(
+        (widgets) => widget.chats = List.from(widgets.reversed));
+      setState(() => newChatToggle = !newChatToggle);
+    });
   }
 
   @override
@@ -91,16 +67,7 @@ class _ChatsListState extends State<ChatsList> {
           )
         ],
       ),
-      body: ListView.builder(
-        itemCount: widget.chats.length,
-        itemBuilder: (BuildContext context, int index) {
-          return Column(
-            children: [
-              widget.chats[index],
-              Divider(height: 0),
-            ]);
-        },
-      ),
+      body: ChatsWidgetList(),
       drawer: DrawerScreen(),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -109,4 +76,55 @@ class _ChatsListState extends State<ChatsList> {
       ),
     );
   }
+
+
+  ListView ChatsWidgetList() {
+    return ListView.builder(
+      itemCount: widget.chats.length,
+      itemBuilder: (BuildContext context, int index) {
+        return Column(
+          children: [
+            widget.chats[index],
+            Divider(height: 0),
+          ]);
+      },
+    );
+  }
+
+}
+
+
+Future<List<Widget>> getChats(user, messages) async {
+  // sort messages by peer and timestamp.
+  // can I use a sort function here
+  Map<int, dynamic> peers = {};
+  messages.forEach((message) {
+    for (final id in [message.fromId, message.toId]) {
+      int? timestamp = peers[id]?.timestamp;
+      if (timestamp == null || timestamp < message.timestamp) {
+        peers[id] = message;
+      }
+    }
+  });
+
+  List<Contact> contacts = await getContacts(peers.keys.toList());
+
+  List<Widget> entries = [];
+  for (final contact in contacts) {
+    entries.add(
+      ChatsEntry(
+        name: contact.id == user.id ? "Me" : contact.name,
+        picture: NetworkImage(
+          "https://i.ytimg.com/vi/D7h9UMADesM/maxresdefault.jpg",
+        ),
+        type: "group",
+        sending: "Your",
+        lastTime: "02:45",
+        seeing: 2,
+        lastMessage: "https://github.com/",
+        currentUser: user,
+      )
+    );
+  };
+  return entries;
 }
