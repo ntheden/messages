@@ -91,10 +91,15 @@ class _ChatsListState extends State<ChatsList> {
           )
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: widget.chats,
-        ),
+      body: ListView.builder(
+        itemCount: widget.chats.length,
+        itemBuilder: (BuildContext context, int index) {
+          return Column(
+            children: [
+              widget.chats[index],
+              Divider(height: 0),
+            ]);
+        },
       ),
       drawer: DrawerScreen(),
       floatingActionButton: FloatingActionButton(

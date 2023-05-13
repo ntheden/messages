@@ -27,6 +27,7 @@ class MessagesApp extends StatelessWidget {
   MessagesApp({super.key, Contact? this.user}) {
     routerDelegate.pushPage(name: user == null ? '/login' : '/chats', arguments: user);
     if (user != null) {
+      // FIXME: This is causing performance bottleneck at startup
       runEventSink();
     }
   }

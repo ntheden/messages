@@ -173,7 +173,6 @@ Future<DbEvent> getEvent(String id) async {
       .getSingle();
 }
 
-// Locally sourced events call this directly
 Future<int> insertEvent(
   nostr.Event event, 
   Contact fromContact,
@@ -202,7 +201,7 @@ Future<int> insertEvent(
 }
 
 
-// called by pages/chat
+// Locally sourced events call this directly, called by pages/chat
 Future<int> storeSentEvent(
     nostr.Event event, 
     Contact fromContact,
@@ -251,6 +250,7 @@ Future<void> storeReceivedEvent(
   Contact? fromContact = await getContactFromNpub(event.pubkey);
   if (fromContact == null) {
     // TODO: SPAM/DOS Protection
+    print('New contact? From ${event.pubkey}');
     fromContact = await createContact([event.pubkey], "no name");
   }
 
