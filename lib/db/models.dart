@@ -75,7 +75,6 @@ class DbEvents extends Table {
   IntColumn get receiverRef => integer().references(Npubs, #id)();
   IntColumn get toContact => integer().references(DbContacts, #id)();
   IntColumn get fromContact => integer().references(DbContacts, #id)();
-  TextColumn get fromRelay => text().withLength(min: 0, max: 64)();
   TextColumn get content => text().withLength(min: 0, max: 1024)();
   // TODO: Consider not storing the plaintext.
   TextColumn get plaintext => text().withLength(min: 0, max: 1024)();

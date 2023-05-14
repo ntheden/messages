@@ -10,10 +10,12 @@ class ChatsEntry extends StatelessWidget {
   const ChatsEntry({
     Key? key,
     required this.name,
+    required this.npub,
     required this.picture,
     this.lastMessage,
     required this.lastTime,
     required this.currentUser,
+    required this.peer,
     this.type = "user",
     this.sending = "İsimsiz Hesap",
     this.seeing = 0,
@@ -25,6 +27,7 @@ class ChatsEntry extends StatelessWidget {
   }) : super(key: key);
 
   final String name;
+  final String npub;
   final ImageProvider<Object> picture;
   final String? lastMessage;
   final String? sending;
@@ -37,6 +40,7 @@ class ChatsEntry extends StatelessWidget {
   final GestureTapCallback? onTap;
   final GestureLongPressCallback? onLongPress;
   final currentUser;
+  final peer;
 
   @override
   Widget build(BuildContext context) {
@@ -120,7 +124,7 @@ class ChatsEntry extends StatelessWidget {
       ),
       onTap: () {
         final routerDelegate = Get.put(MyRouterDelegate());
-        routerDelegate.pushPage(name: '/chat', arguments: {'user': currentUser, 'peer': currentUser});
+        routerDelegate.pushPage(name: '/chat', arguments: {'user': currentUser, 'peer': peer});
       },
     );
   }

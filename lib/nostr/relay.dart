@@ -54,7 +54,7 @@ class Relay {
       nostr.Message m = nostr.Message.deserialize(data);
       if ([m.type,].contains("EVENT")) {
         nostr.Event event = m.message;
-        storeReceivedEvent(event, fromRelay: name);
+        storeReceivedEvent(event);
       }
     };
     socket.stream.listen(
@@ -86,7 +86,6 @@ class Relay {
     ]) async {
     // we don't await it, but we might want to to get confirmation
     send(event.serialize());
-    insertEvent(event, from, to, plaintext: plaintext, fromRelay: name);
   }
 }
 

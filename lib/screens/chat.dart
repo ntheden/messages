@@ -31,8 +31,14 @@ class ChatState extends State<Chat> {
   StreamController<MessageEntry> _chat = StreamController<MessageEntry>();
   Contact currentUser;
   Contact peerContact;
+  // These filters should be done at the db query level, not sure how else
+  // to fix right now.
+  Set<int> _contactFilter = {};
+  Set<int> _seenFilter = {};
 
-  ChatState(this.currentUser, this.peerContact);
+  ChatState(this.currentUser, this.peerContact) {
+    _contactFilter = {currentUser.id, peerContact.id};
+  }
 
   @override
   void initState() {
@@ -48,10 +54,10 @@ class ChatState extends State<Chat> {
     });
     getChatMessages(currentUser, peerContact).then((messages) {
       for (final message in messages) {
-        _messages.add(message);
+        addMessage(message);
       }
     }).catchError((err) => print(err));
-    watchMessages().listen((entries) {
+    watchMessages(currentUser, peerContact).listen((entries) {
       for (final message in entries) {
         _chat.add(message);
       }
@@ -93,7 +99,8 @@ class ChatState extends State<Chat> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
-                      Text("Kriss Benwat",style: TextStyle( fontSize: 16 ,fontWeight: FontWeight.w600),),
+                      Text('${peerContact.name}(${peerContact.npubs[0].pubkey.substring(0, 5)})',
+                        style: TextStyle( fontSize: 16 ,fontWeight: FontWeight.w600),),
                       SizedBox(height: 6,),
                       Text("Online",style: TextStyle(color: Colors.grey.shade600, fontSize: 13),),
                     ],
@@ -204,10 +211,23 @@ class ChatState extends State<Chat> {
 
   sendMessage(String content) {
     Relays relays = getRelays({});
-    relays.sendMessage(content, from: currentUser!, to: currentUser!); // TODO
+    relays.sendMessage(content, from: currentUser, to: peerContact);
   }
 
   void addMessage(MessageEntry entry) {
-    _messages.insert(0, entry);
+    //
+    // Open to ways to improve this! Ideally at the database query level
+    //
+    // The reason we could see dups:
+    // 1. After getPlaintext() the message entry in the db is updated
+    //    causing an event.
+    // 2. A db store that hits a conflict and is ignored because it is
+    //    already there still produces an event, I think.
+    if (_seenFilter.contains(entry.id)) {
+      return;
+    }
+    _seenFilter.add(entry.id);
+    _messages.add(entry);
+    _messages.sort((b, a) => a.timestamp.compareTo(b.timestamp));
   }
 }

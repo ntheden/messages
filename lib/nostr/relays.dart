@@ -60,6 +60,7 @@ class Relays {
     relays?.forEach((relay) {
       relay.sendEvent(event, from, to, plaintext);
     });
+    insertEvent(event, from, to, plaintext: plaintext);
   }
 
   void listen([void Function(dynamic)? func=null]) {

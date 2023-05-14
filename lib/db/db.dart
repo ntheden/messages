@@ -16,13 +16,10 @@ class MessageEntry {
   final Npub npub; // public key in nostr event
   final DbEvent dbEvent;
   final EncryptedDirectMessage nostrEvent;
-  Contact? from;
-  Contact? to;
+  Contact from;
+  Contact to;
 
-  MessageEntry(this.npub, this.dbEvent, this.nostrEvent, {
-    Contact? from,
-    Contact? to,
-  });
+  MessageEntry(this.npub, this.dbEvent, this.nostrEvent, this.from, this.to);
 
   int get fromId => dbEvent.fromContact;
   int get toId => dbEvent.toContact;

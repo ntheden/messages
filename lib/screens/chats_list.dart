@@ -37,7 +37,7 @@ class _ChatsListState extends State<ChatsList> {
   @override
   void initState() {
     super.initState();
-    watchMessages().listen((entries) {
+    watchUserMessages(widget.currentUser).listen((entries) {
       // TODO: This stream should be from not far back in time and
       // has to add its data to the existing list
       getChats(widget.currentUser, entries).then(
@@ -105,12 +105,14 @@ Future<List<Widget>> getChats(user, messages) async {
   List<Widget> entries = [];
   for (final contact in contacts) {
     MessageEntry message = peers[contact.id];
+    // TODO: This formatting goes in the widget definition
     String name = contact.id == user.id ? "Me" : contact.name;
-    String pubkey = message.npub.pubkey;
+    String pubkey = contact.npubs[0].pubkey;
     String npubHint = pubkey.substring(0, 5) + '...' + pubkey.substring(59, 63);
     entries.add(
       ChatsEntry(
         name: '$name ($npubHint)',
+        npub: pubkey,
         picture: NetworkImage(
           "https://i.ytimg.com/vi/D7h9UMADesM/maxresdefault.jpg",
         ),
@@ -120,6 +122,7 @@ Future<List<Widget>> getChats(user, messages) async {
         seeing: 2,
         lastMessage: peers[contact.id].getContent(user.privkey),
         currentUser: user,
+        peer: contact,
       )
     );
   };

@@ -77,7 +77,7 @@ Future<Contact> createContactFromNpubs(List<Npub> npubs, String name,
   return contact;
 }
 
-Future<Contact> createContact(
+Future<void> createContact(
   List<String> npubs,
   String name, {
   bool isLocal = false,
@@ -122,9 +122,9 @@ Future<Contact> createContact(
         active: active,
         npub: npubEntries[0].pubkey,
       ),
-      npubEntries);
+      npubEntries,
+  );
   writeContact(contact);
-  return contact;
 }
 
 /*
@@ -173,13 +173,12 @@ Future<DbEvent> getEvent(String id) async {
       .getSingle();
 }
 
-Future<int> insertEvent(
+DbEventsCompanion _insertQuery(
   nostr.Event event, 
   Contact fromContact,
   Contact toContact, {
   String? plaintext,
-  String? fromRelay,
-}) async {
+}) {
   final insert = DbEventsCompanion.insert(
     eventId: event.id,
     pubkeyRef: fromContact.npubs[0].id,
@@ -188,19 +187,37 @@ Future<int> insertEvent(
     toContact: toContact.contact.id,
     content: event.content,
     createdAt: DateTime.fromMillisecondsSinceEpoch(event.createdAt * 1000),
-    fromRelay: fromRelay ?? "", // relay this event is received from, should be ref
     kind: event.kind,
     plaintext: plaintext ?? "",
     decryptError: false,
   );
+  print('@@@@@@@@@@@@@@@@@ insert $insert');
+  return insert;
+}
 
+Future<int> insertEvent(
+  nostr.Event event, 
+  Contact fromContact,
+  Contact toContact, {
+  String? plaintext,
+}) async {
   return database.into(database.dbEvents).insert(
-        insert,
-        mode: InsertMode.insertOrReplace,
+        _insertQuery(event, fromContact, toContact, plaintext: plaintext),
         onConflict: DoNothing(),
       );
 }
 
+Future<int> updateEvent(
+  nostr.Event event, 
+  Contact fromContact,
+  Contact toContact, {
+  String? plaintext,
+}) async {
+  return database.into(database.dbEvents).insert(
+        _insertQuery(event, fromContact, toContact, plaintext: plaintext),
+        mode: InsertMode.insertOrReplace,
+      );
+}
 
 // Locally sourced events call this directly, called by pages/chat
 Future<int> storeSentEvent(
@@ -208,15 +225,14 @@ Future<int> storeSentEvent(
     Contact fromContact,
     Contact toContact, {
     String? plaintext,
-    String? fromRelay,
   }) async {
   logEvent(event.createdAt * 1000, fromContact, toContact, plaintext ?? "<not decrypted>", rx: false);
+  print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ store sent event');
   return insertEvent(
     event,
     fromContact,
     toContact,
     plaintext: plaintext,
-    fromRelay: fromRelay,
   );
 }
 
@@ -224,7 +240,6 @@ Future<int> storeSentEvent(
 Future<void> storeReceivedEvent(
   nostr.Event event, {
   String? plaintext,
-  String? fromRelay,
 }) async {
   try {
     DbEvent entry = await getEvent(event.id);
@@ -241,27 +256,31 @@ Future<void> storeReceivedEvent(
   Contact? toContact = await getContactFromNpub(receiver!);
   if (toContact == null || !toContact.isLocal) {
     // TODO: This must be optimized.
-    // Current idea: relay watches a stream of local users' npubs, and
-    // filters event if the receiver npub is not in the list
+    // FIXME: toContact dones't have to be a local user!!!
     print('Filter: event destination is not a local user: ${receiver}');
     return;
   }
+  print('#################################');
   print('Received event ${event.id}');
+  print('receiver ${event.receiver}');
+  print('sender ${event.pubkey}');
+  print('#################################');
 
   Contact? fromContact = await getContactFromNpub(event.pubkey);
   if (fromContact == null) {
     // TODO: SPAM/DOS Protection
     print('New contact? From ${event.pubkey}');
-    fromContact = await createContact([event.pubkey], "no name");
+    await createContact([event.pubkey], "no name"); // TODO: Look up name from directory
+    fromContact = await getContactFromNpub(event.pubkey);
+    print('@@@@@@@@@@@@@@@@@@@@@@ created contact $fromContact');
   }
 
-  logEvent(event.createdAt * 1000, fromContact, toContact, plaintext ?? "<not decrypted>", rx: true);
+  logEvent(event.createdAt * 1000, fromContact!, toContact!, plaintext ?? "<not decrypted>", rx: true);
   insertEvent(
     event,
     fromContact,
     toContact,
     plaintext: plaintext,
-    fromRelay: fromRelay
   );
 }
 
@@ -277,54 +296,39 @@ nostr.EncryptedDirectMessage nostrEvent(Npub npub, DbEvent event) {
 }
 
 Future<List<MessageEntry>> messageEntries(
-    List<DbEvent> events, [
-    Contact? userHint,
+    List<DbEvent> events,
+    Contact userHint, [// Are these hint optimizations worth it?
     Contact? peerHint,
   ]) async {
   List<MessageEntry> messages = [];
   for (final event in events) {
-    Contact? from;
-    Contact? to;
-    if (userHint != null) {
-      Npub? npub;
-      try {
-        npub = userHint?.npubs.singleWhere((npub) => npub.id == event.pubkeyRef);
-      } catch (error) {
-        // orElse was giving error:
-        // The value 'null' can't be returned from a function with return type 'Npub'
-        // because 'Npub' is not nullable.
-      }
-      from = npub != null ? userHint : peerHint;
-      if (peerHint == null) {
-        Npub? npub;
-        try {
-          npub = userHint?.npubs.singleWhere((npub) => npub.id == event.receiverRef);
-        } catch (error) {
-        }
-        to = npub != null ? userHint : peerHint;
-      } else {
-        Npub? npub;
-        try {
-          npub = peerHint?.npubs.singleWhere((npub) => npub.id == event.receiverRef);
-        } catch (error) {
-        }
-        to = npub != null ? peerHint : userHint;
-      }
-    }
     Npub npub = await getNpubFromId(event.pubkeyRef);
+    Npub receiver = await getNpubFromId(event.receiverRef);
+    Contact? from = await getContactFromNpub(npub.pubkey);
+    Contact? to = await getContactFromNpub(receiver.pubkey);
+    /* Stupid optimizations
+    try {
+      userHint.npubs.firstWhere((n) => n.pubkey == npub.pubkey);
+      from = userHint;
+      if (peerHint == null) {
+        Npub receiver = await getNpubFromId(event.receiverRef);
+        to = await getContactFromNpub(receiver.pubkey);
+      } else {
+        to = peerHint;
+      }
+    } catch (error) {
+      to = userHint;
+      from = peerHint == null ? await getContactFromNpub(npub.pubkey) : peerHint;
+    }
+    */
     messages.add(
-      MessageEntry(
-        npub,
-        event,
-        nostrEvent(npub, event),
-        from: from,
-        to: to,
-      )
+      MessageEntry(npub, event, nostrEvent(npub, event), from!, to!)
     );
   }
   return messages;
 }
 
+// Gets all messages to/from current user
 Future<List<MessageEntry>> getUserMessages(Contact user) async {
   List<DbEvent> entries = await (database.select(database.dbEvents)
         ..where((t) => t.toContact.equals(user.id) | t.fromContact.equals(user.id))
@@ -339,6 +343,7 @@ Future<List<MessageEntry>> getUserMessages(Contact user) async {
   return messages;
 }
 
+// Gets all messages from/to current user and particular contact
 Future<List<MessageEntry>> getChatMessages(Contact user, Contact peer) async {
   List<DbEvent> entries = await (database.select(database.dbEvents)
         ..where((t) => (t.toContact.equals(user.id) & t.fromContact.equals(peer.id)) |
@@ -354,13 +359,39 @@ Future<List<MessageEntry>> getChatMessages(Contact user, Contact peer) async {
   return messages;
 }
 
-Stream<List<MessageEntry>> watchMessages() async* {
-  Stream<List<DbEvent>> entries = await database.select(database.dbEvents)
+// Watches all messages to/from current user
+Stream<List<MessageEntry>> watchUserMessages(Contact user) async* {
+  Stream<List<DbEvent>> entries = await (database.select(database.dbEvents)
+      ..where((m) => m.fromContact.equals(user.id) | m.toContact.equals(user.id))
+      ..orderBy([
+        (t) => OrderingTerm(
+              expression: t.createdAt,
+              mode: OrderingMode.desc,
+            )
+      ]))
       .watch();
   await for (final entryList in entries) {
     // intermediate step of converting to nostr events in order to
     // perform the decryption
-    List<MessageEntry> messages = await messageEntries(entryList);
+    List<MessageEntry> messages = await messageEntries(entryList, user);
+    yield messages;
+  }
+}
+
+// Watches all messages from/to current user and particular contact
+Stream<List<MessageEntry>> watchMessages(Contact user, Contact peer) async* {
+  Stream<List<DbEvent>> entries = await (database.select(database.dbEvents)
+      ..where((t) => (t.toContact.equals(user.id) & t.fromContact.equals(peer.id)) |
+                      (t.toContact.equals(peer.id) & t.fromContact.equals(user.id)))
+      ..orderBy([
+        (t) => OrderingTerm(
+              expression: t.createdAt,
+              mode: OrderingMode.desc,
+            )
+      ]))
+      .watch();
+  await for (final entryList in entries) {
+    List<MessageEntry> messages = await messageEntries(entryList, user, peer);
     yield messages;
   }
 }
