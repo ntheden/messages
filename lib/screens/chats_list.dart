@@ -120,7 +120,7 @@ Future<List<Widget>> getChats(user, messages) async {
         //sending: message.from?.id == user.id ? "You" : "Them",
         lastTime: "02:45", // get from timestamp
         seeing: 2,
-        lastMessage: peers[contact.id].getContent(user.privkey),
+        lastMessage: peers[contact.id].content,
         currentUser: user,
         peer: contact,
       )

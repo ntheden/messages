@@ -23,22 +23,28 @@ class Chat extends StatefulWidget {
   ChatState createState() => ChatState(currentUser, peerContact);
 }
 
+class _MessageEntry {
+  MessageEntry message;
+  Key key;
+
+  int get toId => message.toId;
+  String get content => message.content;
+
+  _MessageEntry(this.message, this.key);
+}
+
 class ChatState extends State<Chat> {
   final List<MessageEntry> _messages = [];
   final TextEditingController textEntryField = TextEditingController();
   final FocusNode focusNode = FocusNode();
   final ScrollController scrollController = ScrollController();
   StreamController<MessageEntry> _chat = StreamController<MessageEntry>();
+  bool newMessageToggle = false;
   Contact currentUser;
   Contact peerContact;
-  // These filters should be done at the db query level, not sure how else
-  // to fix right now.
-  Set<int> _contactFilter = {};
-  Set<int> _seenFilter = {};
+  Set<int> _seen = {};
 
-  ChatState(this.currentUser, this.peerContact) {
-    _contactFilter = {currentUser.id, peerContact.id};
-  }
+  ChatState(this.currentUser, this.peerContact);
 
   @override
   void initState() {
@@ -54,19 +60,31 @@ class ChatState extends State<Chat> {
     });
     getChatMessages(currentUser, peerContact).then((messages) {
       for (final message in messages) {
+        //addMessage(MessageEntry(message, UniqueKey()));
         addMessage(message);
       }
     }).catchError((err) => print(err));
     watchMessages(currentUser, peerContact).listen((entries) {
+      print('@@@@@@@@@@@@@@@@@@ number of entries: ${entries.length}');
       for (final message in entries) {
-        _chat.add(message);
+        if (_seen.contains(message.id)) {
+          print('"${message.content}" was already seen');
+          continue;
+        }
+        _seen.add(message.id);
+        // wait for builder
+        //Future.delayed(Duration(seconds: 1), () => _chat.add(MessageEntry(message, UniqueKey())));
+        //_chat.add(MessageEntry(message, UniqueKey()));
+        addMessage(message);
       }
+      setState(() => newMessageToggle = !newMessageToggle);
     });
   }
 
   @override
   void dispose() {
     textEntryField.dispose();
+    // TODO: Delete the watchMessages stream
     super.dispose();
   }
 
@@ -114,38 +132,29 @@ class ChatState extends State<Chat> {
       ),
       body: Stack(
         children: <Widget>[
-          StreamBuilder(
-            stream: _chat.stream,
-            builder: (context, AsyncSnapshot<MessageEntry> snapshot) {
-              if (snapshot.hasData) {
-                addMessage(snapshot.data!);
-
-                return ListView.builder(
-                  reverse: true,
-                  controller: scrollController,
-                  itemCount: _messages.length,
-                  shrinkWrap: true,
-                  padding: EdgeInsets.only(top: 10, bottom: 10),
-                  itemBuilder: (context, index) {
-                    return Container(
-                      padding: EdgeInsets.only(left: 14,right: 14,top: 10,bottom: 10),
-                      child: Align(
-                        alignment: (_messages[index].toId == currentUser.id ? Alignment.topLeft : Alignment.topRight),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: (_messages[index].toId == currentUser.id ? Colors.green.shade400 : Colors.blue[400]),
-                          ),
-                          padding: EdgeInsets.all(16),
-                          child: Text(_messages[index].getContent(currentUser.privkey), style: TextStyle(fontSize: 15),),
-                        ),
-                      ),
-                    );
-                  },
-                );
-              }
-              return const LinearProgressIndicator();
-            }
+          ListView.builder(
+            reverse: true,
+            controller: scrollController,
+            itemCount: _messages.length,
+            shrinkWrap: true,
+            padding: EdgeInsets.only(top: 10, bottom: 10),
+            itemBuilder: (context, index) {
+              //print('@@@@@@@@@@@@@@@@@@@@@@@@ itemBuilder: index $index');
+              return Container(
+                padding: EdgeInsets.only(left: 14,right: 14,top: 10,bottom: 10),
+                child: Align(
+                  alignment: (_messages[index].toId == currentUser.id ? Alignment.topLeft : Alignment.topRight),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      color: (_messages[index].toId == currentUser.id ? Colors.green.shade400 : Colors.blue[400]),
+                    ),
+                    padding: EdgeInsets.all(16),
+                    child: Text(_messages[index].content, style: TextStyle(fontSize: 15),),
+                  ),
+                ),
+              );
+            },
           ),
           Align(
             alignment: Alignment.bottomLeft,
@@ -215,19 +224,8 @@ class ChatState extends State<Chat> {
   }
 
   void addMessage(MessageEntry entry) {
-    //
-    // Open to ways to improve this! Ideally at the database query level
-    //
-    // The reason we could see dups:
-    // 1. After getPlaintext() the message entry in the db is updated
-    //    causing an event.
-    // 2. A db store that hits a conflict and is ignored because it is
-    //    already there still produces an event, I think.
-    if (_seenFilter.contains(entry.id)) {
-      return;
-    }
-    _seenFilter.add(entry.id);
-    _messages.add(entry);
-    _messages.sort((b, a) => a.timestamp.compareTo(b.timestamp));
+    print('@@@@@@@@@@@@@@@@@ received a msg "${entry.content}"');
+    _messages.insert(0, entry);
+    //_messages.sort((b, a) => a.timestamp.compareTo(b.timestamp));
   }
 }

@@ -1,7 +1,7 @@
 import '../nostr/relays.dart';
 
 Map<String, String> relaySettings = {
-  'nostr_relay': 'ws://192.168.50.162:6969',
+  //'nostr_relay': 'ws://192.168.50.162:6969',
   'monstr_relay': 'ws://192.168.50.144:8081',
 };
 

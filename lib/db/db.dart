@@ -25,6 +25,7 @@ class MessageEntry {
   int get toId => dbEvent.toContact;
   int get timestamp => nostrEvent.createdAt;
   int get id => dbEvent.id;
+  String get content => dbEvent.plaintext;
 
   @override
   String toString() {
@@ -34,25 +35,6 @@ class MessageEntry {
           ..write('timestamp: $timestamp, ')
           ..write(')'))
         .toString();
-  }
-
-  String getContent(String privkey) {
-    // We cannot decrypt messages sent to others, so if a message
-    // was sent from our privkey on another device, we cannot
-    // decrypt it. A naive approach would be to send to self
-    // a copy of every message that is sent to someone else.
-    if (dbEvent.plaintext.length > 0) {
-      return dbEvent.plaintext;
-    }
-    String content = "";
-    try {
-      content = nostrEvent.getPlaintext(privkey);
-      // TODO: Update database with the plaintext
-    } catch (error) {
-      //decryptError = true;
-      content = "<Failed to decrypt>";
-    }
-    return content;
   }
 }
 

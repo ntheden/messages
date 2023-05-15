@@ -56,11 +56,11 @@ class Relays {
     sendEvent(event, from, to, content);
   }
 
-  sendEvent(Event event, from, to, [String? plaintext]) {
+  sendEvent(Event event, from, to, plaintext) {
     relays?.forEach((relay) {
       relay.sendEvent(event, from, to, plaintext);
     });
-    insertEvent(event, from, to, plaintext: plaintext);
+    storeSentEvent(event, from, to, plaintext);
   }
 
   void listen([void Function(dynamic)? func=null]) {

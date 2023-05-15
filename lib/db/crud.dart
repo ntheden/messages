@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:drift/drift.dart';
 import 'package:nostr/nostr.dart' as nostr;
 import 'package:rxdart/rxdart.dart';
@@ -178,6 +179,7 @@ DbEventsCompanion _insertQuery(
   Contact fromContact,
   Contact toContact, {
   String? plaintext,
+  bool? decryptError,
 }) {
   final insert = DbEventsCompanion.insert(
     eventId: event.id,
@@ -189,7 +191,7 @@ DbEventsCompanion _insertQuery(
     createdAt: DateTime.fromMillisecondsSinceEpoch(event.createdAt * 1000),
     kind: event.kind,
     plaintext: plaintext ?? "",
-    decryptError: false,
+    decryptError: decryptError ?? false,
   );
   print('@@@@@@@@@@@@@@@@@ insert $insert');
   return insert;
@@ -200,9 +202,16 @@ Future<int> insertEvent(
   Contact fromContact,
   Contact toContact, {
   String? plaintext,
+  bool? decryptError,
 }) async {
   return database.into(database.dbEvents).insert(
-        _insertQuery(event, fromContact, toContact, plaintext: plaintext),
+        _insertQuery(
+          event,
+          fromContact,
+          toContact,
+          plaintext: plaintext,
+          decryptError: decryptError
+        ),
         onConflict: DoNothing(),
       );
 }
@@ -212,9 +221,10 @@ Future<int> updateEvent(
   Contact fromContact,
   Contact toContact, {
   String? plaintext,
+  bool? decryptError,
 }) async {
   return database.into(database.dbEvents).insert(
-        _insertQuery(event, fromContact, toContact, plaintext: plaintext),
+        _insertQuery(event, fromContact, toContact, plaintext: plaintext, decryptError: decryptError),
         mode: InsertMode.insertOrReplace,
       );
 }
@@ -223,10 +233,10 @@ Future<int> updateEvent(
 Future<int> storeSentEvent(
     nostr.Event event, 
     Contact fromContact,
-    Contact toContact, {
-    String? plaintext,
-  }) async {
-  logEvent(event.createdAt * 1000, fromContact, toContact, plaintext ?? "<not decrypted>", rx: false);
+    Contact toContact,
+    String plaintext,
+  ) async {
+  logEvent(event.createdAt * 1000, fromContact, toContact, plaintext, rx: false);
   print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ store sent event');
   return insertEvent(
     event,
@@ -275,12 +285,22 @@ Future<void> storeReceivedEvent(
     print('@@@@@@@@@@@@@@@@@@@@@@ created contact $fromContact');
   }
 
+  Npub receiveNpub = await getNpub(receiver!);
+  String? plaintext = null;
+  bool decryptError = false;
+  try {
+    plaintext = event.getPlaintext(receiveNpub.privkey);
+  } catch (error) {
+    decryptError = true;
+  }
+
   logEvent(event.createdAt * 1000, fromContact!, toContact!, plaintext ?? "<not decrypted>", rx: true);
   insertEvent(
     event,
     fromContact,
     toContact,
-    plaintext: plaintext,
+    plaintext: plaintext ?? "",
+    decryptError: decryptError,
   );
 }
 

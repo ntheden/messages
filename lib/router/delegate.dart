@@ -83,10 +83,8 @@ class MyRouterDelegate extends RouterDelegate<List<RouteSettings>>
   }
 
   void pushPage({required String name, dynamic arguments}) {
-    print('@@@@@@@@@@@@@@@@@@@@ pushing page $name');
     pages.removeWhere((page) => page.name == name);
     pages.add(createPage(RouteSettings(name: name, arguments: arguments)));
-    print('@@@@@@@@@@@@@@@@@@@@ pages are $pages');
 
     notifyListeners();
   }
