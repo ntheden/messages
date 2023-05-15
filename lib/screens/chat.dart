@@ -23,28 +23,24 @@ class Chat extends StatefulWidget {
   ChatState createState() => ChatState(currentUser, peerContact);
 }
 
-class _MessageEntry {
-  MessageEntry message;
-  Key key;
-
-  int get toId => message.toId;
-  String get content => message.content;
-
-  _MessageEntry(this.message, this.key);
-}
-
 class ChatState extends State<Chat> {
   final List<MessageEntry> _messages = [];
   final TextEditingController textEntryField = TextEditingController();
   final FocusNode focusNode = FocusNode();
   final ScrollController scrollController = ScrollController();
-  StreamController<MessageEntry> _chat = StreamController<MessageEntry>();
   bool newMessageToggle = false;
   Contact currentUser;
   Contact peerContact;
   Set<int> _seen = {};
 
   ChatState(this.currentUser, this.peerContact);
+  StreamController<List<MessageEntry>> _stream = StreamController<List<MessageEntry>>();
+
+  double screenAwareHeight(double size, BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    double drawingHeight = mediaQuery.size.height - mediaQuery.padding.top;
+    return size * drawingHeight;
+  }
 
   @override
   void initState() {
@@ -64,7 +60,9 @@ class ChatState extends State<Chat> {
         addMessage(message);
       }
     }).catchError((err) => print(err));
-    watchMessages(currentUser, peerContact).listen((entries) {
+    print(watchMessages(currentUser, peerContact));
+    _stream.addStream(watchMessages(currentUser, peerContact));
+    _stream.stream.listen((entries) {
       print('@@@@@@@@@@@@@@@@@@ number of entries: ${entries.length}');
       for (final message in entries) {
         if (_seen.contains(message.id)) {
@@ -77,14 +75,16 @@ class ChatState extends State<Chat> {
         //_chat.add(MessageEntry(message, UniqueKey()));
         addMessage(message);
       }
-      setState(() => newMessageToggle = !newMessageToggle);
+      if (mounted) {
+        setState(() => newMessageToggle = !newMessageToggle);
+      }
     });
   }
 
   @override
   void dispose() {
     textEntryField.dispose();
-    // TODO: Delete the watchMessages stream
+    //_stream.close();
     super.dispose();
   }
 
@@ -132,29 +132,32 @@ class ChatState extends State<Chat> {
       ),
       body: Stack(
         children: <Widget>[
-          ListView.builder(
-            reverse: true,
-            controller: scrollController,
-            itemCount: _messages.length,
-            shrinkWrap: true,
-            padding: EdgeInsets.only(top: 10, bottom: 10),
-            itemBuilder: (context, index) {
-              //print('@@@@@@@@@@@@@@@@@@@@@@@@ itemBuilder: index $index');
-              return Container(
-                padding: EdgeInsets.only(left: 14,right: 14,top: 10,bottom: 10),
-                child: Align(
-                  alignment: (_messages[index].toId == currentUser.id ? Alignment.topLeft : Alignment.topRight),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      color: (_messages[index].toId == currentUser.id ? Colors.green.shade400 : Colors.blue[400]),
+          Container(
+            height: screenAwareHeight(0.85, context),
+            child: ListView.builder(
+              reverse: true,
+              controller: scrollController,
+              itemCount: _messages.length,
+              shrinkWrap: true,
+              padding: EdgeInsets.only(top: 10, bottom: 10),
+              itemBuilder: (context, index) {
+                //print('@@@@@@@@@@@@@@@@@@@@@@@@ itemBuilder: index $index');
+                return Container(
+                  padding: EdgeInsets.only(left: 14,right: 14,top: 10,bottom: 10),
+                  child: Align(
+                    alignment: (_messages[index].toId == currentUser.id ? Alignment.topLeft : Alignment.topRight),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: (_messages[index].toId == currentUser.id ? Colors.green.shade400 : Colors.blue[400]),
+                      ),
+                      padding: EdgeInsets.all(16),
+                      child: Text(_messages[index].content, style: TextStyle(fontSize: 15),),
                     ),
-                    padding: EdgeInsets.all(16),
-                    child: Text(_messages[index].content, style: TextStyle(fontSize: 15),),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
           Align(
             alignment: Alignment.bottomLeft,
@@ -226,6 +229,5 @@ class ChatState extends State<Chat> {
   void addMessage(MessageEntry entry) {
     print('@@@@@@@@@@@@@@@@@ received a msg "${entry.content}"');
     _messages.insert(0, entry);
-    //_messages.sort((b, a) => a.timestamp.compareTo(b.timestamp));
   }
 }
