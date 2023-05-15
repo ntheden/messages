@@ -35,6 +35,7 @@ class ChatState extends State<Chat> {
 
   ChatState(this.currentUser, this.peerContact);
   StreamController<List<MessageEntry>> _stream = StreamController<List<MessageEntry>>();
+  StreamSubscription<List<MessageEntry>>? subscription;
 
   double screenAwareHeight(double size, BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
@@ -54,19 +55,20 @@ class ChatState extends State<Chat> {
         composing: TextRange.empty,
       );
     });
+    /*
     getChatMessages(currentUser, peerContact).then((messages) {
       for (final message in messages) {
         //addMessage(MessageEntry(message, UniqueKey()));
         addMessage(message);
       }
     }).catchError((err) => print(err));
-    print(watchMessages(currentUser, peerContact));
+    */
     _stream.addStream(watchMessages(currentUser, peerContact));
-    _stream.stream.listen((entries) {
+    subscription = _stream.stream.listen((entries) {
       print('@@@@@@@@@@@@@@@@@@ number of entries: ${entries.length}');
       for (final message in entries) {
         if (_seen.contains(message.id)) {
-          print('"${message.content}" was already seen');
+          //print('"${message.content}" was already seen');
           continue;
         }
         _seen.add(message.id);
@@ -75,16 +77,14 @@ class ChatState extends State<Chat> {
         //_chat.add(MessageEntry(message, UniqueKey()));
         addMessage(message);
       }
-      if (mounted) {
-        setState(() => newMessageToggle = !newMessageToggle);
-      }
+      setState(() => newMessageToggle = !newMessageToggle);
     });
   }
 
   @override
   void dispose() {
     textEntryField.dispose();
-    //_stream.close();
+    subscription?.cancel();
     super.dispose();
   }
 

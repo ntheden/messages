@@ -406,7 +406,7 @@ Stream<List<MessageEntry>> watchMessages(Contact user, Contact peer) async* {
       ..orderBy([
         (t) => OrderingTerm(
               expression: t.createdAt,
-              mode: OrderingMode.desc,
+              mode: OrderingMode.asc,
             )
       ]))
       .watch();
