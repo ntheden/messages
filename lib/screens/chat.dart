@@ -55,26 +55,17 @@ class ChatState extends State<Chat> {
         composing: TextRange.empty,
       );
     });
-    /*
-    getChatMessages(currentUser, peerContact).then((messages) {
-      for (final message in messages) {
-        //addMessage(MessageEntry(message, UniqueKey()));
-        addMessage(message);
-      }
-    }).catchError((err) => print(err));
-    */
     _stream.addStream(watchMessages(currentUser, peerContact));
     subscription = _stream.stream.listen((entries) {
       print('@@@@@@@@@@@@@@@@@@ number of entries: ${entries.length}');
       for (final message in entries) {
+        // TODO: This needs to be optimized - possibly cancel the stream
+        // and restart it from the latest message.id
         if (_seen.contains(message.id)) {
           //print('"${message.content}" was already seen');
           continue;
         }
         _seen.add(message.id);
-        // wait for builder
-        //Future.delayed(Duration(seconds: 1), () => _chat.add(MessageEntry(message, UniqueKey())));
-        //_chat.add(MessageEntry(message, UniqueKey()));
         addMessage(message);
       }
       setState(() => newMessageToggle = !newMessageToggle);
@@ -141,7 +132,6 @@ class ChatState extends State<Chat> {
               shrinkWrap: true,
               padding: EdgeInsets.only(top: 10, bottom: 10),
               itemBuilder: (context, index) {
-                //print('@@@@@@@@@@@@@@@@@@@@@@@@ itemBuilder: index $index');
                 return Container(
                   padding: EdgeInsets.only(left: 14,right: 14,top: 10,bottom: 10),
                   child: Align(
@@ -227,7 +217,7 @@ class ChatState extends State<Chat> {
   }
 
   void addMessage(MessageEntry entry) {
-    print('@@@@@@@@@@@@@@@@@ received a msg "${entry.content}"');
+    //print('@@@@@@@@@@@@@@@@@ received a msg "${entry.content}"');
     _messages.insert(0, entry);
   }
 }

@@ -11,15 +11,8 @@ import '../db/db.dart';
 class ChatsList extends StatefulWidget {
   final String title;
   final Contact currentUser;
-  List<Widget> chats = [];
-  ChatsList(this.currentUser, {Key? key, this.title='Messages'}) : super(key: key) {
-    // most recent on top - XXX Not sure if it's working
-    getUserMessages(currentUser).then(
-      (messages) => getChats(currentUser, messages).then(
-        (widgets) => chats = List.from(widgets.reversed)
-      )
-    );
-  }
+  List<Widget> chats = []; // TODO: move this back to State
+  ChatsList(this.currentUser, {Key? key, this.title='Messages'}) : super(key: key);
 
   @override
   _ChatsListState createState() => _ChatsListState();
@@ -41,7 +34,7 @@ class _ChatsListState extends State<ChatsList> {
       // TODO: This stream should be from not far back in time and
       // has to add its data to the existing list
       getChats(widget.currentUser, entries).then(
-        (widgets) => widget.chats = List.from(widgets.reversed));
+        (widgets) => widget.chats = widgets);
       setState(() => newChatToggle = !newChatToggle);
     });
   }
@@ -93,6 +86,13 @@ Future<List<Widget>> getChats(user, messages) async {
   Map<int, dynamic> peers = {};
   messages.forEach((message) {
     for (final id in [message.fromId, message.toId]) {
+      // This does not need to check if the contact is a local user,
+      // just check against currentUser, since this is only for
+      // drawing the widgets
+      if (id == user.id && (message.fromId != message.toId)) {
+        // Record this under the remote contact, only
+        continue;
+      }
       int? timestamp = peers[id]?.timestamp;
       if (timestamp == null || timestamp < message.timestamp) {
         peers[id] = message;
