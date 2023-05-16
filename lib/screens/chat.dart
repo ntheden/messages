@@ -9,6 +9,7 @@ import '../constants/messages.dart';
 import '../db/crud.dart';
 import '../db/db.dart';
 import '../nostr/relays.dart';
+import '../util/date.dart';
 
 class Chat extends StatefulWidget {
   late Contact currentUser;
@@ -24,7 +25,7 @@ class Chat extends StatefulWidget {
 }
 
 class ChatState extends State<Chat> {
-  final List<MessageEntry> _messages = [];
+  final List<dynamic> _messages = [];
   final TextEditingController textEntryField = TextEditingController();
   final FocusNode focusNode = FocusNode();
   final ScrollController scrollController = ScrollController();
@@ -68,6 +69,7 @@ class ChatState extends State<Chat> {
         _seen.add(message.id);
         addMessage(message);
       }
+      addMarkers();
       setState(() => newMessageToggle = !newMessageToggle);
     });
   }
@@ -132,20 +134,7 @@ class ChatState extends State<Chat> {
               shrinkWrap: true,
               padding: EdgeInsets.only(top: 10, bottom: 10),
               itemBuilder: (context, index) {
-                return Container(
-                  padding: EdgeInsets.only(left: 14,right: 14,top: 10,bottom: 10),
-                  child: Align(
-                    alignment: (_messages[index].toId == currentUser.id ? Alignment.topLeft : Alignment.topRight),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        color: (_messages[index].toId == currentUser.id ? Colors.green.shade400 : Colors.blue[400]),
-                      ),
-                      padding: EdgeInsets.all(16),
-                      child: Text(_messages[index].content, style: TextStyle(fontSize: 15),),
-                    ),
-                  ),
-                );
+                return listBuilderEntry(index);
               },
             ),
           ),
@@ -220,4 +209,86 @@ class ChatState extends State<Chat> {
     //print('@@@@@@@@@@@@@@@@@ received a msg "${entry.content}"');
     _messages.insert(0, entry);
   }
+
+  void addMarkers() {
+    // Remove markers before re-adding them
+    List<dynamic> cleaned = _messages.where((widget) => !(widget is String)).toList();
+    _messages.clear();
+    _messages.addAll(cleaned);
+    _messages.replaceRange(0, _messages.length, insertStrings(_messages));
+    /*
+    for (int index = 1; index < _messages.length; index += 2) {
+      _messages.insert(index, DateTime.now().formattedDate());
+    }
+    */
+  }
+
+  Widget? listBuilderEntry(index) {
+    if (_messages[index] is String) {
+      return Container(
+        padding: EdgeInsets.only(left: 14,right: 14,top: 5, bottom: 5),
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: Container(
+            child: Text(_messages[index], style: TextStyle(fontSize: 10),),
+          ),
+        ),
+      );
+    }
+    return Container(
+      padding: EdgeInsets.only(left: 14,right: 14,top: 10,bottom: 10),
+      child: Align(
+        alignment: (_messages[index].toId == currentUser.id ? Alignment.topLeft : Alignment.topRight),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            color: (_messages[index].toId == currentUser.id ? Colors.green.shade400 : Colors.blue[400]),
+          ),
+          padding: EdgeInsets.all(16),
+          child: Text(_messages[index].content, style: TextStyle(fontSize: 15),),
+        ),
+      ),
+    );
+  }
+}
+
+List<dynamic> insertStrings(List<dynamic> messages) {
+  List<dynamic> result = [];
+
+  DateTime firstMessage = timezoned(messages[messages.length - 1].timestamp);
+
+  for (int i = 0; i < messages.length; i++) {
+    MessageEntry currentMessage = messages[i];
+    DateTime currentTimestamp = timezoned(currentMessage.timestamp);
+
+    if (i == 0) {
+      result.add(currentMessage);
+      continue;
+    }
+
+    MessageEntry previousMessage = messages[i - 1];
+    DateTime previousTimestamp = timezoned(previousMessage.timestamp);
+
+    if (currentTimestamp.difference(previousTimestamp).inHours >= 5 &&
+        currentTimestamp.day == previousTimestamp.day) {
+      String formattedTime =
+          "${currentTimestamp.hour.toString().padLeft(2, '0')}:${currentTimestamp.minute.toString().padLeft(2, '0')}";
+      result.add(formattedTime);
+    }
+
+    if (currentTimestamp.day != previousTimestamp.day) {
+      if (currentTimestamp.day != firstMessage.day) { // firstMessage gets inserted at the end
+        result.add(currentTimestamp.formattedDate());
+      }
+    }
+
+    result.add(currentMessage);
+
+    if (i == messages.length - 1) {
+      // insert timestamp before 1st message
+      result.add(currentTimestamp.formattedDate());
+    }
+  }
+
+  return result;
 }
