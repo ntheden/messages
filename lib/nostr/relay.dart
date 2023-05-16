@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:io';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:nostr/nostr.dart' as nostr;
@@ -6,6 +7,14 @@ import '../config/settings.dart';
 import '../db/crud.dart';
 import '../db/db.dart' as db;
 
+
+class DeferredEvent {
+  nostr.Event event;
+  String receiver;
+  db.Contact toContact;
+
+  DeferredEvent(this.event, this.receiver, this.toContact);
+}
 
 class Relay {
   String name;
@@ -18,6 +27,7 @@ class Relay {
     since: 1681878751, // TODO: Today minus 30 or something, or based on last received in db
     limit: 450,
   )];
+  Map<String, Queue<DeferredEvent>> queues = {};
 
   Relay(this.name, this.url, [filters]) {
     this.filters = this.filters + (filters ?? []);
@@ -53,8 +63,7 @@ class Relay {
       }
       nostr.Message m = nostr.Message.deserialize(data);
       if ([m.type,].contains("EVENT")) {
-        nostr.Event event = m.message;
-        storeReceivedEvent(event);
+        storeEvent(m.message);
       }
     };
     socket.stream.listen(
@@ -62,6 +71,71 @@ class Relay {
       onError: (err) => print("Error in creating connection to $url."),
       onDone: () => print('Relay[$name]: In onDone'),
     );
+  }
+  Future<void> storeEvent(nostr.Event event) async {
+    try {
+      db.DbEvent entry = await getEvent(event.id);
+      // If it's there then nothing to do
+      return;
+    } catch (err) {
+      // event hasn't been seen/stored
+    }
+
+    String? receiver = (event as nostr.EncryptedDirectMessage).receiver;
+    if (receiver == null) {
+      print('{name} Filter: event destination (tag p) is not present');
+      return;
+    }
+    db.Contact? toContact = await getContactFromNpub(receiver!);
+    if (toContact == null || !toContact.isLocal) {
+      // TODO: This must be optimized.
+      // FIXME: toContact dones't have to be a local user!!! (but we won't
+      // be able to decrypt)
+      print('{name} Filter: event destination is not a local user: ${receiver.substring(0, 5)}');
+      return;
+    }
+    print('#################################');
+    print(name);
+    print('Received event ${event.id}');
+    print('receiver ${event.receiver}');
+    print('sender ${event.pubkey}');
+    print('#################################');
+
+    String pubkey = event.pubkey;
+    db.Contact? fromContact = await getContactFromNpub(pubkey);
+    if (fromContact != null) {
+      return receiveBottom(event, fromContact, toContact, receiver!);
+    }
+    if (queues.containsKey(pubkey)) {
+      queues[pubkey]?.add(DeferredEvent(event, receiver, toContact));
+    } else {
+      queues[pubkey] = Queue<DeferredEvent>();
+      queues[pubkey]?.add(DeferredEvent(event, receiver, toContact));
+      // TODO: Look up name from directory
+      // TODO: SPAM/DOS Protection
+      createContact([pubkey], "no name").then((_) =>
+        getContactFromNpub(pubkey).then((fromContact) {
+          // TODO: batch these
+          Queue<DeferredEvent> q = queues[pubkey]!;
+          while (q.isNotEmpty) {
+            DeferredEvent ev = q.removeFirst();
+            receiveBottom(ev.event, fromContact!, ev.toContact, ev.receiver);
+          }
+        })
+      );       
+    }
+  }
+
+  void receiveBottom(nostr.Event event, db.Contact fromContact, db.Contact toContact, String receiver) async {
+    db.Npub receiveNpub = await getNpub(receiver);
+    String? plaintext = null;
+    bool decryptError = false;
+    try {
+      plaintext = (event as nostr.EncryptedDirectMessage).getPlaintext(receiveNpub.privkey);
+    } catch (error) {
+      decryptError = true;
+    }
+    storeReceivedEvent(event);
   }
 
   void close() {
