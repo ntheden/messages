@@ -13,8 +13,10 @@ import 'db/crud.dart';
 import 'db/db.dart';
 import 'db/sink.dart';
 import 'router/delegate.dart';
+import 'util/date.dart';
 
 void main() async {
+  initTimezone('Europe/Brussels');
   getUser().then((user) {
     runApp(MessagesApp(user: user));
   }).catchError((error) => runApp(MessagesApp()));

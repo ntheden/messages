@@ -5,8 +5,6 @@ Map<String, String> relaySettings = {
   'monstr_relay': 'ws://192.168.50.144:8081',
 };
 
-String timezone = 'Europe/Brussels';
-
 // Maybe getRelays should be off of a Contact
 Relays getRelays(Set<String> pubkeys) {
   Relays relays = Relays(pubkeys);

@@ -7,6 +7,7 @@ import '../components/drawer/index.dart';
 import '../nostr/relays.dart';
 import '../db/crud.dart';
 import '../db/db.dart';
+import '../util/date.dart';
 
 class ChatsList extends StatefulWidget {
   final String title;
@@ -118,8 +119,9 @@ Future<List<Widget>> getChats(user, messages) async {
         ),
         //type: "group",
         //sending: message.from?.id == user.id ? "You" : "Them",
-        lastTime: "02:45", // get from timestamp
-        seeing: 2,
+        //lastTime: formattedDate('hh:mm', message.timestamp),
+        lastTime: timezoned(message.timestamp).formattedDate(),
+        //seeing: 2,
         lastMessage: peers[contact.id].content,
         currentUser: user,
         peer: contact,
