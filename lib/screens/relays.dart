@@ -85,21 +85,6 @@ class _RelaysTableState extends State<RelaysTable> with RestorationMixin {
       case 2:
         _relaysDataSource!._sort<num>((d) => d.fat, _sortAscending.value);
         break;
-      case 3:
-        _relaysDataSource!._sort<num>((d) => d.carbs, _sortAscending.value);
-        break;
-      case 4:
-        _relaysDataSource!._sort<num>((d) => d.protein, _sortAscending.value);
-        break;
-      case 5:
-        _relaysDataSource!._sort<num>((d) => d.sodium, _sortAscending.value);
-        break;
-      case 6:
-        _relaysDataSource!._sort<num>((d) => d.calcium, _sortAscending.value);
-        break;
-      case 7:
-        _relaysDataSource!._sort<num>((d) => d.iron, _sortAscending.value);
-        break;
     }
     _relaysDataSource!.updateSelectedRelays(_relaySelections);
     _relaysDataSource!.addListener(_updateSelectedRelayRowListener);
@@ -143,8 +128,36 @@ class _RelaysTableState extends State<RelaysTable> with RestorationMixin {
     final localizations = MessagesLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
+        elevation: 0,
         automaticallyImplyLeading: false,
-        title: Text(localizations.demoDataTableTitle),
+        flexibleSpace: SafeArea(
+          child: Container(
+            padding: EdgeInsets.only(right: 16),
+            child: Row(
+              children: <Widget>[
+                IconButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  icon: Icon(Icons.arrow_back,color: Colors.black,),
+                ),
+                SizedBox(width: 12,),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Text('Relays',
+                        style: TextStyle( fontSize: 16 ,fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.settings,color: Colors.black54,),
+              ],
+            ),
+          ),
+        ),
       ),
       body: Scrollbar(
         child: ListView(
@@ -152,7 +165,7 @@ class _RelaysTableState extends State<RelaysTable> with RestorationMixin {
           padding: const EdgeInsets.all(16),
           children: [
             PaginatedDataTable(
-              header: Text(localizations.dataTableHeader),
+              header: Text('Relays'),
               rowsPerPage: _rowsPerPage.value,
               onRowsPerPageChanged: (value) {
                 setState(() {
@@ -170,51 +183,21 @@ class _RelaysTableState extends State<RelaysTable> with RestorationMixin {
               onSelectAll: _relaysDataSource!._selectAll,
               columns: [
                 DataColumn(
-                  label: Text(localizations.dataTableColumnDessert),
+                  label: Text('Relays'),
                   onSort: (columnIndex, ascending) =>
                       _sort<String>((d) => d.name, columnIndex, ascending),
                 ),
                 DataColumn(
-                  label: Text(localizations.dataTableColumnCalories),
+                  label: Text('Write'),
                   numeric: true,
                   onSort: (columnIndex, ascending) =>
                       _sort<num>((d) => d.calories, columnIndex, ascending),
                 ),
                 DataColumn(
-                  label: Text(localizations.dataTableColumnFat),
+                  label: Text('Read'),
                   numeric: true,
                   onSort: (columnIndex, ascending) =>
                       _sort<num>((d) => d.fat, columnIndex, ascending),
-                ),
-                DataColumn(
-                  label: Text(localizations.dataTableColumnCarbs),
-                  numeric: true,
-                  onSort: (columnIndex, ascending) =>
-                      _sort<num>((d) => d.carbs, columnIndex, ascending),
-                ),
-                DataColumn(
-                  label: Text(localizations.dataTableColumnProtein),
-                  numeric: true,
-                  onSort: (columnIndex, ascending) =>
-                      _sort<num>((d) => d.protein, columnIndex, ascending),
-                ),
-                DataColumn(
-                  label: Text(localizations.dataTableColumnSodium),
-                  numeric: true,
-                  onSort: (columnIndex, ascending) =>
-                      _sort<num>((d) => d.sodium, columnIndex, ascending),
-                ),
-                DataColumn(
-                  label: Text(localizations.dataTableColumnCalcium),
-                  numeric: true,
-                  onSort: (columnIndex, ascending) =>
-                      _sort<num>((d) => d.calcium, columnIndex, ascending),
-                ),
-                DataColumn(
-                  label: Text(localizations.dataTableColumnIron),
-                  numeric: true,
-                  onSort: (columnIndex, ascending) =>
-                      _sort<num>((d) => d.iron, columnIndex, ascending),
                 ),
               ],
               source: _relaysDataSource!,
@@ -231,21 +214,11 @@ class _Relay {
     this.name,
     this.calories,
     this.fat,
-    this.carbs,
-    this.protein,
-    this.sodium,
-    this.calcium,
-    this.iron,
   );
 
   final String name;
   final int calories;
   final double fat;
-  final int carbs;
-  final double protein;
-  final int sodium;
-  final int calcium;
-  final int iron;
   bool selected = false;
 }
 
@@ -254,344 +227,19 @@ class _RelayDataSource extends DataTableSource {
     final localizations = MessagesLocalizations.of(context)!;
     _relays = <_Relay>[
       _Relay(
-        localizations.dataTableRowFrozenYogurt,
+        'ws://192.168.50.144:8081',
         159,
         6.0,
-        24,
-        4.0,
-        87,
-        14,
-        1,
       ),
       _Relay(
-        localizations.dataTableRowIceCreamSandwich,
+        'wss://192.168.50.162:6969',
         237,
         9.0,
-        37,
-        4.3,
-        129,
-        8,
-        1,
       ),
       _Relay(
-        localizations.dataTableRowEclair,
+        'wss://nostr.lol',
         262,
         16.0,
-        24,
-        6.0,
-        337,
-        6,
-        7,
-      ),
-      _Relay(
-        localizations.dataTableRowCupcake,
-        305,
-        3.7,
-        67,
-        4.3,
-        413,
-        3,
-        8,
-      ),
-      _Relay(
-        localizations.dataTableRowGingerbread,
-        356,
-        16.0,
-        49,
-        3.9,
-        327,
-        7,
-        16,
-      ),
-      _Relay(
-        localizations.dataTableRowJellyBean,
-        375,
-        0.0,
-        94,
-        0.0,
-        50,
-        0,
-        0,
-      ),
-      _Relay(
-        localizations.dataTableRowLollipop,
-        392,
-        0.2,
-        98,
-        0.0,
-        38,
-        0,
-        2,
-      ),
-      _Relay(
-        localizations.dataTableRowHoneycomb,
-        408,
-        3.2,
-        87,
-        6.5,
-        562,
-        0,
-        45,
-      ),
-      _Relay(
-        localizations.dataTableRowDonut,
-        452,
-        25.0,
-        51,
-        4.9,
-        326,
-        2,
-        22,
-      ),
-      _Relay(
-        localizations.dataTableRowApplePie,
-        518,
-        26.0,
-        65,
-        7.0,
-        54,
-        12,
-        6,
-      ),
-      _Relay(
-        localizations.dataTableRowWithSugar(
-          localizations.dataTableRowFrozenYogurt,
-        ),
-        168,
-        6.0,
-        26,
-        4.0,
-        87,
-        14,
-        1,
-      ),
-      _Relay(
-        localizations.dataTableRowWithSugar(
-          localizations.dataTableRowIceCreamSandwich,
-        ),
-        246,
-        9.0,
-        39,
-        4.3,
-        129,
-        8,
-        1,
-      ),
-      _Relay(
-        localizations.dataTableRowWithSugar(
-          localizations.dataTableRowEclair,
-        ),
-        271,
-        16.0,
-        26,
-        6.0,
-        337,
-        6,
-        7,
-      ),
-      _Relay(
-        localizations.dataTableRowWithSugar(
-          localizations.dataTableRowCupcake,
-        ),
-        314,
-        3.7,
-        69,
-        4.3,
-        413,
-        3,
-        8,
-      ),
-      _Relay(
-        localizations.dataTableRowWithSugar(
-          localizations.dataTableRowGingerbread,
-        ),
-        345,
-        16.0,
-        51,
-        3.9,
-        327,
-        7,
-        16,
-      ),
-      _Relay(
-        localizations.dataTableRowWithSugar(
-          localizations.dataTableRowJellyBean,
-        ),
-        364,
-        0.0,
-        96,
-        0.0,
-        50,
-        0,
-        0,
-      ),
-      _Relay(
-        localizations.dataTableRowWithSugar(
-          localizations.dataTableRowLollipop,
-        ),
-        401,
-        0.2,
-        100,
-        0.0,
-        38,
-        0,
-        2,
-      ),
-      _Relay(
-        localizations.dataTableRowWithSugar(
-          localizations.dataTableRowHoneycomb,
-        ),
-        417,
-        3.2,
-        89,
-        6.5,
-        562,
-        0,
-        45,
-      ),
-      _Relay(
-        localizations.dataTableRowWithSugar(
-          localizations.dataTableRowDonut,
-        ),
-        461,
-        25.0,
-        53,
-        4.9,
-        326,
-        2,
-        22,
-      ),
-      _Relay(
-        localizations.dataTableRowWithSugar(
-          localizations.dataTableRowApplePie,
-        ),
-        527,
-        26.0,
-        67,
-        7.0,
-        54,
-        12,
-        6,
-      ),
-      _Relay(
-        localizations.dataTableRowWithHoney(
-          localizations.dataTableRowFrozenYogurt,
-        ),
-        223,
-        6.0,
-        36,
-        4.0,
-        87,
-        14,
-        1,
-      ),
-      _Relay(
-        localizations.dataTableRowWithHoney(
-          localizations.dataTableRowIceCreamSandwich,
-        ),
-        301,
-        9.0,
-        49,
-        4.3,
-        129,
-        8,
-        1,
-      ),
-      _Relay(
-        localizations.dataTableRowWithHoney(
-          localizations.dataTableRowEclair,
-        ),
-        326,
-        16.0,
-        36,
-        6.0,
-        337,
-        6,
-        7,
-      ),
-      _Relay(
-        localizations.dataTableRowWithHoney(
-          localizations.dataTableRowCupcake,
-        ),
-        369,
-        3.7,
-        79,
-        4.3,
-        413,
-        3,
-        8,
-      ),
-      _Relay(
-        localizations.dataTableRowWithHoney(
-          localizations.dataTableRowGingerbread,
-        ),
-        420,
-        16.0,
-        61,
-        3.9,
-        327,
-        7,
-        16,
-      ),
-      _Relay(
-        localizations.dataTableRowWithHoney(
-          localizations.dataTableRowJellyBean,
-        ),
-        439,
-        0.0,
-        106,
-        0.0,
-        50,
-        0,
-        0,
-      ),
-      _Relay(
-        localizations.dataTableRowWithHoney(
-          localizations.dataTableRowLollipop,
-        ),
-        456,
-        0.2,
-        110,
-        0.0,
-        38,
-        0,
-        2,
-      ),
-      _Relay(
-        localizations.dataTableRowWithHoney(
-          localizations.dataTableRowHoneycomb,
-        ),
-        472,
-        3.2,
-        99,
-        6.5,
-        562,
-        0,
-        45,
-      ),
-      _Relay(
-        localizations.dataTableRowWithHoney(
-          localizations.dataTableRowDonut,
-        ),
-        516,
-        25.0,
-        63,
-        4.9,
-        326,
-        2,
-        22,
-      ),
-      _Relay(
-        localizations.dataTableRowWithHoney(
-          localizations.dataTableRowApplePie,
-        ),
-        582,
-        26.0,
-        77,
-        7.0,
-        54,
-        12,
-        6,
       ),
     ];
   }
@@ -651,11 +299,6 @@ class _RelayDataSource extends DataTableSource {
         DataCell(Text(relay.name)),
         DataCell(Text('${relay.calories}')),
         DataCell(Text(relay.fat.toStringAsFixed(1))),
-        DataCell(Text('${relay.carbs}')),
-        DataCell(Text(relay.protein.toStringAsFixed(1))),
-        DataCell(Text('${relay.sodium}')),
-        DataCell(Text(format.format(relay.calcium / 100))),
-        DataCell(Text(format.format(relay.iron / 100))),
       ],
     );
   }

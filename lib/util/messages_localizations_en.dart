@@ -20872,7 +20872,7 @@ class MessagesLocalizationsEnZa extends MessagesLocalizationsEn {
   String get demoInputChipDescription => 'Input chips represent a complex piece of information, such as an entity (person, place or thing) or conversational text, in a compact form.';
 
   @override
-  String get demoDataTableTitle => 'Data tables';
+  String get demoDataTableTitle => 'Relays';
 
   @override
   String get demoDataTableSubtitle => 'Rows and columns of information';

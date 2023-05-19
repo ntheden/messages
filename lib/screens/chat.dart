@@ -111,9 +111,8 @@ class ChatState extends State<Chat> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       Text('${peerContact.name}(${peerContact.npubs[0].pubkey.substring(0, 5)})',
-                        style: TextStyle( fontSize: 16 ,fontWeight: FontWeight.w600),),
-                      SizedBox(height: 6,),
-                      Text("Online",style: TextStyle(color: Colors.grey.shade600, fontSize: 13),),
+                        style: TextStyle( fontSize: 16 ,fontWeight: FontWeight.w600),
+                      ),
                     ],
                   ),
                 ),
