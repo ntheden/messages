@@ -271,9 +271,7 @@ List<dynamic> insertStrings(List<dynamic> messages) {
 
     if (currentTimestamp.difference(previousTimestamp).inHours >= 5 &&
         currentTimestamp.day == previousTimestamp.day) {
-      String formattedTime =
-          "${currentTimestamp.hour.toString().padLeft(2, '0')}:${currentTimestamp.minute.toString().padLeft(2, '0')}";
-      result.add(formattedTime);
+      result.add(formattedDate("hh:mm", currentMessage.timestamp));
     }
 
     if (currentTimestamp.day != previousTimestamp.day) {

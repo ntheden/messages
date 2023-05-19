@@ -13,8 +13,11 @@ class ChatsList extends StatefulWidget {
   final String title;
   final Contact currentUser;
   List<Widget> chats = []; // TODO: move this back to State
-  ChatsList(this.currentUser, {Key? key, this.title='Messages'}) : super(key: key);
-
+  ChatsList(this.currentUser, {Key? key, this.title='Messages'}) : super(key: key) {
+    getUserMessages(currentUser).then(
+      (entries) => getChats(currentUser, entries).then(
+        (widgets) => chats = widgets));
+  }
   @override
   _ChatsListState createState() => _ChatsListState();
 }
@@ -45,7 +48,6 @@ class _ChatsListState extends State<ChatsList> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
-        brightness: Brightness.dark,
         actions: [
           Padding(
             padding: EdgeInsets.only(right: 5),

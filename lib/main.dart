@@ -41,8 +41,7 @@ class MessagesApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primaryColor: PacificBlue,
-        brightness: Brightness.dark, // light
-        accentColor: PacificBlue,
+        brightness: Brightness.dark,
       ),
       home: Router(
         routerDelegate: routerDelegate,

@@ -91,7 +91,7 @@ class Relay {
       // TODO: This must be optimized.
       // FIXME: toContact dones't have to be a local user!!! (but we won't
       // be able to decrypt)
-      print('{name} Filter: event destination is not a local user: ${receiver.substring(0, 5)}');
+      print('$name Filter: event destination is not a local user: ${receiver.substring(0, 5)}');
       return;
     }
     print('#################################');

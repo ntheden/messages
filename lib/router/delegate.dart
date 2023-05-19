@@ -5,6 +5,7 @@ import '../pages/contact_page.dart';
 import '../pages/edit_contact_page.dart';
 import '../pages/groups_page.dart';
 import '../screens/chat.dart';
+import '../screens/relays.dart';
 import '../screens/chats_list.dart';
 import '../screens/login.dart';
 import '../db/db.dart';
@@ -72,6 +73,9 @@ class MyRouterDelegate extends RouterDelegate<List<RouteSettings>>
       case '/login':
         child = Login();
         break;
+      case '/relays':
+        child = RelaysTable();
+        break;
     }
 
     return MaterialPage(
@@ -83,8 +87,10 @@ class MyRouterDelegate extends RouterDelegate<List<RouteSettings>>
   }
 
   void pushPage({required String name, dynamic arguments}) {
+    print('@@@@@@@@@@@@@@@@@@@@ pushing page $name');
     pages.removeWhere((page) => page.name == name);
     pages.add(createPage(RouteSettings(name: name, arguments: arguments)));
+    print('@@@@@@@@@@@@@@@@@@@@ pages are $pages');
 
     notifyListeners();
   }
