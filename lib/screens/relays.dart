@@ -629,7 +629,8 @@ class _RelayDataSource extends DataTableSource {
   @override
   DataRow? getRow(int index) {
     final format = NumberFormat.decimalPercentPattern(
-      locale: MessagesOptions.of(context).locale.toString(),
+      //locale: MessagesOptions.of(context).locale.toString(), // FIXME
+      locale: 'en',
       decimalDigits: 0,
     );
     assert(index >= 0);

@@ -127,7 +127,9 @@ class DrawerScreenState extends State<DrawerScreen> {
           DrawerListTile(
             title: "Settings",
             icon: Icons.settings_outlined,
-            onTap: () {},
+            onTap: () {
+              routerDelegate.pushPage(name: '/relays', arguments: currentUser);
+            },
           ),
           Divider(),
           DrawerListTile(

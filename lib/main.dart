@@ -14,6 +14,7 @@ import 'db/db.dart';
 import 'db/sink.dart';
 import 'router/delegate.dart';
 import 'util/date.dart';
+import 'util/messages_localizations.dart';
 
 void main() async {
   initTimezone('Europe/Brussels');
@@ -43,6 +44,8 @@ class MessagesApp extends StatelessWidget {
         primaryColor: PacificBlue,
         brightness: Brightness.dark,
       ),
+      localizationsDelegates: MessagesLocalizations.localizationsDelegates,
+      supportedLocales: MessagesLocalizations.supportedLocales,
       home: Router(
         routerDelegate: routerDelegate,
         backButtonDispatcher: RootBackButtonDispatcher(),
