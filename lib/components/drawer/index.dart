@@ -124,7 +124,10 @@ class DrawerScreenState extends State<DrawerScreen> {
           DrawerListTile(
             title: "Contacts", // Maybe a separate app in the future?
             icon: Icons.contacts_rounded,
-            onTap: () {},//=> routerDelegate.pushPage(name: '/contacts'),
+            onTap: () {
+              routerDelegate.pushPage(name: '/contactList');
+              Navigator.pop(context);
+            },
           ),
           DrawerListTile(
             title: "Settings",

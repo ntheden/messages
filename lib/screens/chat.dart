@@ -33,10 +33,12 @@ class ChatState extends State<Chat> {
   Contact currentUser;
   Contact peerContact;
   Set<int> _seen = {};
-
-  ChatState(this.currentUser, this.peerContact);
   StreamController<List<MessageEntry>> _stream = StreamController<List<MessageEntry>>();
   StreamSubscription<List<MessageEntry>>? subscription;
+
+  ChatState(this.currentUser, this.peerContact) {
+    focusNode.requestFocus();
+  }
 
   double screenAwareHeight(double size, BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
@@ -185,7 +187,8 @@ class ChatState extends State<Chat> {
                   ),
                   SizedBox(width: 15,),
                   FloatingActionButton(
-                    onPressed: () {},
+                    onPressed: () {
+                    },
                     child: Icon(Icons.send, color: Colors.white,size: 18,),
                     backgroundColor: Colors.blue,
                     elevation: 0,

@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:nostr/nostr.dart';
+import 'package:get/get.dart';
 
 import '../components/chats/chats_entry.dart';
 import '../components/drawer/index.dart';
 import '../nostr/relays.dart';
 import '../db/crud.dart';
 import '../db/db.dart';
+import '../router/delegate.dart';
 import '../util/date.dart';
 
 class ChatsList extends StatefulWidget {
@@ -57,24 +59,29 @@ class _ChatsListState extends State<ChatsList> {
                 padding: EdgeInsets.all(10),
                 child: Icon(Icons.search_rounded),
               ),
-              onTap: () {},
-            ),
-          )
+              onTap: () {
+                  final routerDelegate = Get.put(MyRouterDelegate());
+                  routerDelegate.pushPage(name: '/contactList');
+                },
+              ),
+            )
         ],
-      ),
+        ),
       body: ListView.builder(
         itemCount: widget.chats.length,
         itemBuilder: (BuildContext context, int index) {
-          return Column(
+        return Column(
             children: [
-              widget.chats[index],
-              Divider(height: 0),
+            widget.chats[index],
+            Divider(height: 0),
             ]);
         },
-      ),
+        ),
       drawer: DrawerScreen(),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
+          final routerDelegate = Get.put(MyRouterDelegate());
+          routerDelegate.pushPage(name: '/contactList');
         },
         child: Icon(Icons.edit_rounded),
       ),
@@ -88,7 +95,7 @@ Future<List<Widget>> getChats(user, messages) async {
   // can I use a sort function here
   Map<int, dynamic> peers = {};
   messages.forEach((message) {
-    for (final id in [message.fromId, message.toId]) {
+      for (final id in [message.fromId, message.toId]) {
       // This does not need to check if the contact is a local user,
       // just check against currentUser, since this is only for
       // drawing the widgets

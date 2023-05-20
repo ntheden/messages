@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../pages/contact_list_page.dart';
-import '../pages/contact_page.dart';
-import '../pages/edit_contact_page.dart';
-import '../pages/groups_page.dart';
 import '../screens/chat.dart';
+import '../screens/contacts_list.dart';
 import '../screens/relays.dart';
 import '../screens/chats_list.dart';
 import '../screens/login.dart';
@@ -59,16 +56,7 @@ class MyRouterDelegate extends RouterDelegate<List<RouteSettings>>
         child = ChatsList(routeSettings.arguments as Contact);
         break;
       case '/contactList':
-        child = ContactListPage();
-        break;
-      case '/contact':
-        child = ContactPage();
-        break;
-      case '/editContact':
-        child = EditContactPage();
-        break;
-      case '/groups':
-        child = GroupsPage();
+        child = ContactsList();
         break;
       case '/login':
         child = Login();

@@ -1,26 +1,41 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:nostr/nostr.dart';
 
-import '../models/events.dart';
-import '../components/channels/channels_entry.dart';
+import '../components/chats/chats_entry.dart';
 import '../components/drawer/index.dart';
+import '../nostr/relays.dart';
+import '../db/crud.dart';
+import '../db/db.dart';
+import '../util/date.dart';
 
 class ContactsList extends StatefulWidget {
-  const ContactsList({Key? key, this.title='Contacts'}) : super(key: key);
   final String title;
+  List<Widget> chats = []; // TODO: move this back to State
+  ContactsList({Key? key, this.title='Contacts'}) : super(key: key);
 
   @override
   _ContactsListState createState() => _ContactsListState();
 }
 
 class _ContactsListState extends State<ContactsList> {
+  @override ContactsList get widget => super.widget;
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
-        brightness: Brightness.dark,
         actions: [
           Padding(
             padding: EdgeInsets.only(right: 5),
@@ -35,24 +50,21 @@ class _ContactsListState extends State<ContactsList> {
           )
         ],
       ),
-      body: SingleChildScrollView(
-        child: Consumer<NewEvents>(
-          builder: (context, NewEvents e, child) {
-            return Column(
-              children: getSome(),
-            );
-          }
-        ),
+      body: ListView.builder(
+        itemCount: 0,
+        itemBuilder: (BuildContext context, int index) {
+          return Column(
+            children: [
+              Divider(height: 0),
+            ]);
+        },
       ),
       drawer: DrawerScreen(),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          NewEvents n = context.read<NewEvents>();
-          n.increment();
         },
-        child: Icon(Icons.edit_rounded),
+        child: Icon(Icons.add_rounded),
       ),
     );
   }
 }
-
