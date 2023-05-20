@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -38,7 +39,9 @@ class _ChannelState extends State<Channel> {
                 ),
                 SizedBox(width: 2,),
                 CircleAvatar(
-                  backgroundImage: NetworkImage("https://logos-world.net/imageup/Bitcoin/Bitcoin-Logo-PNG6.png"),
+                  backgroundImage: NetworkImage(
+                    "https://randomuser.me/api/portraits/men/${Random().nextInt(100)}.jpg",
+                  ),
                   maxRadius: 20,
                 ),
                 SizedBox(width: 12,),

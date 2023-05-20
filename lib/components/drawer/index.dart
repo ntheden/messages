@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -86,7 +87,8 @@ class DrawerScreenState extends State<DrawerScreen> {
             },
             currentAccountPicture: CircleAvatar(
               backgroundImage: NetworkImage(
-                  "https://avatars.githubusercontent.com/u/75714882"),
+                "https://randomuser.me/api/portraits/men/${Random().nextInt(20)}.jpg",
+              ),
               backgroundColor: Colors.grey.shade400,
             ),
             currentAccountPictureSize: Size(60, 60),

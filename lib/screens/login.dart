@@ -7,6 +7,7 @@ import '../db/db.dart';
 import '../db/crud.dart';
 import '../db/sink.dart';
 import '../router/delegate.dart';
+import '../util/screen.dart';
 
 class Login extends StatefulWidget {
   Login({Key? key}) : super(key: key);
@@ -27,19 +28,6 @@ class _LoginState extends State<Login> {
   );
   bool missingName = false;
   bool invalidNsec = false;
-
-  double screenAwareHeight(double size, BuildContext context) {
-    final mediaQuery = MediaQuery.of(context);
-    double drawingHeight = mediaQuery.size.height - mediaQuery.padding.top;
-    return size * drawingHeight;
-  }
-
-  double screenAwareWidth(double size, BuildContext context) {
-    final mediaQuery = MediaQuery.of(context);
-    double drawingWidth = mediaQuery.size.width -
-        (mediaQuery.padding.left + mediaQuery.padding.right);
-    return size * drawingWidth;
-  }
 
   bool validateNsec() {
     String text = nsecController.text;

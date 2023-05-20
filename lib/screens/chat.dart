@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:nostr/nostr.dart';
 
@@ -10,6 +11,7 @@ import '../db/crud.dart';
 import '../db/db.dart';
 import '../nostr/relays.dart';
 import '../util/date.dart';
+import '../util/screen.dart';
 
 class Chat extends StatefulWidget {
   late Contact currentUser;
@@ -38,12 +40,6 @@ class ChatState extends State<Chat> {
 
   ChatState(this.currentUser, this.peerContact) {
     focusNode.requestFocus();
-  }
-
-  double screenAwareHeight(double size, BuildContext context) {
-    final mediaQuery = MediaQuery.of(context);
-    double drawingHeight = mediaQuery.size.height - mediaQuery.padding.top;
-    return size * drawingHeight;
   }
 
   @override
@@ -89,7 +85,6 @@ class ChatState extends State<Chat> {
       appBar: AppBar(
         elevation: 0,
         automaticallyImplyLeading: false,
-        //backgroundColor: Colors.white, // white for light mode
         flexibleSpace: SafeArea(
           child: Container(
             padding: EdgeInsets.only(right: 16),
@@ -103,7 +98,9 @@ class ChatState extends State<Chat> {
                 ),
                 SizedBox(width: 2,),
                 CircleAvatar(
-                  backgroundImage: NetworkImage("https://randomuser.me/api/portraits/men/5.jpg"),
+                  backgroundImage: NetworkImage(
+                    "https://randomuser.me/api/portraits/men/${Random().nextInt(100)}.jpg",
+                  ),
                   maxRadius: 20,
                 ),
                 SizedBox(width: 12,),
@@ -135,7 +132,7 @@ class ChatState extends State<Chat> {
               shrinkWrap: true,
               padding: EdgeInsets.only(top: 10, bottom: 10),
               itemBuilder: (context, index) {
-                return listBuilderEntry(index);
+                return listBuilderEntry(context, index);
               },
             ),
           ),
@@ -225,7 +222,7 @@ class ChatState extends State<Chat> {
     */
   }
 
-  Widget? listBuilderEntry(index) {
+  Widget? listBuilderEntry(context, index) {
     if (_messages[index] is String) {
       return Container(
         padding: EdgeInsets.only(left: 14,right: 14,top: 5, bottom: 5),
@@ -243,7 +240,7 @@ class ChatState extends State<Chat> {
       alignment = Alignment.topLeft;
       color = Colors.green.shade400;
     } else {
-      alignment = Alignment.topRight;
+      alignment = screenAwareWidth(1, context) < 675 ? Alignment.topRight : Alignment.topLeft;
       color = Colors.blue[400];
     }
     return Container(

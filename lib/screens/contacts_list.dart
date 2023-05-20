@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:nostr/nostr.dart';
 
@@ -106,7 +107,7 @@ getContactWidgets(contacts) {
         name: '${contact.name} ($npubHint)',
         npub: pubkey,
         picture: NetworkImage(
-          "https://i.ytimg.com/vi/D7h9UMADesM/maxresdefault.jpg",
+          "https://randomuser.me/api/portraits/men/${Random().nextInt(100)}.jpg",
         ),
       )
     );

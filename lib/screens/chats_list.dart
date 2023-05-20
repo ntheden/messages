@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:nostr/nostr.dart';
 import 'package:get/get.dart';
@@ -124,7 +125,7 @@ Future<List<Widget>> getChats(user, messages) async {
         name: '$name ($npubHint)',
         npub: pubkey,
         picture: NetworkImage(
-          "https://i.ytimg.com/vi/D7h9UMADesM/maxresdefault.jpg",
+          "https://randomuser.me/api/portraits/men/${Random().nextInt(100)}.jpg",
         ),
         //type: "group",
         //sending: message.from?.id == user.id ? "You" : "Them",
