@@ -581,6 +581,17 @@ Future<List<Contact>> getContacts(List<int> ids) async {
   return contacts;
 }
 
+
+Future<List<Contact>> getAllContacts() async {
+  final contactQuery = database.select(database.dbContacts);
+
+  List<Contact> contacts = [];
+  for (final contact in await contactQuery.get()) {
+    contacts.add(await getContact(contact));
+  }
+  return contacts;
+}
+
 Future<Contact> getContact(DbContact contact) async {
   final npubsQuery = database.select(database.contactNpubs).join(
     [

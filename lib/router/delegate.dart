@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../screens/chat.dart';
 import '../screens/contacts_list.dart';
+import '../screens/contact_edit.dart';
 import '../screens/relays.dart';
 import '../screens/chats_list.dart';
 import '../screens/login.dart';
@@ -54,6 +55,9 @@ class MyRouterDelegate extends RouterDelegate<List<RouteSettings>>
         break;
       case '/chats':
         child = ChatsList(routeSettings.arguments as Contact);
+        break;
+      case '/contactEdit':
+        child = ContactEdit(routeSettings.arguments as String);
         break;
       case '/contactList':
         child = ContactsList();
