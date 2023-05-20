@@ -237,14 +237,23 @@ class ChatState extends State<Chat> {
         ),
       );
     }
+    Alignment alignment;
+    Color? color;
+    if (_messages[index].toId == currentUser.id && _messages[index].toId != peerContact.id) {
+      alignment = Alignment.topLeft;
+      color = Colors.green.shade400;
+    } else {
+      alignment = Alignment.topRight;
+      color = Colors.blue[400];
+    }
     return Container(
       padding: EdgeInsets.only(left: 14,right: 14,top: 10,bottom: 10),
       child: Align(
-        alignment: (_messages[index].toId == currentUser.id ? Alignment.topLeft : Alignment.topRight),
+        alignment: alignment,
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            color: (_messages[index].toId == currentUser.id ? Colors.green.shade400 : Colors.blue[400]),
+            color: color,
           ),
           padding: EdgeInsets.all(16),
           child: Text(_messages[index].content, style: TextStyle(fontSize: 15),),

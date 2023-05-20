@@ -117,7 +117,7 @@ class DrawerScreenState extends State<DrawerScreen> {
             onTap: () {},//=> routerDelegate.pushPage(name: '/channels'),
           ),
           DrawerListTile(
-            title: "Bookmarks",
+            title: "Saved Messages",
             icon: Icons.bookmark_border_rounded,
             onTap: () {},
           ),
