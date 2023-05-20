@@ -49,6 +49,7 @@ class DrawerScreenState extends State<DrawerScreen> {
               // chats, but once we have channels working, then we can't just push
               // chats here.
               (_) => routerDelegate.pushPage(name: '/chats', arguments: currentUser)));
+              Navigator.pop(context);
           },
         ),
       ),
@@ -107,6 +108,7 @@ class DrawerScreenState extends State<DrawerScreen> {
             icon: Icons.person_outline_rounded,
             onTap: () {
               routerDelegate.pushPage(name: '/chats', arguments: currentUser);
+              Navigator.pop(context);
             }
           ),
           DrawerListTile(
@@ -129,6 +131,7 @@ class DrawerScreenState extends State<DrawerScreen> {
             icon: Icons.settings_outlined,
             onTap: () {
               routerDelegate.pushPage(name: '/relays', arguments: currentUser);
+              Navigator.pop(context);
             },
           ),
           Divider(),

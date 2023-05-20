@@ -63,7 +63,7 @@ class _RelaysTableState extends State<RelaysTable> with RestorationMixin {
   _RelayDataSource? _relaysDataSource;
 
   @override
-  String get restorationId => 'data_table_demo';
+  String get restorationId => 'relays_table';
 
   @override
   void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
@@ -159,51 +159,65 @@ class _RelaysTableState extends State<RelaysTable> with RestorationMixin {
           ),
         ),
       ),
-      body: Scrollbar(
-        child: ListView(
-          restorationId: 'data_table_list_view',
-          padding: const EdgeInsets.all(16),
-          children: [
-            PaginatedDataTable(
-              header: Text('Relays'),
-              rowsPerPage: _rowsPerPage.value,
-              onRowsPerPageChanged: (value) {
-                setState(() {
-                  _rowsPerPage.value = value!;
-                });
+    body: ListView(
+        restorationId: 'data_table_list_view',
+        children: [
+          PaginatedDataTable(
+            //header: Text('Relays'),
+            rowsPerPage: _rowsPerPage.value,
+            onRowsPerPageChanged: (value) {
+              setState(() {
+                _rowsPerPage.value = value!;
+              });
+            },
+            initialFirstRowIndex: _rowIndex.value,
+            onPageChanged: (rowIndex) {
+              setState(() {
+                _rowIndex.value = rowIndex;
+              });
+            },
+            sortColumnIndex: _sortColumnIndex.value,
+            sortAscending: _sortAscending.value,
+            onSelectAll: _relaysDataSource!._selectAll,
+            columns: [
+              DataColumn(
+                label: Text('Address'),
+                onSort: (columnIndex, ascending) =>
+                    _sort<String>((d) => d.name, columnIndex, ascending),
+              ),
+              DataColumn(
+                label: Text('Write'),
+                numeric: true,
+                onSort: (columnIndex, ascending) =>
+                    _sort<num>((d) => d.calories, columnIndex, ascending),
+              ),
+              DataColumn(
+                label: Text('Read'),
+                numeric: true,
+                onSort: (columnIndex, ascending) =>
+                    _sort<num>((d) => d.fat, columnIndex, ascending),
+              ),
+            ],
+            source: _relaysDataSource!,
+          ),
+          SizedBox(width: 15,),
+          Expanded(
+            child: TextField(
+              //focusNode: focusNode,
+              //controller: textEntryField,
+              decoration: InputDecoration(
+                hintText: "New Relay...",
+                hintStyle: TextStyle(color: Colors.black54),
+                border: InputBorder.none,
+              ),
+              onSubmitted: (String value) {
+                //sendMessage(value);
+                //textEntryField.clear();
+                //focusNode.requestFocus();
               },
-              initialFirstRowIndex: _rowIndex.value,
-              onPageChanged: (rowIndex) {
-                setState(() {
-                  _rowIndex.value = rowIndex;
-                });
-              },
-              sortColumnIndex: _sortColumnIndex.value,
-              sortAscending: _sortAscending.value,
-              onSelectAll: _relaysDataSource!._selectAll,
-              columns: [
-                DataColumn(
-                  label: Text('Relays'),
-                  onSort: (columnIndex, ascending) =>
-                      _sort<String>((d) => d.name, columnIndex, ascending),
-                ),
-                DataColumn(
-                  label: Text('Write'),
-                  numeric: true,
-                  onSort: (columnIndex, ascending) =>
-                      _sort<num>((d) => d.calories, columnIndex, ascending),
-                ),
-                DataColumn(
-                  label: Text('Read'),
-                  numeric: true,
-                  onSort: (columnIndex, ascending) =>
-                      _sort<num>((d) => d.fat, columnIndex, ascending),
-                ),
-              ],
-              source: _relaysDataSource!,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -218,28 +232,29 @@ class _Relay {
 
   final String name;
   final int calories;
-  final double fat;
+  final int fat;
   bool selected = false;
 }
 
 class _RelayDataSource extends DataTableSource {
+  // TODO: Comes from db
   _RelayDataSource(this.context) {
     final localizations = MessagesLocalizations.of(context)!;
     _relays = <_Relay>[
       _Relay(
         'ws://192.168.50.144:8081',
         159,
-        6.0,
+        6,
       ),
       _Relay(
         'wss://192.168.50.162:6969',
         237,
-        9.0,
+        9,
       ),
       _Relay(
         'wss://nostr.lol',
         262,
-        16.0,
+        16,
       ),
     ];
   }
@@ -320,6 +335,3 @@ class _RelayDataSource extends DataTableSource {
     notifyListeners();
   }
 }
-
-
-
