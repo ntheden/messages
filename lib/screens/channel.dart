@@ -34,7 +34,7 @@ class _ChannelState extends State<Channel> {
                   onPressed: (){
                     Navigator.pop(context);
                   },
-                  icon: Icon(Icons.arrow_back,color: Colors.black,),
+                  icon: Icon(Icons.arrow_back,color: Colors.white,),
                 ),
                 SizedBox(width: 2,),
                 CircleAvatar(
@@ -53,7 +53,7 @@ class _ChannelState extends State<Channel> {
                     ],
                   ),
                 ),
-                Icon(Icons.settings,color: Colors.black54,),
+                Icon(Icons.settings,color: Colors.white54,),
               ],
             ),
           ),

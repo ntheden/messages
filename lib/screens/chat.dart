@@ -94,7 +94,7 @@ class ChatState extends State<Chat> {
                   onPressed: () {
                     Navigator.pop(context);
                   },
-                  icon: Icon(Icons.arrow_back,color: Colors.black,),
+                  icon: Icon(Icons.arrow_back, color: Colors.white,),
                 ),
                 SizedBox(width: 2,),
                 CircleAvatar(
@@ -115,7 +115,7 @@ class ChatState extends State<Chat> {
                     ],
                   ),
                 ),
-                Icon(Icons.settings,color: Colors.black54,),
+                Icon(Icons.settings, color: Colors.white,),
               ],
             ),
           ),
@@ -124,7 +124,7 @@ class ChatState extends State<Chat> {
       body: Stack(
         children: <Widget>[
           Container(
-            height: screenAwareHeight(0.85, context),
+            height: scaledListBox(context),
             child: ListView.builder(
               reverse: true,
               controller: scrollController,
@@ -139,10 +139,9 @@ class ChatState extends State<Chat> {
           Align(
             alignment: Alignment.bottomLeft,
             child: Container(
-              padding: EdgeInsets.only(left: 10,bottom: 10,top: 10),
+              padding: EdgeInsets.only(left: 10, bottom: 10, top: 10),
               height: 60,
               width: double.infinity,
-              //color: Colors.white, // white for light mode
               child: Row(
                 children: <Widget>[
                   GestureDetector(
@@ -186,7 +185,7 @@ class ChatState extends State<Chat> {
                   FloatingActionButton(
                     onPressed: () {
                     },
-                    child: Icon(Icons.send, color: Colors.white,size: 18,),
+                    child: Icon(Icons.send, color: Colors.white, size: 18,),
                     backgroundColor: Colors.blue,
                     elevation: 0,
                   ),
@@ -244,7 +243,7 @@ class ChatState extends State<Chat> {
       color = Colors.blue[400];
     }
     return Container(
-      padding: EdgeInsets.only(left: 14,right: 14,top: 10,bottom: 10),
+      padding: EdgeInsets.only(left: 14, right: 14,top: 10,bottom: 10),
       child: Align(
         alignment: alignment,
         child: Container(
@@ -297,4 +296,18 @@ List<dynamic> insertStrings(List<dynamic> messages) {
   }
 
   return result;
+}
+
+scaledListBox(context) {
+  // Not sure how else to do it
+  double scale = 0.85;
+  double size = screenAwareHeight(1, context);
+  if (size < 310) {
+    scale = 0.65;
+  } else if (size < 450) {
+    scale = 0.70;
+  } else if (size < 650) {
+    scale = 0.8;
+  }
+  return screenAwareHeight(scale, context);
 }

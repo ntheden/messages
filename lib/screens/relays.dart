@@ -139,7 +139,7 @@ class _RelaysTableState extends State<RelaysTable> with RestorationMixin {
                   onPressed: () {
                     Navigator.pop(context);
                   },
-                  icon: Icon(Icons.arrow_back,color: Colors.black,),
+                  icon: Icon(Icons.arrow_back, color: Colors.white,),
                 ),
                 SizedBox(width: 12,),
                 Expanded(
@@ -153,7 +153,7 @@ class _RelaysTableState extends State<RelaysTable> with RestorationMixin {
                     ],
                   ),
                 ),
-                Icon(Icons.settings,color: Colors.black54,),
+                Icon(Icons.settings, color: Colors.white,),
               ],
             ),
           ),

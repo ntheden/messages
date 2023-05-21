@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:nostr/nostr.dart';
 
 import '../components/contacts/contacts_entry.dart';
@@ -9,6 +10,7 @@ import '../nostr/relays.dart';
 import '../db/crud.dart';
 import '../db/db.dart';
 import '../util/date.dart';
+import '../router/delegate.dart';
 
 class ContactsList extends StatefulWidget {
   final String title;
@@ -55,7 +57,7 @@ class _ContactsListState extends State<ContactsList> {
                   onPressed: () {
                     Navigator.pop(context);
                   },
-                  icon: Icon(Icons.arrow_back,color: Colors.black,),
+                  icon: Icon(Icons.arrow_back, color: Colors.white,),
                 ),
                 SizedBox(width: 12,),
                 Expanded(
@@ -69,7 +71,7 @@ class _ContactsListState extends State<ContactsList> {
                     ],
                   ),
                 ),
-                Icon(Icons.settings,color: Colors.black54,),
+                Icon(Icons.settings, color: Colors.white,),
               ],
             ),
           ),
@@ -88,6 +90,8 @@ class _ContactsListState extends State<ContactsList> {
       drawer: DrawerScreen(),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
+          final routerDelegate = Get.put(MyRouterDelegate());
+          routerDelegate.pushPage(name: '/contactEdit', arguments: "");
         },
         child: Icon(Icons.add_rounded),
       ),
@@ -98,7 +102,6 @@ class _ContactsListState extends State<ContactsList> {
 getContactWidgets(contacts) {
   List<Widget> entries = [];
   for (final contact in contacts) {
-    print('@@@@@@@@@@@@@ contact $contact');
     // TODO: This formatting goes in the widget definition
     String pubkey = contact.npubs[0].pubkey;
     String npubHint = pubkey.substring(0, 5) + '...' + pubkey.substring(59, 63);

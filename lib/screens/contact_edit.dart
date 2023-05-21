@@ -31,7 +31,7 @@ class _ContactEditState extends State<ContactEdit> {
                   onPressed: () {
                     Navigator.pop(context);
                   },
-                  icon: Icon(Icons.arrow_back,color: Colors.black,),
+                  icon: Icon(Icons.arrow_back, color: Colors.white,),
                 ),
                 SizedBox(width: 12,),
                 Expanded(
@@ -39,13 +39,13 @@ class _ContactEditState extends State<ContactEdit> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
-                      Text('Contact.Name',
-                        style: TextStyle( fontSize: 16 ,fontWeight: FontWeight.w600),
+                      Text('New Contact',
+                        style: TextStyle(fontSize: 16 ,fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
                 ),
-                Icon(Icons.settings,color: Colors.black54,),
+                Icon(Icons.settings, color: Colors.white,),
               ],
             ),
           ),

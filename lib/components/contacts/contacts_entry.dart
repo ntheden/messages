@@ -44,18 +44,6 @@ class ContactsEntry extends StatelessWidget {
             ),
         ],
       ),
-      subtitle: type == "user"
-          ? Text("last seen")
-          : Row(
-              children: [
-                Text(
-                  "hi: ",
-                  style: TextStyle(color: PacificBlue),
-                ),
-                Text("",
-                ),
-              ],
-            ),
       trailing: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -65,7 +53,7 @@ class ContactsEntry extends StatelessWidget {
         ],
       ),
       leading: SizedBox.fromSize(
-        size: Size(50, 50),
+        size: Size(40, 40),
         child: CircleAvatar(
           backgroundImage: picture,
           backgroundColor: Colors.grey,
