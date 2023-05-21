@@ -48,39 +48,41 @@ class _ContactEditState extends State<ContactEdit> {
                     ],
                   ),
                 ),
-                Icon(Icons.settings, color: Colors.white,),
+                /*
+                IconButton(
+                  icon: Icon(Icons.edit),
+                  onPressed: () {
+                    // Switch to new/edit mode
+                    print('@@@@@ switch to new/edit mode');
+                  },
+                ),
+                */
               ],
             ),
           ),
         ),
       ),
-      body: const TextFormFieldDemo(),
-    );
-  }
-}
-
-
-// Copyright 2019 The Flutter team. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
-class TextFieldDemo extends StatelessWidget {
-  const TextFieldDemo({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Text(MessagesLocalizations.of(context)!.demoTextFieldTitle),
+      body: Column(
+        children: [
+          SizedBox(height: 10.0,),
+          InkWell(
+            // Open image picker
+            onTap: () => print('@@@@@ open image picker'),
+            child: CircleAvatar(
+              radius: 70,
+              backgroundImage: NetworkImage('https://via.placeholder.com/150'),
+            ),
+          ),
+          TextFormFieldDemo(),
+        ],
       ),
-      body: const TextFormFieldDemo(),
     );
   }
 }
+
 
 class TextFormFieldDemo extends StatefulWidget {
-  const TextFormFieldDemo({super.key});
+  TextFormFieldDemo({super.key});
 
   @override
   TextFormFieldDemoState createState() => TextFormFieldDemoState();

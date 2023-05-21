@@ -61,13 +61,11 @@ class _ChatsListState extends State<ChatsList> {
                 child: Icon(Icons.search_rounded),
               ),
               onTap: () {
-                  final routerDelegate = Get.put(MyRouterDelegate());
-                  routerDelegate.pushPage(name: '/contactList');
-                },
-              ),
-            )
+              },
+            ),
+          )
         ],
-        ),
+      ),
       body: ListView.builder(
         itemCount: widget.chats.length,
         itemBuilder: (BuildContext context, int index) {
@@ -77,7 +75,7 @@ class _ChatsListState extends State<ChatsList> {
             Divider(height: 0),
             ]);
         },
-        ),
+      ),
       drawer: DrawerScreen(),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
