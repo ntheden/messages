@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -5,6 +6,7 @@ import 'package:get/get.dart';
 
 import '../router/delegate.dart';
 import '../util/messages_localizations.dart';
+import '../util/screen.dart';
 
 class ContactEdit extends StatefulWidget {
   final String title;
@@ -42,7 +44,7 @@ class _ContactEditState extends State<ContactEdit> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
-                      Text('New Contact',
+                      Text(widget.npub.length == 0 ? 'New Contact' : widget.npub,
                         style: TextStyle(fontSize: 16 ,fontWeight: FontWeight.w600),
                       ),
                     ],
@@ -62,19 +64,26 @@ class _ContactEditState extends State<ContactEdit> {
           ),
         ),
       ),
-      body: Column(
-        children: [
-          SizedBox(height: 10.0,),
-          InkWell(
-            // Open image picker
-            onTap: () => print('@@@@@ open image picker'),
-            child: CircleAvatar(
-              radius: 70,
-              backgroundImage: NetworkImage('https://via.placeholder.com/150'),
-            ),
+      body: Align(
+        alignment: Alignment.center,
+        child: Container(
+          height: screenAwareHeight(0.8, context),
+          width: min(550, screenAwareWidth(0.8, context)),
+          child: ListView(
+            children: [
+              //SizedBox(height: 5.0,),
+              InkWell(
+                // Open image picker
+                onTap: () => print('@@@@@ open image picker'),
+                child: CircleAvatar(
+                  radius: 90,
+                  //backgroundImage: NetworkImage('https://via.placeholder.com/150'),
+                ),
+              ),
+              TextFormFieldDemo(),
+            ],
           ),
-          TextFormFieldDemo(),
-        ],
+        ),
       ),
     );
   }
