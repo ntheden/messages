@@ -7,6 +7,7 @@ import '../../db/crud.dart';
 import 'drawer_list_tile.dart';
 import 'drawer_user_list_tile.dart';
 import '../../router/delegate.dart';
+import '../../config/preferences.dart';
 
 class DrawerScreen extends StatefulWidget {
   DrawerScreen({Key? key}) : super(key: key);
@@ -20,6 +21,7 @@ class DrawerScreenState extends State<DrawerScreen> {
   List<Contact> users = [];
   Contact? currentUser;
   final routerDelegate = Get.put(MyRouterDelegate());
+  final DarkThemeProvider themeChange = DarkThemeProvider();
  
   @override
   void initState() {
@@ -66,13 +68,19 @@ class DrawerScreenState extends State<DrawerScreen> {
             ),
             currentAccountPictureSize: Size(60, 60),
             otherAccountsPictures: [
-              IconButton(
-                onPressed: () {},
+              Switch(
+                // FIXME: fix it later, consider animated switch
+                value: themeChange.darkTheme,
+                onChanged: (bool? value) {
+                  themeChange.darkTheme = value!;
+                },
+                /*
                 icon: Icon(
                   Icons.dark_mode_rounded,
-                  /* Icons.light_mode_rounded */
+                  // Icons.light_mode_rounded
                   color: Colors.white,
                 ),
+                */
               )
             ],
           ),
