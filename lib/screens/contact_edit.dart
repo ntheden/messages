@@ -2,17 +2,18 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:file_picker/file_picker.dart';
 
 
 import '../router/delegate.dart';
+import '../db/db.dart';
 import '../util/messages_localizations.dart';
 import '../util/screen.dart';
 
 class ContactEdit extends StatefulWidget {
-  final String title;
-  final String npub;
+  final Contact? contact;
 
-  const ContactEdit(this.npub, {Key? key, this.title='<Name of Contact>'}) : super(key: key);
+  const ContactEdit(this.contact, {Key? key}) : super(key: key);
 
   @override
   _ContactEditState createState() => _ContactEditState();
@@ -44,7 +45,7 @@ class _ContactEditState extends State<ContactEdit> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
-                      Text(widget.npub.length == 0 ? 'New Contact' : widget.npub,
+                      Text(getTitle(),
                         style: TextStyle(fontSize: 16 ,fontWeight: FontWeight.w600),
                       ),
                     ],
@@ -74,7 +75,16 @@ class _ContactEditState extends State<ContactEdit> {
               //SizedBox(height: 5.0,),
               InkWell(
                 // Open image picker
-                onTap: () => print('@@@@@ open image picker'),
+                onTap: () {
+                  print('@@@@@ open image picker');
+                  FilePicker.platform.pickFiles().then((result) {
+                    if (result != null) {
+                      //File file = File(result.files.single.path);
+                    } else {
+                      // User canceled the picker
+                    }
+                  });
+                },
                 child: CircleAvatar(
                   radius: 90,
                   //backgroundImage: NetworkImage('https://via.placeholder.com/150'),
@@ -87,6 +97,14 @@ class _ContactEditState extends State<ContactEdit> {
       ),
     );
   }
+
+  String getTitle() {
+    if (widget.contact == null) {
+      return 'New Contact';
+    }
+    // TODO: first/last name, else username
+    return 'Edit Contact: ${widget.contact!.name}';
+  } 
 }
 
 
@@ -341,5 +359,3 @@ class _UsNumberTextInputFormatter extends TextInputFormatter {
     );
   }
 }
-
-

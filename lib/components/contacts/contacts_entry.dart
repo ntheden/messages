@@ -3,13 +3,24 @@ import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 
 import '../../constants/color.dart';
+import '../../db/db.dart';
 import '../../router/delegate.dart';
 
 class ContactsEntry extends StatelessWidget {
+  final String name;
+  final Contact contact;
+  final ImageProvider<Object> picture;
+  final String type;
+  final bool pinned;
+  final bool mute;
+  final String badge;
+  final GestureTapCallback? onTap;
+  final GestureLongPressCallback? onLongPress;
+
   const ContactsEntry({
     Key? key,
     required this.name,
-    required this.npub,
+    required this.contact,
     required this.picture,
     this.type = "user",
     this.pinned = false,
@@ -19,22 +30,12 @@ class ContactsEntry extends StatelessWidget {
     this.onLongPress,
   }) : super(key: key);
 
-  final String name;
-  final String npub;
-  final ImageProvider<Object> picture;
-  final String type;
-  final bool pinned;
-  final bool mute;
-  final String badge;
-  final GestureTapCallback? onTap;
-  final GestureLongPressCallback? onLongPress;
-
   @override
   Widget build(BuildContext context) {
     return ListTile(
       title: Row(
         children: [
-          Text(name),
+          Text(getTitle()),
           if (mute) SizedBox(width: 5),
           if (mute)
             Icon(
@@ -61,8 +62,14 @@ class ContactsEntry extends StatelessWidget {
       ),
       onTap: () {
         final routerDelegate = Get.put(MyRouterDelegate());
-        routerDelegate.pushPage(name: '/contactEdit', arguments: npub);
+        routerDelegate.pushPage(name: '/contactEdit', arguments: contact);
       },
     );
+  }
+
+  String getTitle() {
+    String pubkey = contact.npubs[0].pubkey;
+    String npubHint = pubkey.substring(0, 5) + '...' + pubkey.substring(59, 63);
+    return npubHint;
   }
 }

@@ -91,7 +91,7 @@ class _ContactsListState extends State<ContactsList> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           final routerDelegate = Get.put(MyRouterDelegate());
-          routerDelegate.pushPage(name: '/contactEdit', arguments: "");
+          routerDelegate.pushPage(name: '/contactEdit', arguments: null);
         },
         child: Icon(Icons.add_rounded),
       ),
@@ -102,13 +102,10 @@ class _ContactsListState extends State<ContactsList> {
 getContactWidgets(contacts) {
   List<Widget> entries = [];
   for (final contact in contacts) {
-    // TODO: This formatting goes in the widget definition
-    String pubkey = contact.npubs[0].pubkey;
-    String npubHint = pubkey.substring(0, 5) + '...' + pubkey.substring(59, 63);
     entries.add(
       ContactsEntry(
-        name: '${contact.name} ($npubHint)',
-        npub: pubkey,
+        name: '${contact!.name}',
+        contact: contact!,
         picture: NetworkImage(
           "https://randomuser.me/api/portraits/men/${Random().nextInt(100)}.jpg",
         ),

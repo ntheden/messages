@@ -39,8 +39,10 @@ class MessagesAppState extends State<MessagesApp> {
   DarkThemeProvider themeChangeProvider = DarkThemeProvider();
 
   MessagesAppState({Contact? this.user}) {
-    routerDelegate.pushPage(name: user == null ? '/login' : '/chats', arguments: user);
-    if (user != null) {
+    if (user == null) {
+      routerDelegate.pushPage(name: '/login', arguments: false);
+    } else {
+      routerDelegate.pushPage(name: '/chats', arguments: user);
       // FIXME: This is causing performance bottleneck at startup
       runEventSink();
     }

@@ -87,12 +87,13 @@ class _LoginState extends State<Login> {
             padding: EdgeInsets.only(right: 16, top: 10),
             child: Row(
               children: [
-                IconButton(
-                  onPressed: (){
-                    Navigator.pop(context);
-                  },
-                  icon: Icon(Icons.arrow_back, color: Colors.white,),
-                ),
+                if (widget.cancelable)
+                  IconButton(
+                    onPressed: (){
+                      Navigator.pop(context);
+                    },
+                    icon: Icon(Icons.arrow_back, color: Colors.white,),
+                  ),
               ],
             ),
           ),

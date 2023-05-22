@@ -73,6 +73,8 @@ class DbContacts extends Table {
   TextColumn get email => text()();
   TextColumn get email2 => text()();
   TextColumn get notes => text()();
+  TextColumn get picture_url => text()();
+  TextColumn get picture_pathname => text()();
 }
 
 class DbEvents extends Table {
