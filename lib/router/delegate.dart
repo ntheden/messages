@@ -47,7 +47,7 @@ class MyRouterDelegate extends RouterDelegate<List<RouteSettings>>
   Future<void> setNewRoutePath(List<RouteSettings> configuration) async {}
 
   MaterialPage createPage(RouteSettings routeSettings) {
-    Widget child = Login();
+    Widget child = Login(false);
 
     switch (routeSettings.name) {
       case '/chat':
@@ -63,7 +63,7 @@ class MyRouterDelegate extends RouterDelegate<List<RouteSettings>>
         child = ContactsList();
         break;
       case '/login':
-        child = Login();
+        child = Login(routeSettings.arguments as bool);
         break;
       case '/relays':
         child = RelaysTable();

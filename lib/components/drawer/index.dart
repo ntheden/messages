@@ -27,6 +27,11 @@ class DrawerScreenState extends State<DrawerScreen> {
     queryUsers();
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
   Future<void> queryUsers() async {
     List<Contact> myUsers = await getUsers();
     Contact myUser = myUsers.singleWhere((user) => user.active == true);
@@ -34,41 +39,6 @@ class DrawerScreenState extends State<DrawerScreen> {
       users = myUsers;
       currentUser = myUser;
     });
-  }
-
-  List<DrawerUserListTile> otherUserTiles() {
-    List<DrawerUserListTile> tiles = [];
-    users.asMap().forEach((index, user) =>
-        tiles.add(DrawerUserListTile(
-          name: user.name,
-          picture: "https://avatars.githubusercontent.com/u/75714882",
-          selected: user.active,
-          onTap: () {
-            switchUser(user.contact.id).then(
-              (_) => queryUsers().then(
-              // TODO: Need to remove pages that have the old user, pushing does it for
-              // chats, but once we have channels working, then we can't just push
-              // chats here.
-              (_) => routerDelegate.pushPage(name: '/chats', arguments: currentUser)));
-              Navigator.pop(context);
-          },
-        ),
-      ),
-    );
-    return tiles;
-  }
-
-  
-  List<dynamic> showOtherUsers() {
-    return [
-      ...otherUserTiles(),
-      DrawerUserListTile(
-        name: "New User Identity",
-        icon: Icons.person_add_outlined,
-        onTap: () => routerDelegate.pushPage(name: '/login'),
-      ),
-      Divider(),
-    ];
   }
 
   @override
@@ -85,11 +55,14 @@ class DrawerScreenState extends State<DrawerScreen> {
                 showOtherUsersFlag = showOtherUsersFlag ? false : true;
               });
             },
-            currentAccountPicture: CircleAvatar(
-              backgroundImage: NetworkImage(
-                "https://randomuser.me/api/portraits/men/${Random().nextInt(20)}.jpg",
+            currentAccountPicture: InkWell(
+              onTap: () => print('@@@@@ open edit contact'),
+              child: CircleAvatar(
+                backgroundImage: NetworkImage(
+                  "https://randomuser.me/api/portraits/men/${Random().nextInt(20)}.jpg",
+                ),
+                backgroundColor: Colors.grey.shade400,
               ),
-              backgroundColor: Colors.grey.shade400,
             ),
             currentAccountPictureSize: Size(60, 60),
             otherAccountsPictures: [
@@ -153,5 +126,40 @@ class DrawerScreenState extends State<DrawerScreen> {
         ],
       ),
     );
+  }
+
+  List<DrawerUserListTile> otherUserTiles() {
+    List<DrawerUserListTile> tiles = [];
+    users.asMap().forEach((index, user) =>
+        tiles.add(DrawerUserListTile(
+          name: user.name,
+          picture: "https://avatars.githubusercontent.com/u/75714882",
+          selected: user.active,
+          onTap: () {
+            switchUser(user.contact.id).then(
+              (_) => queryUsers().then(
+              // TODO: Need to remove pages that have the old user, pushing does it for
+              // chats, but once we have channels working, then we can't just push
+              // chats here.
+              (_) => routerDelegate.pushPage(name: '/chats', arguments: currentUser)));
+              Navigator.pop(context);
+          },
+        ),
+      ),
+    );
+    return tiles;
+  }
+
+  
+  List<dynamic> showOtherUsers() {
+    return [
+      ...otherUserTiles(),
+      DrawerUserListTile(
+        name: "New User Identity",
+        icon: Icons.person_add_outlined,
+        onTap: () => routerDelegate.pushPage(name: '/login', arguments: true),
+      ),
+      Divider(),
+    ];
   }
 }

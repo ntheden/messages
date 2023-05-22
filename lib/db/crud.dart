@@ -47,6 +47,14 @@ Future<Contact> createContactFromNpubs(List<Npub> npubs, String name,
 
   DbContactsCompanion db_contact = DbContactsCompanion.insert(
           name: name,
+          surname: "",
+          username: "",
+          address: "",
+          city: "",
+          phone: "",
+          email: "",
+          email2: "",
+          notes: "",
           isLocal: isLocal,
           active: active,
           npub: npubs[0].pubkey,
@@ -68,6 +76,14 @@ Future<Contact> createContactFromNpubs(List<Npub> npubs, String name,
     DbContact(
       id: contactId,
       name: name,
+      surname: "",
+      username: "",
+      address: "",
+      city: "",
+      phone: "",
+      email: "",
+      email2: "",
+      notes: "",
       isLocal: isLocal,
       active: active,
       npub: npubs[0].pubkey,
@@ -95,6 +111,14 @@ Future<void> createContact(
   final contactId = await database.into(database.dbContacts).insert(
         DbContactsCompanion.insert(
           name: name,
+          surname: "",
+          username: "",
+          address: "",
+          city: "",
+          phone: "",
+          email: "",
+          email2: "",
+          notes: "",
           isLocal: isLocal,
           active: active,
           npub: npubs[0],
@@ -119,6 +143,14 @@ Future<void> createContact(
       DbContact(
         id: contactId,
         name: name,
+        surname: "",
+        username: "",
+        address: "",
+        city: "",
+        phone: "",
+        email: "",
+        email2: "",
+        notes: "",
         isLocal: isLocal,
         active: active,
         npub: npubEntries[0].pubkey,
@@ -481,7 +513,21 @@ Future<Contact> createEmptyContact(String name,
       .into(database.contactNpubs)
       .insert(ContactNpubsCompanion());
   final contact =
-      DbContact(id: id, name: name, isLocal: isLocal, active: active, npub: npubPlaceHolder);
+      DbContact(
+        id: id,
+        name: name,
+        surname: "",
+        username: "",
+        address: "",
+        city: "",
+        phone: "",
+        email: "",
+        email2: "",
+        notes: "",
+        isLocal: isLocal,
+        active: active,
+        npub: npubPlaceHolder
+      );
   return Contact(contact, []);
 }
 

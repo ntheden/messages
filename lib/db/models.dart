@@ -60,11 +60,19 @@ class DbContacts extends Table {
   ///   When true, then this is one of the user "accounts"
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text().withLength(min: 0, max: 64)();
+  TextColumn? get surname => text().withLength(min: 0, max: 64)();
+  TextColumn get username => text()();
   BoolColumn get isLocal => boolean()(); // Whether this is associated with a User
   BoolColumn get active => boolean()(); // Whether this is the active user
   // There can be more in Contact.npubs (see db/db.dart), but we will
   // use a primary npub here to maintain uniqueness of DbContact entries
   TextColumn get npub => text().unique().withLength(min: 64, max: 64)();
+  TextColumn get address => text()();
+  TextColumn get city => text()();
+  TextColumn get phone => text()();
+  TextColumn get email => text()();
+  TextColumn get email2 => text()();
+  TextColumn get notes => text()();
 }
 
 class DbEvents extends Table {

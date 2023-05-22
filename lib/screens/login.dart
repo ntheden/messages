@@ -10,7 +10,8 @@ import '../router/delegate.dart';
 import '../util/screen.dart';
 
 class Login extends StatefulWidget {
-  Login({Key? key}) : super(key: key);
+  bool cancelable = false;
+  Login(this.cancelable, {Key? key}) : super(key: key);
 
   @override
   State<Login> createState() => _LoginState();
@@ -21,6 +22,8 @@ class _LoginState extends State<Login> {
 
   TextEditingController nameController = TextEditingController();
   TextEditingController nsecController = TextEditingController();
+  FocusNode nameFocus = FocusNode();
+  FocusNode nsecFocus = FocusNode();
   final borderDecoration = InputDecoration(
     labelText: 'User Name',
     labelStyle: TextStyle(color: Colors.grey),
@@ -28,6 +31,20 @@ class _LoginState extends State<Login> {
   );
   bool missingName = false;
   bool invalidNsec = false;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    nameFocus.dispose();
+    nsecFocus.dispose();
+    nameController.dispose();
+    nsecController.dispose();
+    super.dispose();
+  }
 
   bool validateNsec() {
     String text = nsecController.text;
@@ -54,6 +71,7 @@ class _LoginState extends State<Login> {
     await switchUser(user!.contact.id);
     createContext(await getDefaultRelays(), user!);
     print('Successful login!');
+    Navigator.pop(context);
     routerDelegate.pushPage(name: '/chats', arguments: user!);
     runEventSink();
   }
@@ -61,6 +79,25 @@ class _LoginState extends State<Login> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        flexibleSpace: SafeArea(
+          child: Container(
+            padding: EdgeInsets.only(right: 16, top: 10),
+            child: Row(
+              children: [
+                IconButton(
+                  onPressed: (){
+                    Navigator.pop(context);
+                  },
+                  icon: Icon(Icons.arrow_back, color: Colors.white,),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
       body: Align(
         alignment: Alignment.center,
         child: Container(
@@ -93,7 +130,14 @@ class _LoginState extends State<Login> {
                       setState(() => missingName = false);
                     }
                   },
-                  child: TextField(
+                  child: RawKeyboardListener(
+                    focusNode: nameFocus,
+                    onKey: (dynamic key) {
+                      if (key.data.keyCode == 9) {
+                        FocusScope.of(context).requestFocus(nsecFocus);
+                      }
+                    },
+                    child: TextField(
                       controller: nameController,
                       decoration: missingName
                           ? borderDecoration.copyWith(
@@ -105,7 +149,9 @@ class _LoginState extends State<Login> {
                                 borderSide: BorderSide(color: Colors.red),
                               ),
                             )
-                          : borderDecoration),
+                          : borderDecoration,
+                    ),
+                  ),
                 ),
               ),
               Container(
@@ -118,6 +164,7 @@ class _LoginState extends State<Login> {
                   },
                   child: TextField(
                     controller: nsecController,
+                    focusNode: nsecFocus,
                     obscureText: true,
                     decoration: invalidNsec
                         ? borderDecoration.copyWith(

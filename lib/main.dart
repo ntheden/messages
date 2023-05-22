@@ -42,6 +42,10 @@ class MessagesApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primaryColor: PacificBlue,
+        brightness: Brightness.light,
+      ),
+      darkTheme: ThemeData(
+        primaryColor: PacificBlue,
         brightness: Brightness.dark,
       ),
       localizationsDelegates: MessagesLocalizations.localizationsDelegates,

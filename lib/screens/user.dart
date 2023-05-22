@@ -25,7 +25,6 @@ class _ChannelState extends State<Channel> {
       appBar: AppBar(
         elevation: 0,
         automaticallyImplyLeading: false,
-        //backgroundColor: Colors.white, // white for light mode
         flexibleSpace: SafeArea(
           child: Container(
             padding: EdgeInsets.only(right: 16),
