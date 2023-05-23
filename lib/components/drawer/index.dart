@@ -67,7 +67,7 @@ class DrawerScreenState extends State<DrawerScreen> {
                   backgroundColor: Colors.grey,
                 ),
                 */
-                child: currentUser!.avatar,
+                child: currentUser?.avatar,
               ),
               /*
               child: CircleAvatar(

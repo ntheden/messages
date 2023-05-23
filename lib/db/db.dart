@@ -1,5 +1,7 @@
+import 'dart:typed_data';
 import 'dart:io';
 import 'dart:core';
+import 'package:dart_bech32/dart_bech32.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:nostr/nostr.dart';
@@ -66,7 +68,10 @@ class Contact {
   String get name => contact.name;
   String get pubkey => npubs[0].pubkey; // FIXME
   String get privkey => npubs[0].privkey;
+  String get npub => hexToBech32('npub', pubkey);
+  String get nsec => hexToBech32('nsec', privkey);
   int get id => contact.id;
+  SvgPicture get avatar => SvgPicture.string(multiavatar(npub));
 
   @override
   String toString() {
@@ -78,7 +83,15 @@ class Contact {
         .toString();
   }
 
-  SvgPicture get avatar => SvgPicture.string(multiavatar(pubkey));
+  String hexToBech32(String prefix, String hexKey) {
+    List<int> data = [];
+    for (int i = 0; i < hexKey.length; i += 2) {
+      data.add(int.parse(hexKey.substring(i, i + 2), radix: 16));
+    }
+
+    final decoded = Decoded(prefix: prefix, words: bech32.toWords(Uint8List.fromList(data)));
+    return bech32.encode(decoded);
+  }
 }
 
 class Event {
