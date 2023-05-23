@@ -117,10 +117,13 @@ class ChatsEntry extends StatelessWidget {
       ),
       leading: SizedBox.fromSize(
         size: Size(50, 50),
+        /*
         child: CircleAvatar(
           backgroundImage: picture,
           backgroundColor: Colors.grey,
         ),
+        */
+        child: peer.avatar,
       ),
       onTap: () {
         final routerDelegate = Get.put(MyRouterDelegate());

@@ -22,6 +22,9 @@ dependencies:
   file_picker:
     git:
       url: https://github.com/miguelpruivo/flutter_file_picker.git
+  flutter_svg_provider:
+    git:
+      url: https://github.com/yang-f/flutter_svg_provider.git
   drift: ^2.7.0
   badges: ^3.1.1
   intl: ^0.18.0
@@ -30,6 +33,7 @@ dependencies:
   rxdart: ^0.27.7
   get: ^4.6.5
   shared_preferences: ^2.1.1
+  multiavatar: ^0.1.5
 
 
 dev_dependencies:

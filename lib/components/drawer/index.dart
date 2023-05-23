@@ -59,12 +59,24 @@ class DrawerScreenState extends State<DrawerScreen> {
             },
             currentAccountPicture: InkWell(
               onTap: () => print('@@@@@ open edit contact'),
+              child: SizedBox.fromSize(
+                size: Size(50, 50),
+                /*
+                child: CircleAvatar(
+                  backgroundImage: picture,
+                  backgroundColor: Colors.grey,
+                ),
+                */
+                child: currentUser!.avatar,
+              ),
+              /*
               child: CircleAvatar(
                 backgroundImage: NetworkImage(
                   "https://randomuser.me/api/portraits/men/${Random().nextInt(20)}.jpg",
                 ),
                 backgroundColor: Colors.grey.shade400,
               ),
+              */
             ),
             currentAccountPictureSize: Size(60, 60),
             otherAccountsPictures: [
@@ -141,6 +153,7 @@ class DrawerScreenState extends State<DrawerScreen> {
     users.asMap().forEach((index, user) =>
         tiles.add(DrawerUserListTile(
           name: user.name,
+          contact: user,
           picture: "https://avatars.githubusercontent.com/u/75714882",
           selected: user.active,
           onTap: () {

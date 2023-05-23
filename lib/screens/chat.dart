@@ -97,12 +97,24 @@ class ChatState extends State<Chat> {
                   icon: Icon(Icons.arrow_back, color: Colors.white,),
                 ),
                 SizedBox(width: 2,),
+                SizedBox.fromSize(
+                  size: Size(50, 50),
+                  /*
+                  child: CircleAvatar(
+                    backgroundImage: picture,
+                    backgroundColor: Colors.grey,
+                  ),
+                  */
+                  child: peerContact.avatar,
+                ),
+                /*
                 CircleAvatar(
                   backgroundImage: NetworkImage(
                     "https://randomuser.me/api/portraits/men/${Random().nextInt(100)}.jpg",
                   ),
                   maxRadius: 20,
                 ),
+                */
                 SizedBox(width: 12,),
                 Expanded(
                   child: Column(

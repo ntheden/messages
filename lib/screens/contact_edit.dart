@@ -85,10 +85,11 @@ class _ContactEditState extends State<ContactEdit> {
                     }
                   });
                 },
-                child: CircleAvatar(
-                  radius: 90,
-                  //backgroundImage: NetworkImage('https://via.placeholder.com/150'),
-                ),
+                child: widget.contact == null ?
+                  CircleAvatar(
+                    radius: 90,
+                    backgroundImage: NetworkImage('https://via.placeholder.com/150'),
+                  ) : widget.contact!.avatar,
               ),
               TextFormFieldDemo(),
             ],

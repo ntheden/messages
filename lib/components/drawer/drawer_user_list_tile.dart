@@ -1,10 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:badges/badges.dart' as badges;
 
+import '../../db/db.dart';
+
+
 class DrawerUserListTile extends StatelessWidget {
+  final String? picture;
+  final IconData? icon;
+  final String name;
+  final Contact? contact;
+  final Color backgroundColor;
+  final GestureTapCallback? onTap;
+  final GestureLongPressCallback? onLongPress;
+  final bool selected;
+
   const DrawerUserListTile({
     Key? key,
     this.picture = "",
+    this.contact,
     this.icon,
     required this.name,
     this.backgroundColor = Colors.grey,
@@ -12,14 +25,6 @@ class DrawerUserListTile extends StatelessWidget {
     this.onLongPress,
     this.selected = false,
   }) : super(key: key);
-
-  final String? picture;
-  final IconData? icon;
-  final String name;
-  final Color backgroundColor;
-  final GestureTapCallback? onTap;
-  final GestureLongPressCallback? onLongPress;
-  final bool selected;
 
   @override
   Widget build(BuildContext context) {
@@ -37,31 +42,20 @@ class DrawerUserListTile extends StatelessWidget {
               ),
               child: SizedBox.fromSize(
                 size: Size(35, 35),
-                child: CircleAvatar(
-                  child: Center(
-                    child: Text(
-                      this.picture != "" ? "" : this.name.substring(0, 1),
-                      style: TextStyle(color: Colors.white),
-                    ),
+                child: contact != null ?
+                  contact!.avatar
+                  : CircleAvatar(
+                      backgroundColor: Colors.grey,
                   ),
-                  backgroundImage: NetworkImage(this.picture!),
-                  backgroundColor: this.backgroundColor,
-                ),
               ),
             )
           : SizedBox.fromSize(
               size: Size(35, 35),
               child: this.icon != null
                   ? Icon(this.icon!)
+                  : contact != null ? contact!.avatar
                   : CircleAvatar(
-                      child: Center(
-                        child: Text(
-                          this.picture != "" ? "" : this.name.substring(0, 1),
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                      backgroundImage: NetworkImage(this.picture!),
-                      backgroundColor: this.backgroundColor,
+                      backgroundColor: Colors.grey,
                     ),
             ),
       title: Text(this.name),

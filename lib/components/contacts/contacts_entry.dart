@@ -55,10 +55,13 @@ class ContactsEntry extends StatelessWidget {
       ),
       leading: SizedBox.fromSize(
         size: Size(40, 40),
+        child: contact!.avatar,
+        /*
         child: CircleAvatar(
           backgroundImage: picture,
           backgroundColor: Colors.grey,
         ),
+        */
       ),
       onTap: () {
         final routerDelegate = Get.put(MyRouterDelegate());

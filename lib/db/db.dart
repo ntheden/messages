@@ -6,11 +6,12 @@ import 'package:drift/native.dart';
 import 'package:nostr/nostr.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:multiavatar/multiavatar.dart';
 
 import 'crud.dart';
 import 'models.dart';
 part 'db.g.dart';
-
 
 class MessageEntry {
   final Npub npub; // public key in nostr event
@@ -38,12 +39,11 @@ class MessageEntry {
   }
 }
 
-
 // This class might be going away
 class Context {
   final DbContext context;
   final List<Relay> defaultRelays;
-  final Contact user; 
+  final Contact user;
 
   Context(this.context, this.defaultRelays, this.user);
 
@@ -56,7 +56,6 @@ class Context {
         .toString();
   }
 }
-
 
 class Contact {
   final DbContact contact;
@@ -80,8 +79,9 @@ class Contact {
           ..write(')'))
         .toString();
   }
-}
 
+  SvgPicture get avatar => SvgPicture.string(multiavatar(pubkey));
+}
 
 class Event {
   final DbEvent event;
@@ -104,34 +104,31 @@ class Event {
   }
 }
 
-
-@DriftDatabase(
-    tables: [
-      DbContacts,
-      DbContexts,
-      DefaultRelays,
-      DbEvents,
-      Npubs,
-      ContactNpubs,
-      Etags,
-      EventPtags,
-      EventEtags,
-      Relays,
-    ])
+@DriftDatabase(tables: [
+  DbContacts,
+  DbContexts,
+  DefaultRelays,
+  DbEvents,
+  Npubs,
+  ContactNpubs,
+  Etags,
+  EventPtags,
+  EventEtags,
+  Relays,
+])
 class AppDatabase extends _$AppDatabase {
-    AppDatabase() : super(_openConnection());
+  AppDatabase() : super(_openConnection());
 
-    @override
-    int get schemaVersion => 1;
-
-}   
+  @override
+  int get schemaVersion => 1;
+}
 
 LazyDatabase _openConnection() {
-    return LazyDatabase(() async {
-        final dbFolder = await getApplicationDocumentsDirectory();
-        final file = File(join(dbFolder.path, 'messages.sqlite'));
-        return NativeDatabase(file);
-    });
+  return LazyDatabase(() async {
+    final dbFolder = await getApplicationDocumentsDirectory();
+    final file = File(join(dbFolder.path, 'messages.sqlite'));
+    return NativeDatabase(file);
+  });
 }
 
 final AppDatabase database = AppDatabase();
