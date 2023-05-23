@@ -11,7 +11,7 @@ Relays getRelays(Set<String> pubkeys) {
   // TODO: Maybe Relays should decide which relays to connect to
   // based on the passed in pubkeys
   relaySettings.forEach((name, url) {
-    relays?.add(name, url);
+    relays.add(name, url);
   });
-  return relays!;
+  return relays;
 }

@@ -1,8 +1,6 @@
-import 'package:badges/badges.dart' as badges;
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 
-import '../../constants/color.dart';
 import '../../db/db.dart';
 import '../../router/delegate.dart';
 
@@ -54,8 +52,8 @@ class ContactsEntry extends StatelessWidget {
         ],
       ),
       leading: SizedBox.fromSize(
-        size: Size(40, 40),
-        child: contact!.avatar,
+        size: const Size(40, 40),
+        child: contact.avatar,
         /*
         child: CircleAvatar(
           backgroundImage: picture,

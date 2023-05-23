@@ -1,39 +1,25 @@
-import 'package:flutter/material.dart';
 import 'package:drift/drift.dart';
 import 'package:nostr/nostr.dart' as nostr;
 import 'package:rxdart/rxdart.dart';
 
 import 'db.dart';
-import '../config/settings.dart';
 import '../util/logging.dart';
 
-
-// why doesn't this work???
-Stream<List<DbContact>> watchUser() async* {
-  Stream<List<DbContact>> entries = await (database.select(database.dbContacts)
-        ..where((c) => c.active.equals(true)))
-      .watch();
-}
-
 Future<void> switchUser(int id) async {
-  final allUsers = database
-    .update(database.dbContacts)
+  final allUsers = database.update(database.dbContacts)
     ..where((c) => c.isLocal.equals(true))
     ..where((c) => c.id.isNotValue(id));
 
-  allUsers.write(DbContactsCompanion(
-      active: Value(false),
-    )
-  );
+  allUsers.write(const DbContactsCompanion(
+    active: Value(false),
+  ));
 
-  final user = database
-    .update(database.dbContacts)
+  final user = database.update(database.dbContacts)
     ..where((c) => c.id.equals(id));
 
-  user.write(DbContactsCompanion(
-      active: Value(true),
-    )
-  );
+  user.write(const DbContactsCompanion(
+    active: Value(true),
+  ));
 }
 
 Future<Contact> createContactFromNpubs(List<Npub> npubs, String name,
@@ -46,19 +32,19 @@ Future<Contact> createContactFromNpubs(List<Npub> npubs, String name,
   });
 
   DbContactsCompanion db_contact = DbContactsCompanion.insert(
-          name: name,
-          surname: "",
-          username: "",
-          address: "",
-          city: "",
-          phone: "",
-          email: "",
-          email2: "",
-          notes: "",
-          isLocal: isLocal,
-          active: active,
-          npub: npubs[0].pubkey,
-        );
+    name: name,
+    surname: "",
+    username: "",
+    address: "",
+    city: "",
+    phone: "",
+    email: "",
+    email2: "",
+    notes: "",
+    isLocal: isLocal,
+    active: active,
+    npub: npubs[0].pubkey,
+  );
 
   final contactId = await database.into(database.dbContacts).insert(
         db_contact,
@@ -140,22 +126,22 @@ Future<void> createContact(
   }
 
   Contact contact = Contact(
-      DbContact(
-        id: contactId,
-        name: name,
-        surname: "",
-        username: "",
-        address: "",
-        city: "",
-        phone: "",
-        email: "",
-        email2: "",
-        notes: "",
-        isLocal: isLocal,
-        active: active,
-        npub: npubEntries[0].pubkey,
-      ),
-      npubEntries,
+    DbContact(
+      id: contactId,
+      name: name,
+      surname: "",
+      username: "",
+      address: "",
+      city: "",
+      phone: "",
+      email: "",
+      email2: "",
+      notes: "",
+      isLocal: isLocal,
+      active: active,
+      npub: npubEntries[0].pubkey,
+    ),
+    npubEntries,
   );
   writeContact(contact);
 }
@@ -207,7 +193,7 @@ Future<DbEvent> getEvent(String id) async {
 }
 
 DbEventsCompanion _insertQuery(
-  nostr.Event event, 
+  nostr.Event event,
   Contact fromContact,
   Contact toContact, {
   String? plaintext,
@@ -230,45 +216,42 @@ DbEventsCompanion _insertQuery(
 }
 
 Future<int> insertEvent(
-  nostr.Event event, 
+  nostr.Event event,
   Contact fromContact,
   Contact toContact, {
   String? plaintext,
   bool? decryptError,
 }) async {
   return database.into(database.dbEvents).insert(
-        _insertQuery(
-          event,
-          fromContact,
-          toContact,
-          plaintext: plaintext,
-          decryptError: decryptError
-        ),
+        _insertQuery(event, fromContact, toContact,
+            plaintext: plaintext, decryptError: decryptError),
         onConflict: DoNothing(),
       );
 }
 
 Future<int> updateEvent(
-  nostr.Event event, 
+  nostr.Event event,
   Contact fromContact,
   Contact toContact, {
   String? plaintext,
   bool? decryptError,
 }) async {
   return database.into(database.dbEvents).insert(
-        _insertQuery(event, fromContact, toContact, plaintext: plaintext, decryptError: decryptError),
+        _insertQuery(event, fromContact, toContact,
+            plaintext: plaintext, decryptError: decryptError),
         mode: InsertMode.insertOrReplace,
       );
 }
 
 // Locally sourced events call this directly, called by pages/chat
 Future<int> storeSentEvent(
-    nostr.Event event, 
-    Contact fromContact,
-    Contact toContact,
-    String plaintext,
-  ) async {
-  logEvent(event.createdAt * 1000, fromContact, toContact, plaintext, rx: false);
+  nostr.Event event,
+  Contact fromContact,
+  Contact toContact,
+  String plaintext,
+) async {
+  logEvent(event.createdAt * 1000, fromContact, toContact, plaintext,
+      rx: false);
   print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ store sent event');
   return insertEvent(
     event,
@@ -312,7 +295,8 @@ Future<void> storeReceivedEvent(
   if (fromContact == null) {
     // TODO: SPAM/DOS Protection
     print('New contact? From ${event.pubkey}');
-    await createContact([event.pubkey], "no name"); // TODO: Look up name from directory
+    await createContact(
+        [event.pubkey], "no name"); // TODO: Look up name from directory
     fromContact = await getContactFromNpub(event.pubkey);
     print('@@@@@@@@@@@@@@@@@@@@@@ created contact $fromContact');
   }
@@ -326,7 +310,9 @@ Future<void> storeReceivedEvent(
     decryptError = true;
   }
 
-  logEvent(event.createdAt * 1000, fromContact!, toContact!, plaintext ?? "<not decrypted>", rx: true);
+  logEvent(event.createdAt * 1000, fromContact!, toContact!,
+      plaintext ?? "<not decrypted>",
+      rx: true);
   insertEvent(
     event,
     fromContact,
@@ -348,10 +334,11 @@ nostr.EncryptedDirectMessage nostrEvent(Npub npub, DbEvent event) {
 }
 
 Future<List<MessageEntry>> messageEntries(
-    List<DbEvent> events,
-    Contact userHint, [// Are these hint optimizations worth it?
-    Contact? peerHint,
-  ]) async {
+  List<DbEvent> events,
+  Contact userHint, [
+  // Are these hint optimizations worth it?
+  Contact? peerHint,
+]) async {
   List<MessageEntry> messages = [];
   for (final event in events) {
     Npub npub = await getNpubFromId(event.pubkeyRef);
@@ -373,9 +360,8 @@ Future<List<MessageEntry>> messageEntries(
       from = peerHint == null ? await getContactFromNpub(npub.pubkey) : peerHint;
     }
     */
-    messages.add(
-      MessageEntry(npub, event, nostrEvent(npub, event), from!, to!)
-    );
+    messages
+        .add(MessageEntry(npub, event, nostrEvent(npub, event), from!, to!));
   }
   return messages;
 }
@@ -383,7 +369,8 @@ Future<List<MessageEntry>> messageEntries(
 // Gets all messages to/from current user
 Future<List<MessageEntry>> getUserMessages(Contact user) async {
   List<DbEvent> entries = await (database.select(database.dbEvents)
-        ..where((t) => t.toContact.equals(user.id) | t.fromContact.equals(user.id))
+        ..where(
+            (t) => t.toContact.equals(user.id) | t.fromContact.equals(user.id))
         ..orderBy([
           (t) => OrderingTerm(
                 expression: t.createdAt,
@@ -398,8 +385,9 @@ Future<List<MessageEntry>> getUserMessages(Contact user) async {
 // Gets all messages from/to current user and particular contact
 Future<List<MessageEntry>> getChatMessages(Contact user, Contact peer) async {
   List<DbEvent> entries = await (database.select(database.dbEvents)
-        ..where((t) => (t.toContact.equals(user.id) & t.fromContact.equals(peer.id)) |
-                        (t.toContact.equals(peer.id) & t.fromContact.equals(user.id)))
+        ..where((t) =>
+            (t.toContact.equals(user.id) & t.fromContact.equals(peer.id)) |
+            (t.toContact.equals(peer.id) & t.fromContact.equals(user.id)))
         ..orderBy([
           (t) => OrderingTerm(
                 expression: t.createdAt,
@@ -414,13 +402,14 @@ Future<List<MessageEntry>> getChatMessages(Contact user, Contact peer) async {
 // Watches all messages to/from current user
 Stream<List<MessageEntry>> watchUserMessages(Contact user) async* {
   Stream<List<DbEvent>> entries = await (database.select(database.dbEvents)
-      ..where((m) => m.fromContact.equals(user.id) | m.toContact.equals(user.id))
-      ..orderBy([
-        (t) => OrderingTerm(
-              expression: t.createdAt,
-              mode: OrderingMode.desc,
-            )
-      ]))
+        ..where(
+            (m) => m.fromContact.equals(user.id) | m.toContact.equals(user.id))
+        ..orderBy([
+          (t) => OrderingTerm(
+                expression: t.createdAt,
+                mode: OrderingMode.desc,
+              )
+        ]))
       .watch();
   await for (final entryList in entries) {
     // intermediate step of converting to nostr events in order to
@@ -433,14 +422,15 @@ Stream<List<MessageEntry>> watchUserMessages(Contact user) async* {
 // Watches all messages from/to current user and particular contact
 Stream<List<MessageEntry>> watchMessages(Contact user, Contact peer) async* {
   Stream<List<DbEvent>> entries = await (database.select(database.dbEvents)
-      ..where((t) => (t.toContact.equals(user.id) & t.fromContact.equals(peer.id)) |
-                      (t.toContact.equals(peer.id) & t.fromContact.equals(user.id)))
-      ..orderBy([
-        (t) => OrderingTerm(
-              expression: t.createdAt,
-              mode: OrderingMode.asc,
-            )
-      ]))
+        ..where((t) =>
+            (t.toContact.equals(user.id) & t.fromContact.equals(peer.id)) |
+            (t.toContact.equals(peer.id) & t.fromContact.equals(user.id)))
+        ..orderBy([
+          (t) => OrderingTerm(
+                expression: t.createdAt,
+                mode: OrderingMode.asc,
+              )
+        ]))
       .watch();
   await for (final entryList in entries) {
     List<MessageEntry> messages = await messageEntries(entryList, user, peer);
@@ -505,29 +495,28 @@ Future<void> writeContact(Contact entry) async {
   }
 }
 
-String npubPlaceHolder = "0000000000000000000000000000000000000000000000000000000000000000";
+String npubPlaceHolder =
+    "0000000000000000000000000000000000000000000000000000000000000000";
 
 Future<Contact> createEmptyContact(String name,
     {bool isLocal = false, bool active = false}) async {
   final id = await database
       .into(database.contactNpubs)
       .insert(ContactNpubsCompanion());
-  final contact =
-      DbContact(
-        id: id,
-        name: name,
-        surname: "",
-        username: "",
-        address: "",
-        city: "",
-        phone: "",
-        email: "",
-        email2: "",
-        notes: "",
-        isLocal: isLocal,
-        active: active,
-        npub: npubPlaceHolder
-      );
+  final contact = DbContact(
+      id: id,
+      name: name,
+      surname: "",
+      username: "",
+      address: "",
+      city: "",
+      phone: "",
+      email: "",
+      email2: "",
+      notes: "",
+      isLocal: isLocal,
+      active: active,
+      npub: npubPlaceHolder);
   return Contact(contact, []);
 }
 
@@ -626,7 +615,6 @@ Future<List<Contact>> getContacts(List<int> ids) async {
   }
   return contacts;
 }
-
 
 Future<List<Contact>> getAllContacts() async {
   final contactQuery = database.select(database.dbContacts);
