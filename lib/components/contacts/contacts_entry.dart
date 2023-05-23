@@ -69,7 +69,6 @@ class ContactsEntry extends StatelessWidget {
   }
 
   String getTitle() {
-    String npubHint = contact.npub.substring(0, 5) + '...' + contact.npub.substring(59, 63);
-    return npubHint;
+    return contact.npub.substring(59, 63);
   }
 }

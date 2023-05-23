@@ -121,7 +121,7 @@ class ChatState extends State<Chat> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
-                      Text('${peerContact.name}(${peerContact.npub.substring(0, 5)})',
+                      Text('${peerContact.name} (${peerContact.npub.substring(59, 63)})',
                         style: TextStyle( fontSize: 16 ,fontWeight: FontWeight.w600),
                       ),
                     ],
