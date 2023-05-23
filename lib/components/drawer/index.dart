@@ -51,7 +51,7 @@ class DrawerScreenState extends State<DrawerScreen> {
           UserAccountsDrawerHeader(
             accountName: currentUser == null ? Text("?") : Text(currentUser!.name),
             // TODO: This should display bech32 not hex
-            accountEmail: currentUser == null ? Text("npub...") : Text(currentUser!.pubkey),
+            accountEmail: currentUser == null ? Text("npub...") : Text(currentUser!.npub),
             onDetailsPressed: () {
               setState(() {
                 showOtherUsersFlag = showOtherUsersFlag ? false : true;
@@ -163,7 +163,6 @@ class DrawerScreenState extends State<DrawerScreen> {
               // chats, but once we have channels working, then we can't just push
               // chats here.
               (_) => routerDelegate.pushPage(name: '/chats', arguments: currentUser)));
-              Navigator.pop(context);
           },
         ),
       ),
@@ -178,7 +177,10 @@ class DrawerScreenState extends State<DrawerScreen> {
       DrawerUserListTile(
         name: "New User Identity",
         icon: Icons.person_add_outlined,
-        onTap: () => routerDelegate.pushPage(name: '/login', arguments: true),
+        onTap: () {
+          routerDelegate.pushPage(name: '/login', arguments: true);
+          Navigator.pop(context);
+        },
       ),
       Divider(),
     ];

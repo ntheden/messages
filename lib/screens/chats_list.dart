@@ -116,12 +116,11 @@ Future<List<Widget>> getChats(user, messages) async {
     MessageEntry message = peers[contact.id];
     // TODO: This formatting goes in the widget definition
     String name = contact.id == user.id ? "Me" : contact.name;
-    String pubkey = contact.npubs[0].pubkey;
-    String npubHint = pubkey.substring(0, 5) + '...' + pubkey.substring(59, 63);
+    String npubHint = contact.npub.substring(0, 5) + '...' + contact.npub.substring(59, 63);
     entries.add(
       ChatsEntry(
         name: '$name ($npubHint)',
-        npub: pubkey,
+        npub: contact.npub,
         picture: NetworkImage(
           "https://randomuser.me/api/portraits/men/${Random().nextInt(100)}.jpg",
         ),
