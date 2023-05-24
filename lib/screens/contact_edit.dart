@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter_svg_icons/flutter_svg_icons.dart';
 
 
 import '../router/delegate.dart';
 import '../db/db.dart';
 import '../util/messages_localizations.dart';
 import '../util/screen.dart';
+import '../components/icon/icon.dart';
 
 class ContactEdit extends StatefulWidget {
   final Contact? contact;
@@ -118,6 +120,7 @@ class TextFormFieldDemo extends StatefulWidget {
 
 class PersonData {
   String? name = '';
+  String? npub = '';
   String? phoneNumber = '';
   String? email = '';
 }
@@ -126,18 +129,20 @@ class TextFormFieldDemoState extends State<TextFormFieldDemo>
     with RestorationMixin {
   PersonData person = PersonData();
 
-  late FocusNode _phoneNumber, _email, _lifeStory;
+  late FocusNode _npub, _phoneNumber, _email, _lifeStory;
 
   @override
   void initState() {
     super.initState();
     _phoneNumber = FocusNode();
+    _npub = FocusNode();
     _email = FocusNode();
     _lifeStory = FocusNode();
   }
 
   @override
   void dispose() {
+    _npub.dispose();
     _phoneNumber.dispose();
     _email.dispose();
     _lifeStory.dispose();
@@ -152,7 +157,7 @@ class TextFormFieldDemoState extends State<TextFormFieldDemo>
   }
 
   @override
-  String get restorationId => 'text_field_demo';
+  String get restorationId => 'contact_edit';
 
   @override
   void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
@@ -231,6 +236,35 @@ class TextFormFieldDemoState extends State<TextFormFieldDemo>
                   _phoneNumber.requestFocus();
                 },
                 validator: _validateName,
+              ),
+              sizedBoxSpace,
+              TextFormField(
+                restorationId: 'npub_field',
+                textInputAction: TextInputAction.next,
+                focusNode: _npub,
+                decoration: InputDecoration(
+                  filled: true,
+                  icon: SvgIcon(icon: SvgIconData(
+                    'assets/nostr_logo_prpl.svg',
+                  )),
+                  hintText: localizations.demoTextFieldWhereCanWeReachYou,
+                  labelText: localizations.demoTextFieldPhoneNumber,
+                  prefixText: '+1 ',
+                ),
+                keyboardType: TextInputType.phone,
+                onSaved: (value) {
+                  person.phoneNumber = value;
+                  _email.requestFocus();
+                },
+                maxLength: 14,
+                maxLengthEnforcement: MaxLengthEnforcement.none,
+                validator: _validatePhoneNumber,
+                // TextInputFormatters are applied in sequence.
+                inputFormatters: <TextInputFormatter>[
+                  FilteringTextInputFormatter.digitsOnly,
+                  // Fit the validating format.
+                  _phoneNumberFormatter,
+                ],
               ),
               sizedBoxSpace,
               TextFormField(
