@@ -146,46 +146,6 @@ Future<void> createContact(
   writeContact(contact);
 }
 
-/*
-Future<void> createEventHELPER(nostr.Event event, {String? plaintext, String? fromRelay,}) async {
-  bool locallySent = (event.pubkey == getKey('bob', 'pub'));
-  if (plaintext == null && !locallySent) {
-    bool decryptError = false;
-    try {
-      plaintext = (event as nostr.EncryptedDirectMessage).getPlaintext(getKey('bob', 'priv'));
-    } catch(err) {
-      decryptError = true;
-      print(err);
-    }
-    updateEventPlaintext(event, decryptError ? "" : plaintext!, decryptError, fromRelay!);
-  }
-  logEvent(event, plaintext);
-}
-
-Future<void> updateEventPlaintext(
-    nostr.Event event,
-    String plaintext,
-    bool decryptError,
-    String fromRelay,
-  ) async {
-  final insert = DbEventsCompanion.insert(
-      id: event.id,
-      pubkey: event.pubkey,
-      receiver: (event as nostr.EncryptedDirectMessage).receiver!,
-      content: event.content,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(event.createdAt * 1000),
-      fromRelay: fromRelay,
-      kind: event.kind,
-      plaintext: plaintext,
-      decryptError: decryptError,
-  );
-  database
-    .into(database.dbEvents)
-    .insert(insert, mode: InsertMode.insertOrReplace)
-    .catchError((err) => print(err));
-}
-*/
-
 Future<DbEvent> getEvent(String id) async {
   return (database.select(database.dbEvents)
         ..where((e) => e.eventId.equals(id)))
@@ -713,5 +673,10 @@ Future<int> createRelay(String url, String name) {
 }
 
 Future<List<Relay>> getDefaultRelays() {
+  // XXX This will be different than "all"
+  return database.select(database.relays).get();
+}
+
+Future<List<Relay>> getAllRelays() {
   return database.select(database.relays).get();
 }

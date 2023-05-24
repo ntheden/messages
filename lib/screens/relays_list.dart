@@ -12,19 +12,19 @@ import '../db/db.dart';
 import '../util/date.dart';
 import '../router/delegate.dart';
 
-class ContactsList extends StatefulWidget {
+class RelaysList extends StatefulWidget {
   final String title;
-  List<Widget> contacts = [];
-  ContactsList({Key? key, this.title='Contacts'}) : super(key: key) {
-    getAllContacts().then(
-      (entries) => contacts = getContactWidgets(entries));
+  List<Widget> relays = [];
+  RelaysList({Key? key, this.title='Relays'}) : super(key: key) {
+    getAllRelays().then(
+      (entries) => relays = getRelayWidgets(entries));
   }
   @override
-  _ContactsListState createState() => _ContactsListState();
+  _RelaysListState createState() => _RelaysListState();
 }
 
-class _ContactsListState extends State<ContactsList> {
-  @override ContactsList get widget => super.widget;
+class _RelaysListState extends State<RelaysList> {
+  @override RelaysList get widget => super.widget;
   bool newContactToggle = false;
 
   @override
@@ -93,19 +93,19 @@ class _ContactsListState extends State<ContactsList> {
           final routerDelegate = Get.put(MyRouterDelegate());
           routerDelegate.pushPage(name: '/contactEdit', arguments: null);
         },
-        child: Icon(Icons.person_add),
+        child: Icon(Icons.add_rounded),
       ),
     );
   }
 }
 
-getContactWidgets(contacts) {
+getRelayWidgets(relays) {
   List<Widget> entries = [];
-  for (final contact in contacts) {
+  for (final relay in relays) {
     entries.add(
-      ContactsEntry(
-        name: '${contact!.name}',
-        contact: contact!,
+      RelaysEntry(
+        name: '${relay!.name}',
+        relay: relay!,
         picture: NetworkImage(
           "https://randomuser.me/api/portraits/men/${Random().nextInt(100)}.jpg",
         ),
@@ -114,3 +114,4 @@ getContactWidgets(contacts) {
   };
   return entries;
 }
+

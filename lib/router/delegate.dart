@@ -60,14 +60,14 @@ class MyRouterDelegate extends RouterDelegate<List<RouteSettings>>
       case '/contactEdit':
         child = ContactEdit(routeSettings.arguments as Contact?);
         break;
-      case '/contactList':
+      case '/contacts':
         child = ContactsList();
         break;
       case '/login':
         child = Login(routeSettings.arguments as bool);
         break;
       case '/relays':
-        child = RelaysTable();
+        child = RelaysList();
         break;
     }
 

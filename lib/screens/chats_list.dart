@@ -80,7 +80,7 @@ class _ChatsListState extends State<ChatsList> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           final routerDelegate = Get.put(MyRouterDelegate());
-          routerDelegate.pushPage(name: '/contactList');
+          routerDelegate.pushPage(name: '/contacts');
         },
         child: Icon(Icons.edit_rounded),
       ),

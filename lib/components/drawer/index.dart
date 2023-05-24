@@ -120,7 +120,7 @@ class DrawerScreenState extends State<DrawerScreen> {
             title: "Contacts", // Maybe a separate app in the future?
             icon: Icons.contacts_rounded,
             onTap: () {
-              routerDelegate.pushPage(name: '/contactList');
+              routerDelegate.pushPage(name: '/contacts');
               Navigator.pop(context);
             },
           ),

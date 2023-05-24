@@ -69,7 +69,6 @@ class _LoginState extends State<Login> {
       print(error);
     }
     await switchUser(user!.contact.id);
-    createContext(await getDefaultRelays(), user!);
     print('Successful login!');
     Navigator.pop(context);
     routerDelegate.pushPage(name: '/chats', arguments: user!);
