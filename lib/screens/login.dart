@@ -2,6 +2,8 @@ import 'dart:math';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:nostr/nostr.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:multiavatar/multiavatar.dart';
 
 import '../db/db.dart';
 import '../db/crud.dart';
@@ -31,6 +33,9 @@ class _LoginState extends State<Login> {
   );
   bool missingName = false;
   bool invalidNsec = false;
+  String _npub = "Welcome!";
+  String _title = "Messages";
+  Keychain? _keys;
 
   @override
   void initState() {
@@ -83,9 +88,9 @@ class _LoginState extends State<Login> {
         automaticallyImplyLeading: false,
         flexibleSpace: SafeArea(
           child: Container(
-            padding: EdgeInsets.only(right: 16, top: 10),
+            padding: EdgeInsets.only(right: 16),
             child: Row(
-              children: [
+              children: <Widget>[
                 if (widget.cancelable)
                   IconButton(
                     onPressed: (){
@@ -93,6 +98,15 @@ class _LoginState extends State<Login> {
                     },
                     icon: Icon(Icons.arrow_back, color: Colors.white,),
                   ),
+                SizedBox(width: 12,),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                  ),
+                ),
+                // TODO: This icon will allow you to configure relays
+                Icon(Icons.settings, color: Colors.white,),
               ],
             ),
           ),
@@ -101,27 +115,30 @@ class _LoginState extends State<Login> {
       body: Align(
         alignment: Alignment.center,
         child: Container(
-          height: screenAwareHeight(0.6, context),
+          height: screenAwareHeight(0.85, context),
           width: max(350, screenAwareWidth(0.5, context)),
           child: ListView(
             children: <Widget>[
+              SvgPicture.string(multiavatar(_npub)),
               Container(
-                  alignment: Alignment.center,
-                  padding: EdgeInsets.all(10),
-                  child: Text(
-                    'Messages',
-                    style: TextStyle(
-                        color: Colors.blue,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 30),
-                  )),
+                alignment: Alignment.center,
+                padding: EdgeInsets.all(10),
+                child: Text(
+                  _title.isEmpty ? "Messages" : _title,
+                  style: TextStyle(
+                      color: Colors.blue,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 30),
+                ),
+              ),
               Container(
-                  alignment: Alignment.center,
-                  padding: EdgeInsets.all(10),
-                  child: Text(
-                    'Sign in',
-                    style: TextStyle(fontSize: 20),
-                  )),
+                alignment: Alignment.center,
+                padding: EdgeInsets.all(10),
+                child: Text(
+                  'Sign in',
+                  style: TextStyle(fontSize: 20),
+                ),
+              ),
               Container(
                 padding: EdgeInsets.all(10),
                 child: Focus(
@@ -139,6 +156,9 @@ class _LoginState extends State<Login> {
                     },
                     child: TextField(
                       controller: nameController,
+                      onChanged: (value) {
+                        setState(() => _title = value);
+                      },
                       decoration: missingName
                           ? borderDecoration.copyWith(
                               labelText: "User Name required",
@@ -155,7 +175,7 @@ class _LoginState extends State<Login> {
                 ),
               ),
               Container(
-                padding: EdgeInsets.all(10),
+                padding: EdgeInsets.all(16),
                 child: Focus(
                   onFocusChange: (hasFocus) {
                     if (invalidNsec == true && validateNsec()) {
@@ -180,47 +200,49 @@ class _LoginState extends State<Login> {
                   ),
                 ),
               ),
-              TextButton(
-                onPressed: () {
-                  if (nameController.text.isEmpty) {
-                    setState(() => missingName = true);
-                    setState(() => invalidNsec = false);
-                    return;
-                  } else {
-                    setState(() => missingName = false);
-                  }
-                  setState(() => invalidNsec = false);
-                  createUserAndLogin(Keychain.generate(), nameController.text);
-                },
-                child: Text(
-                  'Create new Nsec',
+              Container(
+                height: 50,
+                width: screenAwareWidth(0.5, context),
+                padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+                child: ElevatedButton(
+                  child: Text('Login'),
+                  onPressed: () {
+                    if (nameController.text.isEmpty) {
+                      setState(() => missingName = true);
+                    } else {
+                      setState(() => missingName = false);
+                    }
+                    if (!validateNsec()) {
+                      setState(() => invalidNsec = true);
+                    } else {
+                      setState(() => invalidNsec = false);
+                    }
+                    if (!invalidNsec && !missingName) {
+                      createUserAndLogin(
+                        Keychain.from_bech32(nsecController.text),
+                        nameController.text,
+                      );
+                    }
+                  },
                 ),
               ),
               Container(
-                  height: 50,
-                  width: screenAwareWidth(0.5, context),
-                  padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
-                  child: ElevatedButton(
-                    child: Text('Login'),
-                    onPressed: () {
-                      if (nameController.text.isEmpty) {
-                        setState(() => missingName = true);
-                      } else {
-                        setState(() => missingName = false);
-                      }
-                      if (!validateNsec()) {
-                        setState(() => invalidNsec = true);
-                      } else {
-                        setState(() => invalidNsec = false);
-                      }
-                      if (!invalidNsec && !missingName) {
-                        createUserAndLogin(
-                          Keychain.from_bech32(nsecController.text),
-                          nameController.text,
-                        );
-                      }
-                    },
-                  )),
+                height: 50,
+                width: screenAwareWidth(0.5, context),
+                padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+                child: TextButton(
+                  onPressed: () {
+                    _keys = Keychain.generate();
+                    setState(() {
+                      _npub = _keys!.npub;
+                      nsecController.text = _keys!.nsec;
+                    });
+                  },
+                  child: Text(
+                    'Generate New User',
+                  ),
+                ),
+              ),
             ],
           ),
         ),

@@ -119,7 +119,7 @@ class Relay {
       queues[pubkey]?.add(DeferredEvent(event, receiver, toContact));
       // TODO: Look up name from directory
       // TODO: SPAM/DOS Protection
-      createContact([pubkey], "no name")
+      createContact([pubkey], "Unnamed")
           .then((_) => getContactFromNpub(pubkey).then((fromContact) {
                 // TODO: batch these
                 Queue<DeferredEvent> q = queues[pubkey]!;

@@ -256,7 +256,7 @@ Future<void> storeReceivedEvent(
     // TODO: SPAM/DOS Protection
     print('New contact? From ${event.pubkey}');
     await createContact(
-        [event.pubkey], "no name"); // TODO: Look up name from directory
+        [event.pubkey], "Unnamed"); // TODO: Look up name from directory
     fromContact = await getContactFromNpub(event.pubkey);
     print('@@@@@@@@@@@@@@@@@@@@@@ created contact $fromContact');
   }

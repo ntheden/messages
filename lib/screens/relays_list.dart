@@ -66,7 +66,7 @@ class _RelaysListState extends State<RelaysList> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       Text('Contacts',
-                        style: TextStyle( fontSize: 16 ,fontWeight: FontWeight.w600),
+                        style: TextStyle( fontSize: 16, fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
