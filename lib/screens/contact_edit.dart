@@ -10,7 +10,6 @@ import '../router/delegate.dart';
 import '../db/db.dart';
 import '../util/messages_localizations.dart';
 import '../util/screen.dart';
-import '../components/icon/icon.dart';
 
 class ContactEdit extends StatefulWidget {
   final Contact? contact;
@@ -21,103 +20,6 @@ class ContactEdit extends StatefulWidget {
   _ContactEditState createState() => _ContactEditState();
 }
 
-class _ContactEditState extends State<ContactEdit> {
-  final RouterDelegate routerDelegate = Get.put(MyRouterDelegate());
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        flexibleSpace: SafeArea(
-          child: Container(
-            padding: EdgeInsets.only(right: 16),
-            child: Row(
-              children: <Widget>[
-                IconButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  icon: Icon(Icons.arrow_back, color: Colors.white,),
-                ),
-                SizedBox(width: 12,),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Text(getTitle(),
-                        style: TextStyle(fontSize: 16 ,fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                ),
-                /*
-                IconButton(
-                  icon: Icon(Icons.edit),
-                  onPressed: () {
-                    // Switch to new/edit mode
-                    print('@@@@@ switch to new/edit mode');
-                  },
-                ),
-                */
-              ],
-            ),
-          ),
-        ),
-      ),
-      body: Align(
-        alignment: Alignment.center,
-        child: Container(
-          height: screenAwareHeight(0.8, context),
-          width: min(550, screenAwareWidth(0.8, context)),
-          child: ListView(
-            children: [
-              //SizedBox(height: 5.0,),
-              InkWell(
-                // Open image picker
-                onTap: () {
-                  print('@@@@@ open image picker');
-                  FilePicker.platform.pickFiles().then((result) {
-                    if (result != null) {
-                      //File file = File(result.files.single.path);
-                    } else {
-                      // User canceled the picker
-                    }
-                  });
-                },
-                child: widget.contact == null ?
-                  CircleAvatar(
-                    radius: 90,
-                    backgroundImage: NetworkImage('https://via.placeholder.com/150'),
-                  ) : widget.contact!.avatar,
-              ),
-              TextFormFieldDemo(),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  String getTitle() {
-    if (widget.contact == null) {
-      return 'New Contact';
-    }
-    // TODO: first/last name, else username
-    return 'Edit Contact: ${widget.contact!.name}';
-  } 
-}
-
-
-class TextFormFieldDemo extends StatefulWidget {
-  TextFormFieldDemo({super.key});
-
-  @override
-  TextFormFieldDemoState createState() => TextFormFieldDemoState();
-}
-
 class PersonData {
   String? name = '';
   String? npub = '';
@@ -125,16 +27,16 @@ class PersonData {
   String? email = '';
 }
 
-class TextFormFieldDemoState extends State<TextFormFieldDemo>
-    with RestorationMixin {
+class _ContactEditState extends State<ContactEdit> with RestorationMixin {
+  final RouterDelegate routerDelegate = Get.put(MyRouterDelegate());
   PersonData person = PersonData();
-
-  late FocusNode _npub, _phoneNumber, _email, _lifeStory;
+  late FocusNode _name, _npub, _phoneNumber, _email, _lifeStory;
 
   @override
   void initState() {
     super.initState();
     _phoneNumber = FocusNode();
+    _name = FocusNode();
     _npub = FocusNode();
     _email = FocusNode();
     _lifeStory = FocusNode();
@@ -143,6 +45,7 @@ class TextFormFieldDemoState extends State<TextFormFieldDemo>
   @override
   void dispose() {
     _npub.dispose();
+    _name.dispose();
     _phoneNumber.dispose();
     _email.dispose();
     _lifeStory.dispose();
@@ -198,6 +101,14 @@ class TextFormFieldDemoState extends State<TextFormFieldDemo>
     return null;
   }
 
+  String? _validateNpub(String? text) {
+    final regexp = RegExp(r'[a-zA-Z0-9]+$');
+    if (text!.startsWith('npub') && text!.contains(regexp)) {
+      return null;
+    }
+    return 'Enter the 63 character word starting with "npub"';
+  }
+
   String? _validatePhoneNumber(String? value) {
     final phoneExp = RegExp(r'^\(\d\d\d\) \d\d\d\-\d\d\d\d$');
     if (!phoneExp.hasMatch(value!)) {
@@ -208,6 +119,83 @@ class TextFormFieldDemoState extends State<TextFormFieldDemo>
 
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        flexibleSpace: SafeArea(
+          child: Container(
+            padding: EdgeInsets.only(right: 16),
+            child: Row(
+              children: <Widget>[
+                IconButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  icon: Icon(Icons.arrow_back, color: Colors.white,),
+                ),
+                SizedBox(width: 12,),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Text(
+                        getTitle(),
+                        style: TextStyle(fontSize: 16 ,fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                ),
+                /*
+                IconButton(
+                  icon: Icon(Icons.edit),
+                  onPressed: () {
+                    // Switch to new/edit mode
+                    print('@@@@@ switch to new/edit mode');
+                  },
+                ),
+                */
+              ],
+            ),
+          ),
+        ),
+      ),
+      body: Align(
+        alignment: Alignment.center,
+        child: Container(
+          height: screenAwareHeight(0.8, context),
+          width: min(550, screenAwareWidth(0.8, context)),
+          child: ListView(
+            children: [
+              //SizedBox(height: 5.0,),
+              InkWell(
+                // Open image picker
+                onTap: () {
+                  print('@@@@@ open image picker');
+                  FilePicker.platform.pickFiles().then((result) {
+                    if (result != null) {
+                      //File file = File(result.files.single.path);
+                    } else {
+                      // User canceled the picker
+                    }
+                  });
+                },
+                child: widget.contact == null ?
+                  CircleAvatar(
+                    radius: 90,
+                    backgroundImage: NetworkImage('https://via.placeholder.com/150'),
+                  ) : widget.contact!.avatar,
+              ),
+              buildForm(context),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildForm(BuildContext context) {
     const sizedBoxSpace = SizedBox(height: 24);
     final localizations = MessagesLocalizations.of(context)!;
 
@@ -222,23 +210,6 @@ class TextFormFieldDemoState extends State<TextFormFieldDemo>
             children: [
               sizedBoxSpace,
               TextFormField(
-                restorationId: 'name_field',
-                textInputAction: TextInputAction.next,
-                textCapitalization: TextCapitalization.words,
-                decoration: InputDecoration(
-                  filled: true,
-                  icon: const Icon(Icons.person),
-                  hintText: localizations.demoTextFieldWhatDoPeopleCallYou,
-                  labelText: localizations.demoTextFieldNameField,
-                ),
-                onSaved: (value) {
-                  person.name = value;
-                  _phoneNumber.requestFocus();
-                },
-                validator: _validateName,
-              ),
-              sizedBoxSpace,
-              TextFormField(
                 restorationId: 'npub_field',
                 textInputAction: TextInputAction.next,
                 focusNode: _npub,
@@ -247,51 +218,42 @@ class TextFormFieldDemoState extends State<TextFormFieldDemo>
                   icon: SvgIcon(icon: SvgIconData(
                     'assets/nostr_logo_prpl.svg',
                   )),
-                  hintText: localizations.demoTextFieldWhereCanWeReachYou,
-                  labelText: localizations.demoTextFieldPhoneNumber,
-                  prefixText: '+1 ',
+                  hintText: "Enter npub",
+                  labelText: "Nostr Public Key (npub)*",
                 ),
-                keyboardType: TextInputType.phone,
+                keyboardType: TextInputType.text,
                 onSaved: (value) {
-                  person.phoneNumber = value;
-                  _email.requestFocus();
+                  person.npub = value;
+                  _name.requestFocus();
                 },
-                maxLength: 14,
+                maxLength: 63,
                 maxLengthEnforcement: MaxLengthEnforcement.none,
-                validator: _validatePhoneNumber,
+                validator: _validateNpub,
                 // TextInputFormatters are applied in sequence.
+                /*
                 inputFormatters: <TextInputFormatter>[
                   FilteringTextInputFormatter.digitsOnly,
                   // Fit the validating format.
                   _phoneNumberFormatter,
                 ],
+                */
               ),
               sizedBoxSpace,
               TextFormField(
-                restorationId: 'phone_number_field',
+                restorationId: 'name_field',
                 textInputAction: TextInputAction.next,
-                focusNode: _phoneNumber,
+                textCapitalization: TextCapitalization.words,
                 decoration: InputDecoration(
                   filled: true,
-                  icon: const Icon(Icons.phone),
-                  hintText: localizations.demoTextFieldWhereCanWeReachYou,
-                  labelText: localizations.demoTextFieldPhoneNumber,
-                  prefixText: '+1 ',
+                  icon: const Icon(Icons.person),
+                  hintText: "Will be retrieved from relay if not entered",
+                  labelText: "Name",
                 ),
-                keyboardType: TextInputType.phone,
                 onSaved: (value) {
-                  person.phoneNumber = value;
+                  person.name = value;
                   _email.requestFocus();
                 },
-                maxLength: 14,
-                maxLengthEnforcement: MaxLengthEnforcement.none,
-                validator: _validatePhoneNumber,
-                // TextInputFormatters are applied in sequence.
-                inputFormatters: <TextInputFormatter>[
-                  FilteringTextInputFormatter.digitsOnly,
-                  // Fit the validating format.
-                  _phoneNumberFormatter,
-                ],
+                //validator: _validateName,
               ),
               sizedBoxSpace,
               TextFormField(
@@ -301,28 +263,41 @@ class TextFormFieldDemoState extends State<TextFormFieldDemo>
                 decoration: InputDecoration(
                   filled: true,
                   icon: const Icon(Icons.email),
-                  hintText: localizations.demoTextFieldYourEmailAddress,
-                  labelText: localizations.demoTextFieldEmail,
+                  hintText: "Contact's email address (optional)",
+                  labelText: "Email",
                 ),
                 keyboardType: TextInputType.emailAddress,
                 onSaved: (value) {
                   person.email = value;
+                  _phoneNumber.requestFocus();
                   _lifeStory.requestFocus();
                 },
               ),
               sizedBoxSpace,
-              // Disabled text field
               TextFormField(
-                enabled: false,
-                restorationId: 'disabled_email_field',
+                restorationId: 'phone_number_field',
                 textInputAction: TextInputAction.next,
+                focusNode: _phoneNumber,
                 decoration: InputDecoration(
                   filled: true,
-                  icon: const Icon(Icons.email),
-                  hintText: localizations.demoTextFieldYourEmailAddress,
-                  labelText: localizations.demoTextFieldEmail,
+                  icon: const Icon(Icons.phone),
+                  hintText: "Enter a phone number for purple-pilling this contact",
+                  labelText: "Phone number",
                 ),
-                keyboardType: TextInputType.emailAddress,
+                keyboardType: TextInputType.phone,
+                onSaved: (value) {
+                  person.phoneNumber = value;
+                  _lifeStory.requestFocus();
+                },
+                maxLength: 14,
+                maxLengthEnforcement: MaxLengthEnforcement.none,
+                //validator: _validatePhoneNumber,
+                // TextInputFormatters are applied in sequence.
+                inputFormatters: <TextInputFormatter>[
+                  FilteringTextInputFormatter.digitsOnly,
+                  // Fit the validating format.
+                  _phoneNumberFormatter,
+                ],
               ),
               sizedBoxSpace,
               TextFormField(
@@ -330,9 +305,9 @@ class TextFormFieldDemoState extends State<TextFormFieldDemo>
                 focusNode: _lifeStory,
                 decoration: InputDecoration(
                   border: const OutlineInputBorder(),
-                  hintText: localizations.demoTextFieldTellUsAboutYourself,
-                  helperText: localizations.demoTextFieldKeepItShort,
-                  labelText: localizations.demoTextFieldLifeStory,
+                  hintText: "Enter notes here",
+                  helperText: "Any notes you would like to add on the contact",
+                  labelText: "Notes",
                 ),
                 maxLines: 3,
               ),
@@ -340,7 +315,7 @@ class TextFormFieldDemoState extends State<TextFormFieldDemo>
               Center(
                 child: ElevatedButton(
                   onPressed: _handleSubmitted,
-                  child: Text(localizations.demoTextFieldSubmit),
+                  child: Text("Save"),
                 ),
               ),
               sizedBoxSpace,
@@ -355,6 +330,14 @@ class TextFormFieldDemoState extends State<TextFormFieldDemo>
       ),
     );
   }
+
+  String getTitle() {
+    if (widget.contact == null) {
+      return 'New Contact';
+    }
+    // TODO: first/last name, else username
+    return 'Edit Contact: ${widget.contact!.name}';
+  } 
 }
 
 /// Format incoming numeric text to fit the format of (###) ###-#### ##
