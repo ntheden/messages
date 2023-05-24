@@ -41,6 +41,8 @@ Future<Contact> createContactFromNpubs(List<Npub> npubs, String name,
     email: "",
     email2: "",
     notes: "",
+    picture_url: "",
+    picture_pathname: "",
     isLocal: isLocal,
     active: active,
     npub: npubs[0].pubkey,
@@ -70,6 +72,8 @@ Future<Contact> createContactFromNpubs(List<Npub> npubs, String name,
       email: "",
       email2: "",
       notes: "",
+      picture_url: "",
+      picture_pathname: "",
       isLocal: isLocal,
       active: active,
       npub: npubs[0].pubkey,
@@ -105,6 +109,8 @@ Future<void> createContact(
           email: "",
           email2: "",
           notes: "",
+          picture_url: "",
+          picture_pathname: "",
           isLocal: isLocal,
           active: active,
           npub: npubs[0],
@@ -137,6 +143,8 @@ Future<void> createContact(
       email: "",
       email2: "",
       notes: "",
+      picture_url: "",
+      picture_pathname: "",
       isLocal: isLocal,
       active: active,
       npub: npubEntries[0].pubkey,
@@ -474,6 +482,8 @@ Future<Contact> createEmptyContact(String name,
       email: "",
       email2: "",
       notes: "",
+      picture_url: "",
+      picture_pathname: "",
       isLocal: isLocal,
       active: active,
       npub: npubPlaceHolder);
@@ -603,61 +613,6 @@ Future<Contact> getContact(DbContact contact) async {
   return Contact(contact, npubs);
 }
 
-Future<Context> getContext({int id = 1}) async {
-  final contextQuery = database.select(database.dbContexts)
-    ..where((c) => c.id.equals(id));
-
-  final relaysQuery = database.select(database.defaultRelays).join(
-    [
-      innerJoin(
-        database.relays,
-        database.relays.id.equalsExp(database.defaultRelays.relay),
-      ),
-    ],
-  )..where(database.defaultRelays.context.equals(id));
-
-  final relays = (await relaysQuery.get()).map((row) {
-    return row.readTable(database.relays);
-  }).toList();
-
-  DbContext context = await contextQuery.getSingle();
-
-  return Context(context, relays, await getContactFromId(context.currentUser));
-}
-
-Future<void> createContext(List<Relay> relays, Contact currentUser) async {
-  Context context = Context(
-    DbContext(
-      id: 1,
-      currentUser: currentUser.contact.id,
-    ),
-    relays,
-    currentUser,
-  );
-  writeContext(context);
-}
-
-Future<void> writeContext(Context entry) async {
-  DbContext context = entry.context;
-
-  await database
-      .into(database.dbContexts)
-      .insert(context, mode: InsertMode.replace);
-
-  await (database.delete(database.defaultRelays)
-        ..where((item) => item.context.equals(context.id)))
-      .go();
-
-  for (final relay in entry.defaultRelays) {
-    await database
-        .into(database.defaultRelays)
-        .insert(DefaultRelaysCompanion.insert(
-          context: context.id,
-          relay: relay.id,
-        ));
-  }
-}
-
 Future<int> createRelay(String url, String name) {
   RelaysCompanion relay = RelaysCompanion.insert(
     url: url,
@@ -670,11 +625,6 @@ Future<int> createRelay(String url, String name) {
           target: [database.relays.id],
         ),
       );
-}
-
-Future<List<Relay>> getDefaultRelays() {
-  // XXX This will be different than "all"
-  return database.select(database.relays).get();
 }
 
 Future<List<Relay>> getAllRelays() {

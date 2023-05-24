@@ -5,7 +5,7 @@ Map<String, String> relaySettings = {
   'monstr_relay': 'ws://192.168.50.144:8081',
 };
 
-// Maybe getRelays should be off of a Contact
+// Maybe getRelays should be off of a User
 Relays getRelays(Set<String> pubkeys) {
   Relays relays = Relays(pubkeys);
   // TODO: Maybe Relays should decide which relays to connect to

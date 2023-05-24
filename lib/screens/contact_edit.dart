@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:multiavatar/multiavatar.dart';
 
 
 import '../router/delegate.dart';
@@ -22,15 +24,22 @@ class ContactEdit extends StatefulWidget {
 
 class PersonData {
   String? name = '';
-  String? npub = '';
+  String? npub = 'Welcome!';
   String? phoneNumber = '';
   String? email = '';
+  String? notes = '';
 }
 
 class _ContactEditState extends State<ContactEdit> with RestorationMixin {
   final RouterDelegate routerDelegate = Get.put(MyRouterDelegate());
   PersonData person = PersonData();
-  late FocusNode _name, _npub, _phoneNumber, _email, _lifeStory;
+  late FocusNode _name, _npub, _phoneNumber, _email, _notes;
+  TextEditingController nameController = TextEditingController();
+  TextEditingController npubController = TextEditingController();
+  TextEditingController phoneController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
+  TextEditingController notesController = TextEditingController();
+  String _title = "New Contact";
 
   @override
   void initState() {
@@ -39,7 +48,20 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
     _name = FocusNode();
     _npub = FocusNode();
     _email = FocusNode();
-    _lifeStory = FocusNode();
+    _notes = FocusNode();
+    if (widget.contact != null) {
+      _title = 'Edit Contact - ${widget.contact!.name}';
+      person.name = widget.contact!.name;
+      person.npub = widget.contact!.npub;
+      person.phoneNumber = widget.contact!.phone;
+      person.email = widget.contact!.email;
+      person.notes = widget.contact!.notes;
+      nameController.text = person.name!;
+      npubController.text = person.npub!;
+      emailController.text = person.email!;
+      phoneController.text = person.phoneNumber!;
+      notesController.text = person.notes!;
+    }
   }
 
   @override
@@ -48,7 +70,12 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
     _name.dispose();
     _phoneNumber.dispose();
     _email.dispose();
-    _lifeStory.dispose();
+    _notes.dispose();
+    nameController.dispose();
+    npubController.dispose();
+    phoneController.dispose();
+    emailController.dispose();
+    notesController.dispose();
     super.dispose();
   }
 
@@ -82,11 +109,12 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
       showInSnackBar(
         MessagesLocalizations.of(context)!.demoTextFieldFormErrors,
       );
-    } else {
-      form.save();
-      showInSnackBar(MessagesLocalizations.of(context)!
-          .demoTextFieldNameHasPhoneNumber(person.name!, person.phoneNumber!));
+      return;
     }
+    form.save();
+    showInSnackBar(MessagesLocalizations.of(context)!
+        .demoTextFieldNameHasPhoneNumber(person.name!, person.phoneNumber!));
+    // TODO
   }
 
   String? _validateName(String? value) {
@@ -103,7 +131,7 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
 
   String? _validateNpub(String? text) {
     final regexp = RegExp(r'[a-zA-Z0-9]+$');
-    if (text!.startsWith('npub') && text!.contains(regexp)) {
+    if (text!.startsWith('npub') && text!.contains(regexp) && text.length == 63) {
       return null;
     }
     return 'Enter the 63 character word starting with "npub"';
@@ -141,7 +169,7 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       Text(
-                        getTitle(),
+                        _title,
                         style: TextStyle(fontSize: 16 ,fontWeight: FontWeight.w600),
                       ),
                     ],
@@ -181,11 +209,7 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
                     }
                   });
                 },
-                child: widget.contact == null ?
-                  CircleAvatar(
-                    radius: 90,
-                    backgroundImage: NetworkImage('https://via.placeholder.com/150'),
-                  ) : widget.contact!.avatar,
+                child: SvgPicture.string(multiavatar(person.npub!)),
               ),
               buildForm(context),
             ],
@@ -211,6 +235,7 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
               sizedBoxSpace,
               TextFormField(
                 restorationId: 'npub_field',
+                controller: npubController,
                 textInputAction: TextInputAction.next,
                 focusNode: _npub,
                 decoration: InputDecoration(
@@ -225,6 +250,15 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
                 onSaved: (value) {
                   person.npub = value;
                   _name.requestFocus();
+                },
+                onChanged: (value) {
+                  setState(() {
+                    if (_validateNpub(value) == null) {
+                      person.npub = value;
+                    } else {
+                      person.npub = "Welcome!";
+                    }
+                  });
                 },
                 maxLength: 63,
                 maxLengthEnforcement: MaxLengthEnforcement.none,
@@ -241,6 +275,7 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
               sizedBoxSpace,
               TextFormField(
                 restorationId: 'name_field',
+                controller: nameController,
                 textInputAction: TextInputAction.next,
                 textCapitalization: TextCapitalization.words,
                 decoration: InputDecoration(
@@ -254,10 +289,14 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
                   _email.requestFocus();
                 },
                 //validator: _validateName,
+                onChanged: (value) {
+                  setState(() => _title = "${widget.contact == null ? 'New' : 'Edit'} Contact - $value");
+                },
               ),
               sizedBoxSpace,
               TextFormField(
                 restorationId: 'email_field',
+                controller: emailController,
                 textInputAction: TextInputAction.next,
                 focusNode: _email,
                 decoration: InputDecoration(
@@ -270,12 +309,13 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
                 onSaved: (value) {
                   person.email = value;
                   _phoneNumber.requestFocus();
-                  _lifeStory.requestFocus();
+                  _notes.requestFocus();
                 },
               ),
               sizedBoxSpace,
               TextFormField(
                 restorationId: 'phone_number_field',
+                controller: phoneController,
                 textInputAction: TextInputAction.next,
                 focusNode: _phoneNumber,
                 decoration: InputDecoration(
@@ -287,7 +327,7 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
                 keyboardType: TextInputType.phone,
                 onSaved: (value) {
                   person.phoneNumber = value;
-                  _lifeStory.requestFocus();
+                  _notes.requestFocus();
                 },
                 maxLength: 14,
                 maxLengthEnforcement: MaxLengthEnforcement.none,
@@ -302,7 +342,8 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
               sizedBoxSpace,
               TextFormField(
                 restorationId: 'life_story_field',
-                focusNode: _lifeStory,
+                controller: notesController,
+                focusNode: _notes,
                 decoration: InputDecoration(
                   border: const OutlineInputBorder(),
                   hintText: "Enter notes here",
@@ -332,6 +373,7 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
   }
 
   String getTitle() {
+    return _title;
     if (widget.contact == null) {
       return 'New Contact';
     }

@@ -31,7 +31,6 @@ class _LoginState extends State<Login> {
     labelStyle: TextStyle(color: Colors.grey),
     border: OutlineInputBorder(),
   );
-  bool missingName = false;
   bool invalidNsec = false;
   String _npub = "Welcome!";
   String _title = "Messages";
@@ -73,6 +72,7 @@ class _LoginState extends State<Login> {
     } catch (error) {
       print(error);
     }
+    _npub = keys.npub; // trying to get rid of that flash of the wrong avatar
     await switchUser(user!.contact.id);
     print('Successful login!');
     Navigator.pop(context);
@@ -142,35 +142,14 @@ class _LoginState extends State<Login> {
               Container(
                 padding: EdgeInsets.all(10),
                 child: Focus(
-                  onFocusChange: (hasFocus) {
-                    if (missingName == true && !nameController.text.isEmpty) {
-                      setState(() => missingName = false);
-                    }
-                  },
-                  child: RawKeyboardListener(
+                  onFocusChange: (hasFocus) {},
+                  child: TextField(
                     focusNode: nameFocus,
-                    onKey: (dynamic key) {
-                      if (key.data.keyCode == 9) {
-                        FocusScope.of(context).requestFocus(nsecFocus);
-                      }
+                    controller: nameController,
+                    onChanged: (value) {
+                      setState(() => _title = value);
                     },
-                    child: TextField(
-                      controller: nameController,
-                      onChanged: (value) {
-                        setState(() => _title = value);
-                      },
-                      decoration: missingName
-                          ? borderDecoration.copyWith(
-                              labelText: "User Name required",
-                              labelStyle: TextStyle(
-                                color: Colors.red,
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.red),
-                              ),
-                            )
-                          : borderDecoration,
-                    ),
+                    decoration: borderDecoration,
                   ),
                 ),
               ),
@@ -207,17 +186,12 @@ class _LoginState extends State<Login> {
                 child: ElevatedButton(
                   child: Text('Login'),
                   onPressed: () {
-                    if (nameController.text.isEmpty) {
-                      setState(() => missingName = true);
-                    } else {
-                      setState(() => missingName = false);
-                    }
                     if (!validateNsec()) {
                       setState(() => invalidNsec = true);
                     } else {
                       setState(() => invalidNsec = false);
                     }
-                    if (!invalidNsec && !missingName) {
+                    if (!invalidNsec) {
                       createUserAndLogin(
                         Keychain.from_bech32(nsecController.text),
                         nameController.text,

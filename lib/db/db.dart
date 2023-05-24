@@ -39,24 +39,6 @@ class MessageEntry {
   }
 }
 
-// This class might be going away
-class Context {
-  final DbContext context;
-  final List<Relay> defaultRelays;
-  final Contact user;
-
-  Context(this.context, this.defaultRelays, this.user);
-
-  @override
-  String toString() {
-    return (StringBuffer('Context(')
-          ..write('user: $user, ')
-          ..write('defaultRelays: ${defaultRelays}, ')
-          ..write(')'))
-        .toString();
-  }
-}
-
 class Contact {
   final DbContact contact;
   final List<Npub> npubs;
@@ -70,6 +52,13 @@ class Contact {
   String get privkey => npubs[0].privkey;
   String get npub => hexToBech32('npub', pubkey);
   String get nsec => hexToBech32('nsec', privkey);
+  String get address => contact.address;
+  String get city => contact.city;
+  String get phone => contact.phone;
+  String get email => contact.email;
+  String get notes => contact.notes;
+  //String get picture_url => contact.picture_url;
+  //String get picture_pathname => contact.picture_pathname;
   int get id => contact.id;
   SvgPicture get avatar => SvgPicture.string(multiavatar(npub));
 
@@ -117,8 +106,6 @@ class Event {
 
 @DriftDatabase(tables: [
   DbContacts,
-  DbContexts,
-  DefaultRelays,
   DbEvents,
   Npubs,
   ContactNpubs,
