@@ -53,18 +53,22 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
     _email = FocusNode();
     _notes = FocusNode();
     if (widget.contact != null) {
-      _title = 'Edit Contact - ${widget.contact!.name}';
-      person.name = widget.contact!.name;
-      person.npub = widget.contact!.npub;
-      person.phoneNumber = widget.contact!.phone;
-      person.email = widget.contact!.email;
-      person.notes = widget.contact!.notes;
-      nameController.text = person.name!;
-      npubController.text = person.npub!;
-      emailController.text = person.email!;
-      phoneController.text = person.phoneNumber!;
-      notesController.text = person.notes!;
+      updateFields(widget.contact!);
     }
+  }
+
+  void updateFields(Contact contact) {
+    _title = 'Edit Contact - ${contact!.name}';
+    person.name = contact.name;
+    person.npub = contact.npub;
+    person.phoneNumber = contact.phone;
+    person.email = contact.email;
+    person.notes = contact.notes;
+    nameController.text = person.name!;
+    npubController.text = person.npub!;
+    emailController.text = person.email!;
+    phoneController.text = person.phoneNumber!;
+    notesController.text = person.notes!;
   }
 
   @override
@@ -115,15 +119,16 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
       return;
     }
     form.save();
-    showInSnackBar(MessagesLocalizations.of(context)!
-        .demoTextFieldNameHasPhoneNumber(person.name!, person.phoneNumber!));
+    showInSnackBar(
+      "Saved ${person.npub}",
+    );
 
     String pubkey = bech32_decode('npub', person.npub!);
     insertNpub(pubkey, nameController.text).then((_) =>
       getNpub(pubkey).then((npub) =>
         createContactFromNpubs(
           [npub],
-          nameController.text ?? "Unnamed",
+          nameController.text.isEmpty ? "Unnamed" : nameController.text,
           active: false,
         )));
     Navigator.pop(context);
@@ -271,6 +276,11 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
                       person.npub = "Welcome!";
                     }
                   });
+                  getContactFromNpub(bech32_decode('npub', person.npub!)).then((contact) {
+                    if (contact != null && widget.contact == null) {
+                      setState(() => updateFields(contact));
+                    }
+                  });
                 },
                 maxLength: 63,
                 maxLengthEnforcement: MaxLengthEnforcement.none,
@@ -357,6 +367,7 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
                 controller: notesController,
                 focusNode: _notes,
                 decoration: InputDecoration(
+                  icon: const Icon(Icons.notes),
                   border: const OutlineInputBorder(),
                   hintText: "Enter notes here",
                   helperText: "Any notes you would like to add on the contact",
@@ -366,9 +377,20 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
               ),
               sizedBoxSpace,
               Center(
-                child: ElevatedButton(
-                  onPressed: _handleSubmitted,
-                  child: Text("Save"),
+                child: Container(
+                  height: 50,
+                  width: screenAwareWidth(0.5, context),
+                  padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+                  child: TextButton(
+                    onPressed: _handleSubmitted,
+                    child: Text(
+                      'Save',
+                    ),
+                    style: TextButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
                 ),
               ),
               sizedBoxSpace,

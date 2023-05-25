@@ -60,13 +60,12 @@ class _LoginState extends State<Login> {
   }
 
   void createUserAndLogin(Keychain keys, String name) async {
-    await insertNpub(keys.public, nameController.text ?? "Unnamed",
-        privkey: keys.private);
+    await insertNpub(keys.public, name, privkey: keys.private);
     Contact? user;
     try {
       user = await createContactFromNpubs(
         [await getNpub(keys.public)],
-        nameController.text,
+        name,
         active: true,
       );
     } catch (error) {
@@ -193,7 +192,7 @@ class _LoginState extends State<Login> {
                     if (!invalidNsec) {
                       createUserAndLogin(
                         Keychain.from_bech32(nsecController.text),
-                        nameController.text,
+                        nameController.text.isEmpty ? "Unnamed" : nameController.text,
                       );
                     }
                   },

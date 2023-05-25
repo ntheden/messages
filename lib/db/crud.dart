@@ -31,6 +31,15 @@ Future<Contact> createContactFromNpubs(List<Npub> npubs, String name,
     }
   });
 
+  /*
+  DbContact? dbContact;
+  try {
+    dbContact = await (database.select(database.dbContacts)
+      ..where((c) => c.npub.equals(npubs[0].pubkey))).getSingle();
+  } catch (error) {
+  }
+  */
+
   DbContactsCompanion db_contact = DbContactsCompanion.insert(
     name: name,
     surname: "",
