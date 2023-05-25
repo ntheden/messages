@@ -518,6 +518,10 @@ Stream<Contact> watchContact(int id) {
   });
 }
 
+Stream<List<DbContact>> watchAllContacts() {
+  return database.select(database.dbContacts).watch();
+}
+
 Future<Contact?> getContactFromNpub(String publickey) async {
   final npubQuery = database.select(database.npubs)
     ..where((n) => n.pubkey.equals(publickey));

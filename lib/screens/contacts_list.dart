@@ -35,6 +35,18 @@ class _ContactsListState extends State<ContactsList> {
   @override
   void initState() {
     super.initState();
+    /*
+    watchAllContacts().listen((entries) {
+      print('@@@@@@@@@@@@@@@@@@@ entries $entries');
+      List<Contact> contacts = [];
+      for (final entry in entries) {
+        getContact(entry).then((contact) => contacts.add(contact));
+      }
+      widget.contacts = getContactWidgets(contacts);
+      print('@@@@@@@@@@@@@@@@@@@ contacts len ${widget.contacts.length}');
+      setState(() => newContactToggle = !newContactToggle);
+    });
+    */
     getAllContacts().then(
       (entries) {
         widget.contacts = getContactWidgets(entries);

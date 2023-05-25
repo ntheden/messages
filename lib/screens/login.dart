@@ -60,7 +60,7 @@ class _LoginState extends State<Login> {
   }
 
   void createUserAndLogin(Keychain keys, String name) async {
-    await insertNpub(keys.public, nameController.text,
+    await insertNpub(keys.public, nameController.text ?? "Unnamed",
         privkey: keys.private);
     Contact? user;
     try {
@@ -74,7 +74,6 @@ class _LoginState extends State<Login> {
     }
     _npub = keys.npub; // trying to get rid of that flash of the wrong avatar
     await switchUser(user!.contact.id);
-    print('Successful login!');
     Navigator.pop(context);
     routerDelegate.pushPage(name: '/chats', arguments: user!);
     runEventSink();

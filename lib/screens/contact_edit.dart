@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -6,10 +7,12 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter_svg_icons/flutter_svg_icons.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:multiavatar/multiavatar.dart';
+import 'package:dart_bech32/dart_bech32.dart';
 
 
 import '../router/delegate.dart';
 import '../db/db.dart';
+import '../db/crud.dart';
 import '../util/messages_localizations.dart';
 import '../util/screen.dart';
 
@@ -114,7 +117,16 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
     form.save();
     showInSnackBar(MessagesLocalizations.of(context)!
         .demoTextFieldNameHasPhoneNumber(person.name!, person.phoneNumber!));
-    // TODO
+
+    String pubkey = bech32_decode('npub', person.npub!);
+    insertNpub(pubkey, nameController.text).then((_) =>
+      getNpub(pubkey).then((npub) =>
+        createContactFromNpubs(
+          [npub],
+          nameController.text ?? "Unnamed",
+          active: false,
+        )));
+    Navigator.pop(context);
   }
 
   String? _validateName(String? value) {
@@ -371,15 +383,6 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
       ),
     );
   }
-
-  String getTitle() {
-    return _title;
-    if (widget.contact == null) {
-      return 'New Contact';
-    }
-    // TODO: first/last name, else username
-    return 'Edit Contact: ${widget.contact!.name}';
-  } 
 }
 
 /// Format incoming numeric text to fit the format of (###) ###-#### ##
@@ -418,4 +421,15 @@ class _UsNumberTextInputFormatter extends TextInputFormatter {
       selection: TextSelection.collapsed(offset: selectionIndex),
     );
   }
+}
+
+// TODO move to util
+String bech32_decode(String prefix, String key) {
+  final decoded = bech32.decode(key);
+  List<int> data = bech32.fromWords(decoded.words);
+  String outputHex = "";
+  for (final word in data) { 
+    outputHex += word.toRadixString(16).padLeft(2, '0');
+  }
+  return outputHex; 
 }
