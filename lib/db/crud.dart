@@ -22,8 +22,20 @@ Future<void> switchUser(int id) async {
   ));
 }
 
-Future<Contact> createContactFromNpubs(List<Npub> npubs, String name,
-    {bool active = false}) async {
+Future<DbContact> getDbContact(int id) async {
+  return (database.select(database.dbContacts)
+    ..where((c) => c.id.equals(id))).getSingle();
+}
+
+Future<DbContact> getDbContactFromNpub(String npub) async {
+  return (database.select(database.dbContacts)
+    ..where((c) => c.npub.equals(npub))).getSingle();
+}
+
+Future<Contact> createContactFromNpubs(
+    List<Npub> npubs,
+    String name) async {
+
   bool isLocal = false;
   npubs.forEach((npub) {
     if (npub.privkey.length > 0) {
@@ -31,16 +43,7 @@ Future<Contact> createContactFromNpubs(List<Npub> npubs, String name,
     }
   });
 
-  /*
-  DbContact? dbContact;
-  try {
-    dbContact = await (database.select(database.dbContacts)
-      ..where((c) => c.npub.equals(npubs[0].pubkey))).getSingle();
-  } catch (error) {
-  }
-  */
-
-  DbContactsCompanion db_contact = DbContactsCompanion.insert(
+  DbContactsCompanion insertable = DbContactsCompanion.insert(
     name: name,
     surname: "",
     username: "",
@@ -53,114 +56,48 @@ Future<Contact> createContactFromNpubs(List<Npub> npubs, String name,
     picture_url: "",
     picture_pathname: "",
     isLocal: isLocal,
-    active: active,
+    active: false,
     npub: npubs[0].pubkey,
   );
 
-  final contactId = await database.into(database.dbContacts).insert(
-        db_contact,
+  await database.into(database.dbContacts).insert(
+        insertable,
         onConflict: DoUpdate(
-          (old) => db_contact,
+          (old) {
+            return DbContactsCompanion.custom(
+              name: Constant(name), // will add more fields once working right.
+            );
+          },
           target: [database.dbContacts.npub],
         ),
       );
 
-  if (active) {
-    assert(isLocal, "Did not find a privkey for user $name");
-  }
+  DbContact dbContact = await getDbContactFromNpub(npubs[0].pubkey);
 
   Contact contact = Contact(
-    DbContact(
-      id: contactId,
-      name: name,
-      surname: "",
-      username: "",
-      address: "",
-      city: "",
-      phone: "",
-      email: "",
-      email2: "",
-      notes: "",
-      picture_url: "",
-      picture_pathname: "",
-      isLocal: isLocal,
-      active: active,
-      npub: npubs[0].pubkey,
-    ),
+    await getDbContactFromNpub(npubs[0].pubkey),
     npubs,
   );
   writeContact(contact);
   return contact;
 }
 
-Future<void> createContact(
+Future<Contact> createContact(
   List<String> npubs,
   String name, {
   bool isLocal = false,
   bool active = false,
 }) async {
+  List<Npub> npubList = [];
   for (String npubStr in npubs) {
     try {
-      Npub npub = await getNpub(npubStr);
+      npubList.add(await getNpub(npubStr));
     } catch (err) {
       int npubId = await insertNpub(npubStr, name);
+      npubList.add(await getNpubFromId(npubId));
     }
   }
-
-  final contactId = await database.into(database.dbContacts).insert(
-        DbContactsCompanion.insert(
-          name: name,
-          surname: "",
-          username: "",
-          address: "",
-          city: "",
-          phone: "",
-          email: "",
-          email2: "",
-          notes: "",
-          picture_url: "",
-          picture_pathname: "",
-          isLocal: isLocal,
-          active: active,
-          npub: npubs[0],
-        ),
-        onConflict: DoNothing(),
-      );
-
-  final List<Npub> npubEntries = [];
-  for (String npubStr in npubs) {
-    Npub npub = (await getNpub(npubStr))!;
-    if (npub.privkey.length > 0) {
-      isLocal = true;
-    }
-    npubEntries.add(npub);
-  }
-
-  if (active) {
-    assert(isLocal, "Did not find a privkey for user $name");
-  }
-
-  Contact contact = Contact(
-    DbContact(
-      id: contactId,
-      name: name,
-      surname: "",
-      username: "",
-      address: "",
-      city: "",
-      phone: "",
-      email: "",
-      email2: "",
-      notes: "",
-      picture_url: "",
-      picture_pathname: "",
-      isLocal: isLocal,
-      active: active,
-      npub: npubEntries[0].pubkey,
-    ),
-    npubEntries,
-  );
-  writeContact(contact);
+  return createContactFromNpubs(npubList, name);
 }
 
 Future<DbEvent> getEvent(String id) async {
@@ -442,10 +379,16 @@ Future<int> insertNpub(String pubkey, String label, {String? privkey}) async {
     label: label,
     privkey: privkey ?? "",
   );
+
   return database.into(database.npubs).insert(
         npub,
         onConflict: DoUpdate(
-          (old) => npub,
+          (old) {
+            return NpubsCompanion.custom(
+              privkey: privkey == null ? old.privkey : Constant(privkey),
+              label: Constant(label),
+            );
+          },
           target: [database.npubs.pubkey],
         ),
       );
@@ -470,33 +413,6 @@ Future<void> writeContact(Contact entry) async {
           npub: npub.id,
         ));
   }
-}
-
-String npubPlaceHolder =
-    "0000000000000000000000000000000000000000000000000000000000000000";
-
-Future<Contact> createEmptyContact(String name,
-    {bool isLocal = false, bool active = false}) async {
-  final id = await database
-      .into(database.contactNpubs)
-      .insert(ContactNpubsCompanion());
-  final contact = DbContact(
-      id: id,
-      name: name,
-      surname: "",
-      username: "",
-      address: "",
-      city: "",
-      phone: "",
-      email: "",
-      email2: "",
-      notes: "",
-      picture_url: "",
-      picture_pathname: "",
-      isLocal: isLocal,
-      active: active,
-      npub: npubPlaceHolder);
-  return Contact(contact, []);
 }
 
 Stream<Contact> watchContact(int id) {

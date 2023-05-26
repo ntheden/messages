@@ -66,7 +66,6 @@ class _LoginState extends State<Login> {
       user = await createContactFromNpubs(
         [await getNpub(keys.public)],
         name,
-        active: true,
       );
     } catch (error) {
       print(error);

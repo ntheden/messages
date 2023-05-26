@@ -129,8 +129,7 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
         createContactFromNpubs(
           [npub],
           nameController.text.isEmpty ? "Unnamed" : nameController.text,
-          active: false,
-        )));
+    )));
     Navigator.pop(context);
   }
 
