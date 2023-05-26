@@ -61,7 +61,7 @@ class MyRouterDelegate extends RouterDelegate<List<RouteSettings>>
         child = ContactEdit(routeSettings.arguments as Contact?);
         break;
       case '/contacts':
-        child = ContactsList();
+        child = ContactsList(routeSettings.arguments as Map<String, dynamic>);
         break;
       case '/login':
         child = Login(routeSettings.arguments as bool);
@@ -77,6 +77,10 @@ class MyRouterDelegate extends RouterDelegate<List<RouteSettings>>
       name: routeSettings.name,
       arguments: routeSettings.arguments,
     );
+  }
+
+  void removePage({required String name}) {
+    pages.removeWhere((page) => page.name == name);
   }
 
   void pushPage({required String name, dynamic arguments}) {

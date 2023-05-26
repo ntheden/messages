@@ -56,10 +56,13 @@ class ChatState extends State<Chat> {
     });
     _stream.addStream(watchMessages(currentUser, peerContact));
     subscription = _stream.stream.listen((entries) {
+      if (entries.isEmpty) {
+        return;
+      }
       print('@@@@@@@@@@@@@@@@@@ number of entries: ${entries.length}');
       for (final message in entries) {
         // TODO: This needs to be optimized - possibly cancel the stream
-        // and restart it from the latest message.id
+        // and restart it from the latest message.id or something
         if (_seen.contains(message.id)) {
           //print('"${message.content}" was already seen');
           continue;
@@ -183,19 +186,18 @@ class ChatState extends State<Chat> {
                         sendMessage(value);
                         textEntryField.clear();
                         focusNode.requestFocus();
-                        /*
                         scrollController.animateTo(
                           scrollController.position.maxScrollExtent,
                           duration: const Duration(milliseconds: 100),
                           curve: Curves.easeOut
                         );
-                        */
                       },
                     ),
                   ),
                   SizedBox(width: 15,),
                   FloatingActionButton(
                     onPressed: () {
+                      // TODO!!!!!!!!!!!!!!!!!!
                     },
                     child: Icon(Icons.send, color: Colors.white, size: 18,),
                     backgroundColor: Colors.blue,

@@ -7,6 +7,7 @@ import '../../router/delegate.dart';
 class ContactsEntry extends StatelessWidget {
   final String name;
   final Contact contact;
+  final Contact user;
   final ImageProvider<Object> picture;
   final String type;
   final bool pinned;
@@ -14,11 +15,13 @@ class ContactsEntry extends StatelessWidget {
   final String badge;
   final GestureTapCallback? onTap;
   final GestureLongPressCallback? onLongPress;
+  final String onTapIntent;
 
   const ContactsEntry({
     Key? key,
     required this.name,
     required this.contact,
+    required this.user,
     required this.picture,
     this.type = "user",
     this.pinned = false,
@@ -26,6 +29,7 @@ class ContactsEntry extends StatelessWidget {
     this.badge = "",
     this.onTap,
     this.onLongPress,
+    this.onTapIntent = "lookup",
   }) : super(key: key);
 
   @override
@@ -63,7 +67,13 @@ class ContactsEntry extends StatelessWidget {
       ),
       onTap: () {
         final routerDelegate = Get.put(MyRouterDelegate());
-        routerDelegate.pushPage(name: '/contactEdit', arguments: contact);
+        if (onTapIntent == 'lookup') {
+          routerDelegate.pushPage(name: '/contactEdit', arguments: contact);
+        } else {
+          assert(onTapIntent == 'chat');
+          routerDelegate.removePage(name: '/contacts');
+          routerDelegate.pushPage(name: '/chat', arguments: {'user': user, 'peer': contact});
+        }
       },
     );
   }

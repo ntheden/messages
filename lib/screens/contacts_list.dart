@@ -15,9 +15,13 @@ import '../router/delegate.dart';
 class ContactsList extends StatefulWidget {
   final String title;
   List<Widget> contacts = [];
-  ContactsList({Key? key, this.title='Contacts'}) : super(key: key) {
+  late Contact user;
+  late String intent;
+  ContactsList(Map<String, dynamic> options, {Key? key, this.title='Contacts'}) : super(key: key) {
+    user = options['user'];
+    intent = options['intent']; // either 'chat' or 'lookup'
     getAllContacts().then(
-      (entries) => contacts = getContactWidgets(entries));
+      (entries) => contacts = getContactWidgets(user, intent, entries));
   }
   @override
   _ContactsListState createState() => _ContactsListState();
@@ -49,7 +53,7 @@ class _ContactsListState extends State<ContactsList> {
     */
     getAllContacts().then(
       (entries) {
-        widget.contacts = getContactWidgets(entries);
+        widget.contacts = getContactWidgets(widget.user, widget.intent, entries);
         setState(() => newContactToggle = !newContactToggle);
     });
   }
@@ -111,16 +115,18 @@ class _ContactsListState extends State<ContactsList> {
   }
 }
 
-getContactWidgets(contacts) {
+getContactWidgets(user, intent, contacts) {
   List<Widget> entries = [];
   for (final contact in contacts) {
     entries.add(
       ContactsEntry(
         name: '${contact!.name}',
         contact: contact!,
+        user: user,
         picture: NetworkImage(
           "https://randomuser.me/api/portraits/men/${Random().nextInt(100)}.jpg",
         ),
+        onTapIntent: intent,
       )
     );
   };

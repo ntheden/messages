@@ -7,6 +7,22 @@ import '../../router/delegate.dart';
 import '../../db/db.dart';
 
 class ChatsEntry extends StatelessWidget {
+  final String name;
+  final String npub;
+  final ImageProvider<Object> picture;
+  final String? lastMessage;
+  final String? sending;
+  final String lastTime;
+  final String type;
+  final int seeing;
+  final bool pinned;
+  final bool mute;
+  final String badge;
+  final GestureTapCallback? onTap;
+  final GestureLongPressCallback? onLongPress;
+  final currentUser;
+  final peer;
+
   const ChatsEntry({
     Key? key,
     required this.name,
@@ -25,22 +41,6 @@ class ChatsEntry extends StatelessWidget {
     this.onTap,
     this.onLongPress,
   }) : super(key: key);
-
-  final String name;
-  final String npub;
-  final ImageProvider<Object> picture;
-  final String? lastMessage;
-  final String? sending;
-  final String lastTime;
-  final String type;
-  final int seeing;
-  final bool pinned;
-  final bool mute;
-  final String badge;
-  final GestureTapCallback? onTap;
-  final GestureLongPressCallback? onLongPress;
-  final currentUser;
-  final peer;
 
   @override
   Widget build(BuildContext context) {
