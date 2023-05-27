@@ -37,7 +37,8 @@ class ContactsEntry extends StatelessWidget {
     return ListTile(
       title: Row(
         children: [
-          Text(getTitle()),
+          //Text(getTitle()),
+          Text(contact.name),
           if (mute) SizedBox(width: 5),
           if (mute)
             Icon(

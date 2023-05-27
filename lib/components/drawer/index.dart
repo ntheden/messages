@@ -165,7 +165,10 @@ class DrawerScreenState extends State<DrawerScreen> {
               // TODO: Need to remove pages that have the old user, pushing does it for
               // chats, but once we have channels working, then we can't just push
               // chats here.
-              (_) => routerDelegate.pushPage(name: '/chats', arguments: currentUser)));
+              (_) {
+                routerDelegate.removeOtherUserPages(user: currentUser!);
+                routerDelegate.pushPage(name: '/chats', arguments: currentUser);
+              }));
           },
         ),
       ),

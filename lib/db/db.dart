@@ -67,7 +67,7 @@ class Contact {
     return (StringBuffer('Contact(')
           ..write('id: ${contact.id}, ')
           ..write('name: ${contact.name}, ')
-          ..write('npubs: ${npubs}, ') // TODO: mask privkey
+          ..write('npubs: ${npubs.length}, ')
           ..write(')'))
         .toString();
   }

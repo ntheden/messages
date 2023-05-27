@@ -83,6 +83,15 @@ class MyRouterDelegate extends RouterDelegate<List<RouteSettings>>
     pages.removeWhere((page) => page.name == name);
   }
 
+  void removeOtherUserPages({required Contact user}) {
+    pages.removeWhere((page) {
+      bool remove = (page.name == '/chat');
+      remove &= ((page.arguments as Contact).id != user.id);
+      return remove;
+    });
+    notifyListeners();
+  }
+
   void pushPage({required String name, dynamic arguments}) {
     print('@@@@@@@@@@@@@@@@@@@@ pushing page $name');
     pages.removeWhere((page) => page.name == name);

@@ -125,7 +125,6 @@ DbEventsCompanion _insertQuery(
     plaintext: plaintext ?? "",
     decryptError: decryptError ?? false,
   );
-  print('@@@@@@@@@@@@@@@@@ insert $insert');
   return insert;
 }
 
@@ -166,7 +165,6 @@ Future<int> storeSentEvent(
 ) async {
   logEvent(event.createdAt * 1000, fromContact, toContact, plaintext,
       rx: false);
-  print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ store sent event');
   return insertEvent(
     event,
     fromContact,

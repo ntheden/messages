@@ -59,7 +59,6 @@ class ChatState extends State<Chat> {
       if (entries.isEmpty) {
         return;
       }
-      print('@@@@@@@@@@@@@@@@@@ number of entries: ${entries.length}');
       for (final message in entries) {
         // TODO: This needs to be optimized - possibly cancel the stream
         // and restart it from the latest message.id or something
@@ -187,7 +186,7 @@ class ChatState extends State<Chat> {
                         textEntryField.clear();
                         focusNode.requestFocus();
                         scrollController.animateTo(
-                          scrollController.position.maxScrollExtent,
+                          scrollController.position.minScrollExtent,
                           duration: const Duration(milliseconds: 100),
                           curve: Curves.easeOut
                         );
