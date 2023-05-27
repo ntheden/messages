@@ -166,7 +166,7 @@ class DrawerScreenState extends State<DrawerScreen> {
               // chats, but once we have channels working, then we can't just push
               // chats here.
               (_) {
-                routerDelegate.removeOtherUserPages(user: currentUser!);
+                //routerDelegate.removeOtherUserPages(user: currentUser!);
                 routerDelegate.pushPage(name: '/chats', arguments: currentUser);
               }));
           },

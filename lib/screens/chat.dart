@@ -78,6 +78,7 @@ class ChatState extends State<Chat> {
   void dispose() {
     textEntryField.dispose();
     subscription?.cancel();
+    _stream.close();
     super.dispose();
   }
 

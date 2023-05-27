@@ -10,15 +10,59 @@ import '../db/db.dart';
 import '../router/delegate.dart';
 import '../util/date.dart';
 
+class Pair<Contact, MessageEntry> {
+  final Contact contact;
+  final MessageEntry lastMessage;
+  Pair(this.contact, this.lastMessage);
+}
+
 class ChatsList extends StatefulWidget {
   final String title;
   final Contact currentUser;
-  List<Widget> chats = []; // TODO: move this back to State
+  late StreamController<List<MessageEntry>> stream;
+  late StreamSubscription<List<MessageEntry>> subscription;
+  List<Pair> conversations = [];
+
   ChatsList(this.currentUser, {Key? key, this.title = 'Messages'})
       : super(key: key) {
-    getUserMessages(currentUser).then((entries) =>
-        getChats(currentUser, entries).then((widgets) => chats = widgets));
+    stream = StreamController<List<MessageEntry>>();
+    stream.addStream(watchUserMessages(currentUser));
+    subscription = stream.stream.listen((entries) {
+      // TODO: This stream should be from not far back in time and
+      // has to add its data to the existing list
+      getConversations(entries);
+    });
   }
+
+  void getConversations(messages) async {
+    // sort messages by peer and timestamp.
+    // can I use a sort function here
+    Map<int, dynamic> peers = {};
+    messages.forEach((message) {
+      for (final id in [message.fromId, message.toId]) {
+        // This does not need to check if the contact is a local user,
+        // just check against currentUser, since this is only for
+        // drawing the widgets
+        if (id == currentUser.id && (message.fromId != message.toId)) {
+          // Record this under the remote contact, only
+          continue;
+        }
+        int? timestamp = peers[id]?.timestamp;
+        if (timestamp == null || timestamp < message.timestamp) {
+          peers[id] = message;
+        }
+      }
+    });
+
+    List<Contact> contacts = await getContacts(peers.keys.toList());
+
+    List<Widget> entries = [];
+    conversations.clear();
+    for (final contact in contacts) {
+      conversations.add(Pair(contact, peers[contact.id]));
+    }
+  }
+
   @override
   _ChatsListState createState() => _ChatsListState();
 }
@@ -28,19 +72,14 @@ class _ChatsListState extends State<ChatsList> {
 
   @override
   void dispose() {
+    widget.stream.close();
+    widget.subscription.cancel();
     super.dispose();
   }
 
   @override
   void initState() {
     super.initState();
-    watchUserMessages(widget.currentUser).listen((entries) {
-      // TODO: This stream should be from not far back in time and
-      // has to add its data to the existing list
-      getChats(widget.currentUser, entries)
-          .then((widgets) => widget.chats = widgets);
-      setState(() => newChatToggle = !newChatToggle);
-    });
   }
 
   @override
@@ -63,10 +102,10 @@ class _ChatsListState extends State<ChatsList> {
         ],
       ),
       body: ListView.builder(
-        itemCount: widget.chats.length,
+        itemCount: widget.conversations.length,
         itemBuilder: (BuildContext context, int index) {
           return Column(children: [
-            widget.chats[index],
+            getChatsEntry(context, index),
             const Divider(height: 0),
           ]);
         },
@@ -84,37 +123,15 @@ class _ChatsListState extends State<ChatsList> {
       ),
     );
   }
-}
 
-Future<List<Widget>> getChats(user, messages) async {
-  // sort messages by peer and timestamp.
-  // can I use a sort function here
-  Map<int, dynamic> peers = {};
-  messages.forEach((message) {
-    for (final id in [message.fromId, message.toId]) {
-      // This does not need to check if the contact is a local user,
-      // just check against currentUser, since this is only for
-      // drawing the widgets
-      if (id == user.id && (message.fromId != message.toId)) {
-        // Record this under the remote contact, only
-        continue;
-      }
-      int? timestamp = peers[id]?.timestamp;
-      if (timestamp == null || timestamp < message.timestamp) {
-        peers[id] = message;
-      }
-    }
-  });
-
-  List<Contact> contacts = await getContacts(peers.keys.toList());
-
-  List<Widget> entries = [];
-  for (final contact in contacts) {
-    MessageEntry message = peers[contact.id];
+  ChatsEntry getChatsEntry(BuildContext context, int index) {
+    Contact contact = widget.conversations[index].contact;
+    MessageEntry message = widget.conversations[index].lastMessage;
     // TODO: This formatting goes in the widget definition
-    String name = contact.id == user.id ? "Me" : contact.name;
+    String name = contact.id == widget.currentUser.id ? "Me" : contact.name;
     String npubHint = contact.npub.substring(59, 63);
-    entries.add(ChatsEntry(
+    return ChatsEntry(
+      key: UniqueKey(),
       name: '$name ($npubHint)',
       npub: contact.npub,
       picture: NetworkImage(
@@ -125,10 +142,10 @@ Future<List<Widget>> getChats(user, messages) async {
       //lastTime: formattedDate('hh:mm', message.timestamp),
       lastTime: timezoned(message.timestamp).formattedDate(),
       //seeing: 2,
-      lastMessage: peers[contact.id].content,
-      currentUser: user,
+      lastMessage: message.content,
+      currentUser: widget.currentUser,
       peer: contact,
-    ));
+    );
   }
-  return entries;
 }
+
