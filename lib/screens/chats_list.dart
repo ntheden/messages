@@ -13,13 +13,11 @@ import '../util/date.dart';
 class ChatsList extends StatefulWidget {
   final String title;
   final Contact currentUser;
-  //List<Widget> chats = []; // TODO: move this back to State
+  List<Widget> chats = []; // TODO: move this back to State
   ChatsList(this.currentUser, {Key? key, this.title = 'Messages'})
       : super(key: key) {
-    /*
     getUserMessages(currentUser).then((entries) =>
         getChats(currentUser, entries).then((widgets) => chats = widgets));
-    */
   }
   @override
   _ChatsListState createState() => _ChatsListState();
@@ -27,36 +25,21 @@ class ChatsList extends StatefulWidget {
 
 class _ChatsListState extends State<ChatsList> {
   bool newChatToggle = false;
-  List<Widget> chats = []; // TODO: move this back to State
 
   @override
   void dispose() {
     super.dispose();
-    chats.clear();
   }
 
   @override
   void initState() {
     super.initState();
-
-    print('@@@@@@@@@@@@@@@@@ getting chats list for ${widget.currentUser}');
-    getUserMessages(widget.currentUser).then((entries) =>
-        getChats(widget.currentUser, entries).then((widgets) {
-          chats.clear();
-          chats.addAll(widgets);
-        }));
-
     watchUserMessages(widget.currentUser).listen((entries) {
       // TODO: This stream should be from not far back in time and
       // has to add its data to the existing list
-      print('@@@@@@@@@@@@@@@@@ listener getting chats list for ${widget.currentUser}');
-      getChats(widget.currentUser, entries).then((widgets) {
-            chats.clear();
-            chats.addAll(widgets);
-            setState(() {
-              newChatToggle = !newChatToggle;
-          });
-      });
+      getChats(widget.currentUser, entries)
+          .then((widgets) => widget.chats = widgets);
+      setState(() => newChatToggle = !newChatToggle);
     });
   }
 
@@ -80,10 +63,10 @@ class _ChatsListState extends State<ChatsList> {
         ],
       ),
       body: ListView.builder(
-        itemCount: chats.length,
+        itemCount: widget.chats.length,
         itemBuilder: (BuildContext context, int index) {
           return Column(children: [
-            chats[index],
+            widget.chats[index],
             const Divider(height: 0),
           ]);
         },
