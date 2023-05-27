@@ -441,7 +441,9 @@ Stream<Contact> watchContact(int id) {
   });
 }
 
-Stream<List<DbContact>> watchAllContacts() {
+Stream<List<DbContact>> watchAllDbContacts() {
+  // Would be cool to transform this stream into a Stream<List<Contact>>
+  // and return that.
   return database.select(database.dbContacts).watch();
 }
 

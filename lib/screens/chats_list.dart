@@ -9,19 +9,14 @@ import '../db/crud.dart';
 import '../db/db.dart';
 import '../router/delegate.dart';
 import '../util/date.dart';
-
-class Pair<Contact, MessageEntry> {
-  final Contact contact;
-  final MessageEntry lastMessage;
-  Pair(this.contact, this.lastMessage);
-}
+import '../util/pair.dart';
 
 class ChatsList extends StatefulWidget {
   final String title;
   final Contact currentUser;
   late StreamController<List<MessageEntry>> stream;
   late StreamSubscription<List<MessageEntry>> subscription;
-  List<Pair> conversations = [];
+  List<Pair<Contact, MessageEntry>> conversations = [];
 
   ChatsList(this.currentUser, {Key? key, this.title = 'Messages'})
       : super(key: key) {
@@ -78,11 +73,6 @@ class _ChatsListState extends State<ChatsList> {
   }
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -125,8 +115,8 @@ class _ChatsListState extends State<ChatsList> {
   }
 
   ChatsEntry getChatsEntry(BuildContext context, int index) {
-    Contact contact = widget.conversations[index].contact;
-    MessageEntry message = widget.conversations[index].lastMessage;
+    Contact contact = widget.conversations[index].a;
+    MessageEntry message = widget.conversations[index].b;
     // TODO: This formatting goes in the widget definition
     String name = contact.id == widget.currentUser.id ? "Me" : contact.name;
     String npubHint = contact.npub.substring(59, 63);

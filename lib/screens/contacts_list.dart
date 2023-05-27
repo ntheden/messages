@@ -10,52 +10,46 @@ import '../nostr/relays.dart';
 import '../db/crud.dart';
 import '../db/db.dart';
 import '../util/date.dart';
+import '../util/pair.dart';
 import '../router/delegate.dart';
 
 class ContactsList extends StatefulWidget {
   final String title;
-  List<Widget> contacts = [];
-  late Contact user;
+  List<Contact> contacts = [];
+  late Contact currentUser;
   late String intent;
+  late StreamController<List<DbContact>> stream;
+  late StreamSubscription<List<DbContact>> subscription;
+
   ContactsList(Map<String, dynamic> options, {Key? key, this.title='Contacts'}) : super(key: key) {
-    user = options['user'];
+    currentUser = options['user'];
     intent = options['intent']; // either 'chat' or 'lookup'
-    getAllContacts().then(
-      (entries) => contacts = getContactWidgets(user, intent, entries));
+
+    stream = StreamController<List<DbContact>>();
+    stream.addStream(watchAllDbContacts());
+    subscription = stream.stream.listen((entries) {
+      makeContactsList(entries);
+    });
   }
+
+  void makeContactsList(dbContacts) async {
+    List<int> ids = [];
+    dbContacts.forEach((c) => ids.add(c.id));
+    contacts = await getContacts(ids);
+  }
+
   @override
   _ContactsListState createState() => _ContactsListState();
 }
 
 class _ContactsListState extends State<ContactsList> {
-  @override ContactsList get widget => super.widget;
   bool newContactToggle = false;
 
   @override
   void dispose() {
+    widget.subscription.cancel();
+    widget.stream.close();
     super.dispose();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    /*
-    watchAllContacts().listen((entries) {
-      print('@@@@@@@@@@@@@@@@@@@ entries $entries');
-      List<Contact> contacts = [];
-      for (final entry in entries) {
-        getContact(entry).then((contact) => contacts.add(contact));
-      }
-      widget.contacts = getContactWidgets(contacts);
-      print('@@@@@@@@@@@@@@@@@@@ contacts len ${widget.contacts.length}');
-      setState(() => newContactToggle = !newContactToggle);
-    });
-    */
-    getAllContacts().then(
-      (entries) {
-        widget.contacts = getContactWidgets(widget.user, widget.intent, entries);
-        setState(() => newContactToggle = !newContactToggle);
-    });
   }
 
   @override
@@ -98,7 +92,7 @@ class _ContactsListState extends State<ContactsList> {
         itemBuilder: (BuildContext context, int index) {
           return Column(
             children: [
-              widget.contacts[index],
+              getContactWidget(context, index),
               Divider(height: 0),
             ]);
         },
@@ -113,22 +107,17 @@ class _ContactsListState extends State<ContactsList> {
       ),
     );
   }
-}
 
-getContactWidgets(user, intent, contacts) {
-  List<Widget> entries = [];
-  for (final contact in contacts) {
-    entries.add(
-      ContactsEntry(
-        name: '${contact!.name}',
-        contact: contact!,
-        user: user,
-        picture: NetworkImage(
-          "https://randomuser.me/api/portraits/men/${Random().nextInt(100)}.jpg",
-        ),
-        onTapIntent: intent,
-      )
+  Widget getContactWidget(context, int index) {
+    Contact contact = widget.contacts[index];
+    return ContactsEntry(
+      name: '${contact.name}',
+      contact: contact,
+      user: widget.currentUser,
+      picture: NetworkImage(
+        "https://randomuser.me/api/portraits/men/${Random().nextInt(100)}.jpg",
+      ),
+      onTapIntent: widget.intent,
     );
-  };
-  return entries;
+  }
 }
