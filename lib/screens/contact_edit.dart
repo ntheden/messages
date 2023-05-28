@@ -136,6 +136,8 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
           nameController.text.isEmpty ? "Unnamed" : nameController.text,
         ).then((contact) {
             MyRouterDelegate routerDelegate = Get.put(MyRouterDelegate());
+            // So that back button doesn't send us back here.
+            routerDelegate.removePage(name: '/contactEdit');
             if (widget.intent == 'lookup') {
               routerDelegate.pushPage(name: '/contacts', arguments: {
                 'intent': widget.intent,
