@@ -69,11 +69,18 @@ class ContactsEntry extends StatelessWidget {
       onTap: () {
         final routerDelegate = Get.put(MyRouterDelegate());
         if (onTapIntent == 'lookup') {
-          routerDelegate.pushPage(name: '/contactEdit', arguments: contact);
+          routerDelegate.pushPage(name: '/contactEdit', arguments: {
+            'user': user,
+            'contact': contact,
+            'intent': onTapIntent,
+          });
         } else {
           assert(onTapIntent == 'chat');
           routerDelegate.removePage(name: '/contacts');
-          routerDelegate.pushPage(name: '/chat', arguments: {'user': user, 'peer': contact});
+          routerDelegate.pushPage(name: '/chat', arguments: {
+            'user': user,
+            'peer': contact
+          });
         }
       },
     );

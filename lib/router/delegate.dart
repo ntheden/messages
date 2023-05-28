@@ -59,7 +59,7 @@ class MyRouterDelegate extends RouterDelegate<List<RouteSettings>>
         child = ChatsList(routeSettings.arguments as Contact);
         break;
       case '/contactEdit':
-        child = ContactEdit(routeSettings.arguments as Contact?);
+        child = ContactEdit(routeSettings.arguments as Map<String, dynamic>);
         break;
       case '/contacts':
         child = ContactsList(routeSettings.arguments as Map<String, dynamic>);

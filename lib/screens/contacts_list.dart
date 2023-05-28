@@ -100,7 +100,11 @@ class _ContactsListState extends State<ContactsList> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           final routerDelegate = Get.put(MyRouterDelegate());
-          routerDelegate.pushPage(name: '/contactEdit', arguments: null);
+          routerDelegate.pushPage(name: '/contactEdit', arguments: {
+            'user': widget.currentUser,
+            'contact': null,
+            'intent': widget.intent,
+          });
         },
         child: Icon(Icons.person_add),
       ),

@@ -17,9 +17,15 @@ import '../util/messages_localizations.dart';
 import '../util/screen.dart';
 
 class ContactEdit extends StatefulWidget {
-  final Contact? contact;
+  late final Contact? contact;
+  late final Contact currentUser;
+  late final String intent;
 
-  const ContactEdit(this.contact, {Key? key}) : super(key: key);
+  ContactEdit(Map<String, dynamic> options, {Key? key}) : super(key: key) {
+    contact = options['contact'];
+    currentUser = options['user'];
+    intent = options['intent'];
+  }
 
   @override
   _ContactEditState createState() => _ContactEditState();
@@ -34,7 +40,6 @@ class PersonData {
 }
 
 class _ContactEditState extends State<ContactEdit> with RestorationMixin {
-  final RouterDelegate routerDelegate = Get.put(MyRouterDelegate());
   PersonData person = PersonData();
   late FocusNode _name, _npub, _phoneNumber, _email, _notes;
   TextEditingController nameController = TextEditingController();
@@ -129,8 +134,22 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
         createContactFromNpubs(
           [npub],
           nameController.text.isEmpty ? "Unnamed" : nameController.text,
-    )));
-    Navigator.pop(context);
+        ).then((contact) {
+            MyRouterDelegate routerDelegate = Get.put(MyRouterDelegate());
+            if (widget.intent == 'lookup') {
+              routerDelegate.pushPage(name: '/contacts', arguments: {
+                'intent': widget.intent,
+                'user': widget.currentUser,
+              });
+            } else {
+              routerDelegate.pushPage(name: '/chat', arguments: {
+                'user': widget.currentUser,
+                'peer': contact,
+              });
+            }
+        })
+      )
+    );
   }
 
   String? _validateName(String? value) {
