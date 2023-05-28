@@ -5,6 +5,8 @@ publish_to: "none"
 flutter:
   assets:
     - assets/nostr_logo_prpl.svg
+    - assets/drive_server_100273.jpg
+    - assets/server.jpg
 
   uses-material-design: true
 

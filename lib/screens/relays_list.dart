@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nostr/nostr.dart';
 
-import '../components/contacts/contacts_entry.dart';
+import '../components/relays/relays_entry.dart';
 import '../components/drawer/index.dart';
 import '../nostr/relays.dart';
 import '../db/crud.dart';
@@ -14,32 +14,30 @@ import '../router/delegate.dart';
 
 class RelaysList extends StatefulWidget {
   final String title;
-  List<Widget> relays = [];
-  RelaysList({Key? key, this.title='Relays'}) : super(key: key) {
-    getAllRelays().then(
-      (entries) => relays = getRelayWidgets(entries));
+  List<Relay> relays = [];
+  late Contact currentUser; // will be per-user later
+  late StreamController<List<Relay>> stream;
+  late StreamSubscription<List<Relay>> subscription;
+
+  RelaysList(Map<String, dynamic> options, {Key? key, this.title='Relays'}) : super(key: key) {
+    currentUser = options['user'];
+
+    stream = StreamController<List<Relay>>();
+    stream.addStream(watchAllRelays());
+    subscription = stream.stream.listen((entries) => relays = entries);
   }
+
   @override
   _RelaysListState createState() => _RelaysListState();
 }
 
 class _RelaysListState extends State<RelaysList> {
-  @override RelaysList get widget => super.widget;
-  bool newContactToggle = false;
 
   @override
   void dispose() {
+    widget.subscription.cancel();
+    widget.stream.close();
     super.dispose();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    getAllContacts().then(
-      (entries) {
-        widget.contacts = getContactWidgets(entries);
-        setState(() => newContactToggle = !newContactToggle);
-    });
   }
 
   @override
@@ -65,24 +63,24 @@ class _RelaysListState extends State<RelaysList> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
-                      Text('Contacts',
+                      Text('Relays',
                         style: TextStyle( fontSize: 16, fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
                 ),
-                Icon(Icons.settings, color: Colors.white,),
+                //Icon(Icons.settings, color: Colors.white,),
               ],
             ),
           ),
         ),
       ),
       body: ListView.builder(
-        itemCount: widget.contacts.length,
+        itemCount: widget.relays.length,
         itemBuilder: (BuildContext context, int index) {
           return Column(
             children: [
-              widget.contacts[index],
+              getRelayWidget(context, index),
               Divider(height: 0),
             ]);
         },
@@ -91,27 +89,24 @@ class _RelaysListState extends State<RelaysList> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           final routerDelegate = Get.put(MyRouterDelegate());
-          routerDelegate.pushPage(name: '/contactEdit', arguments: null);
+          routerDelegate.pushPage(name: '/relayEdit', arguments: {
+            'user': widget.currentUser, 'relay': null,
+          });
         },
         child: Icon(Icons.add_rounded),
       ),
     );
   }
+
+  getRelayWidget(BuildContext context, int index) {
+    Relay relay = widget.relays[index];
+    return RelaysEntry(
+      name: '${relay.name}',
+      user: widget.currentUser,
+      relay: relay,
+      picture: AssetImage('assets/server.jpg'),
+    );
+  }
 }
 
-getRelayWidgets(relays) {
-  List<Widget> entries = [];
-  for (final relay in relays) {
-    entries.add(
-      RelaysEntry(
-        name: '${relay!.name}',
-        relay: relay!,
-        picture: NetworkImage(
-          "https://randomuser.me/api/portraits/men/${Random().nextInt(100)}.jpg",
-        ),
-      )
-    );
-  };
-  return entries;
-}
 

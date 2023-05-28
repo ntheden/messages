@@ -43,7 +43,6 @@ class ContactsList extends StatefulWidget {
 }
 
 class _ContactsListState extends State<ContactsList> {
-  bool newContactToggle = false;
 
   @override
   void dispose() {

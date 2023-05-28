@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import '../screens/chat.dart';
 import '../screens/contacts_list.dart';
 import '../screens/contact_edit.dart';
-import '../screens/relays.dart';
+import '../screens/relays_list.dart';
+import '../screens/relay_edit.dart';
 import '../screens/chats_list.dart';
 import '../screens/login.dart';
 import '../db/db.dart';
@@ -66,8 +67,11 @@ class MyRouterDelegate extends RouterDelegate<List<RouteSettings>>
       case '/login':
         child = Login(routeSettings.arguments as bool);
         break;
+      case '/relayEdit':
+        child = RelayEdit(routeSettings.arguments as Map<String, dynamic>);
+        break;
       case '/relays':
-        child = RelaysList();
+        child = RelaysList(routeSettings.arguments as Map<String, dynamic>);
         break;
     }
 

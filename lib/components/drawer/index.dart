@@ -131,7 +131,7 @@ class DrawerScreenState extends State<DrawerScreen> {
             title: "Settings",
             icon: Icons.settings_outlined,
             onTap: () {
-              routerDelegate.pushPage(name: '/relays', arguments: currentUser);
+              routerDelegate.pushPage(name: '/relays', arguments: {'user': currentUser});
               Navigator.pop(context);
             },
           ),

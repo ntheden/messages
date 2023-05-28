@@ -1,12 +1,14 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 
+import '../../screens/relay_edit.dart';
 import '../../db/db.dart';
 import '../../router/delegate.dart';
 
 class RelaysEntry extends StatelessWidget {
   final String name;
   final Relay relay;
+  final Contact user;
   final ImageProvider<Object>? picture;
   final String type;
   final bool pinned;
@@ -19,6 +21,7 @@ class RelaysEntry extends StatelessWidget {
     Key? key,
     required this.name,
     required this.relay,
+    required this.user,
     this.picture,
     this.type = "user",
     this.pinned = false,
@@ -54,13 +57,16 @@ class RelaysEntry extends StatelessWidget {
       leading: SizedBox.fromSize(
         size: const Size(20, 20),
         child: CircleAvatar(
-          //backgroundImage: picture,
+          backgroundImage: picture,
           backgroundColor: Colors.grey,
         ),
       ),
       onTap: () {
         final routerDelegate = Get.put(MyRouterDelegate());
-        routerDelegate.pushPage(name: '/relayEdit', arguments: relay);
+        routerDelegate.pushPage(name: '/relayEdit', arguments: {
+          'user': user,
+          'relay': relay,
+        });
       },
     );
   }

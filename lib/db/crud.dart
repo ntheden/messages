@@ -542,20 +542,33 @@ Future<Contact> getContact(DbContact contact) async {
   return Contact(contact, npubs);
 }
 
-Future<int> createRelay(String url, String name) {
+Future<int> insertRelay({
+  required String url,
+  required String name,
+  String notes: "",
+}) {
   RelaysCompanion relay = RelaysCompanion.insert(
     url: url,
     name: name,
+    //notes: notes,
   );
   return database.into(database.relays).insert(
         relay,
         onConflict: DoUpdate(
-          (old) => relay,
-          target: [database.relays.id],
+          (old) => RelaysCompanion.custom(
+            url: Constant(url),
+            name: Constant(name),
+            //notes: notes.isEmpty ? old.notes : Constant(notes),
+          ),
+          target: [database.relays.url, database.relays.name],
         ),
       );
 }
 
 Future<List<Relay>> getAllRelays() {
   return database.select(database.relays).get();
+}
+
+Stream<List<Relay>> watchAllRelays() {
+  return database.select(database.relays).watch();
 }
