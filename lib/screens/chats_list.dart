@@ -17,6 +17,7 @@ class ChatsList extends StatefulWidget {
   late StreamController<List<MessageEntry>> stream;
   late StreamSubscription<List<MessageEntry>> subscription;
   List<Pair<Contact, MessageEntry>> conversations = [];
+  _ChatsListState? _stateObj;
 
   ChatsList(this.currentUser, {Key? key, this.title = 'Messages'})
       : super(key: key) {
@@ -26,6 +27,7 @@ class ChatsList extends StatefulWidget {
       // TODO: This stream should be from not far back in time and
       // has to add its data to the existing list
       getConversations(entries);
+      _stateObj?.toggleState();
     });
   }
 
@@ -59,11 +61,19 @@ class ChatsList extends StatefulWidget {
   }
 
   @override
-  _ChatsListState createState() => _ChatsListState();
+  _ChatsListState createState() {
+    _stateObj = _ChatsListState();
+    return _stateObj!;
+  }
 }
 
 class _ChatsListState extends State<ChatsList> {
-  bool newChatToggle = false;
+
+  bool _stateToggle = false;
+
+  void toggleState() {
+    setState(() => _stateToggle = !_stateToggle);
+  }
 
   @override
   void dispose() {
