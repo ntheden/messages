@@ -20,6 +20,7 @@ class ContactsList extends StatefulWidget {
   late String intent;
   late StreamController<List<DbContact>> stream;
   late StreamSubscription<List<DbContact>> subscription;
+  _ContactsListState? _stateObj;
 
   ContactsList(Map<String, dynamic> options, {Key? key, this.title='Contacts'}) : super(key: key) {
     currentUser = options['user'];
@@ -29,6 +30,7 @@ class ContactsList extends StatefulWidget {
     stream.addStream(watchAllDbContacts());
     subscription = stream.stream.listen((entries) {
       makeContactsList(entries);
+      _stateObj?.toggleState();
     });
   }
 
@@ -39,10 +41,19 @@ class ContactsList extends StatefulWidget {
   }
 
   @override
-  _ContactsListState createState() => _ContactsListState();
+  _ContactsListState createState() {
+    _stateObj = _ContactsListState();
+    return _stateObj!;
+  }
 }
 
 class _ContactsListState extends State<ContactsList> {
+
+  bool _stateToggle = false;
+
+  void toggleState() {
+    setState(() => _stateToggle = !_stateToggle);
+  }
 
   @override
   void dispose() {
