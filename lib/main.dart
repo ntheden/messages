@@ -16,12 +16,18 @@ import 'db/sink.dart';
 import 'router/delegate.dart';
 import 'util/date.dart';
 import 'util/messages_localizations.dart';
+import 'util/first_time.dart';
 
 void main() async {
-  initTimezone('Europe/Brussels');
-  getUser().then((user) {
+  try {
+    Contact user = await getUser();
+    initTimezone('Europe/Brussels'); // TODO: get prefs
     runApp(MessagesApp(user: user));
-  }).catchError((error) => runApp(MessagesApp()));
+  } catch (error) {
+    Map<String, dynamic> data = await firstTime();
+    initTimezone(data["timezone"]);
+    runApp(MessagesApp());
+  }
 }
 
 class MessagesApp extends StatefulWidget {

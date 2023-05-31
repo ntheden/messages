@@ -1,0 +1,20 @@
+{
+  "relays": [
+    {
+      "url": "https://relay1.com",
+      "read": true,
+      "write": false
+    },
+    {
+      "url": "https://relay2.com",
+      "read": false,
+      "write": true
+    },
+    {
+      "url": "https://relay3.com",
+      "read": true,
+      "write": true
+    }
+  ],
+	"timezone": "Europe/Brussels"
+}
