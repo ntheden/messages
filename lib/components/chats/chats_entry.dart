@@ -7,10 +7,11 @@ import '../../router/delegate.dart';
 import '../../db/db.dart';
 
 class ChatsEntry extends StatelessWidget {
-  final String name;
+  String name;
   final String npub;
   final ImageProvider<Object> picture;
-  final String? lastMessage;
+  String? lastMessage;
+  final fromMe;
   final String? sending;
   final String lastTime;
   final String type;
@@ -22,12 +23,15 @@ class ChatsEntry extends StatelessWidget {
   final GestureLongPressCallback? onLongPress;
   final currentUser;
   final peer;
+  late final isMe;
 
-  const ChatsEntry({
+
+  ChatsEntry({
     Key? key,
     required this.name,
     required this.npub,
     required this.picture,
+    this.fromMe,
     this.lastMessage,
     required this.lastTime,
     required this.currentUser,
@@ -40,7 +44,12 @@ class ChatsEntry extends StatelessWidget {
     this.badge = "",
     this.onTap,
     this.onLongPress,
-  }) : super(key: key);
+  }) : super(key: key) {
+    isMe = (peer.id == currentUser.id);
+    String npubHint = peer.npub.substring(59, 63);
+    name = '${isMe ? "Me" : name} ($npubHint)';
+    lastMessage = fromMe ? "You: ${lastMessage ?? ''}" : lastMessage ?? "";
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,7 +86,7 @@ class ChatsEntry extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (seeing == 1 || seeing == 2)
+              if (seeing == 1 || seeing == 2) // TODO
                 Icon(
                   seeing == 2
                       ? Icons.done_all_rounded

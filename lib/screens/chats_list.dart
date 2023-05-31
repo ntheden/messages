@@ -143,13 +143,15 @@ class _ChatsListState extends State<ChatsList> {
 
   ChatsEntry getChatsEntry(BuildContext context, int index) {
     Contact contact = widget.conversations[index].a;
+    bool fromMe = true;
     MessageEntry message = widget.conversations[index].b;
+    if (message.toId == widget.currentUser.id && message.toId != contact.id) {
+      fromMe = false;
+    }
     // TODO: This formatting goes in the widget definition
-    String name = contact.id == widget.currentUser.id ? "Me" : contact.name;
-    String npubHint = contact.npub.substring(59, 63);
     return ChatsEntry(
       key: UniqueKey(),
-      name: '$name ($npubHint)',
+      name: contact.name,
       npub: contact.npub,
       picture: NetworkImage(
         "https://randomuser.me/api/portraits/men/${Random().nextInt(100)}.jpg",
@@ -162,6 +164,7 @@ class _ChatsListState extends State<ChatsList> {
       lastMessage: message.content,
       currentUser: widget.currentUser,
       peer: contact,
+      fromMe: fromMe,
     );
   }
 }
