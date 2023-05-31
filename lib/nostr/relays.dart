@@ -30,9 +30,9 @@ class Relays {
     });
   }
 
-  void add(name, url) {
-    Relay relay = Relay(name, url);
-    if (relay.socketMap[name] != null) {
+  void add(url) {
+    Relay relay = Relay(url);
+    if (relay.socketMap[url] != null) {
       relays?.add(relay);
     }
   }

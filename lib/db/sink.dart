@@ -5,6 +5,8 @@ import 'crud.dart';
 import '../nostr/relays.dart';
 import '../config/settings.dart';
 
+// TODO: Get rid of EventSink
+
 class EventSink {
   //late User user;
   //late Relays relays;
@@ -39,4 +41,3 @@ void runEventSink() async {
   sink = EventSink(npubs);
   sink?.listen(); // is there a better place to put this
 }
-

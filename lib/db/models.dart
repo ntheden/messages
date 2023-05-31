@@ -7,11 +7,26 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
 
-class Relays extends Table {
+class DbRelays extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get url => text().unique().withLength(min: 0, max: 1024)();
-  TextColumn get name => text().withLength(min: 0, max: 64)();
   TextColumn get notes => text()();
+  BoolColumn get write => boolean()();
+  BoolColumn get read => boolean()();
+}
+
+class DbRelayGroups extends Table {
+  IntColumn get id => integer().autoIncrement()();
+}
+
+class GroupRelays extends Table {
+  IntColumn get group => integer().references(DbRelays, #id)();
+  IntColumn get relay => integer().references(DbRelayGroups, #id)();
+}
+
+class ContactRelays extends Table {
+  IntColumn get contact => integer().references(DbContacts, #id)();
+  IntColumn get relay => integer().references(DbRelays, #id)();
 }
 
 class Npubs extends Table {

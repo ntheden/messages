@@ -39,11 +39,30 @@ class MessageEntry {
   }
 }
 
+class Relay {
+  final DbRelay relay;
+  final List<RelayGroup> groups;
+  String get url => relay.url;
+  String get notes => relay.notes;
+  bool get read => relay.read;
+  bool get write => relay.write;
+
+  const Relay(this.relay, this.groups);
+}
+
+class RelayGroup {
+  final String name;
+  final List<Relay> relays;
+
+  const RelayGroup(this.name, this.relays);
+}
+
 class Contact {
   final DbContact contact;
   final List<Npub> npubs;
+  final List<Relay> relays;
 
-  Contact(this.contact, this.npubs);
+  Contact(this.contact, this.npubs, this.relays);
 
   bool get isLocal => contact.isLocal;
   bool get active => contact.active;
@@ -114,13 +133,23 @@ class Event {
   Etags,
   EventPtags,
   EventEtags,
-  Relays,
+  DbRelays,
+  DbRelayGroups,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration {
+  return MigrationStrategy(
+      onCreate: (Migrator m) async {
+        await m.createAll();
+      },
+    );
+  }
 }
 
 LazyDatabase _openConnection() {

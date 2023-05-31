@@ -6,7 +6,7 @@ import '../../db/db.dart';
 import '../../router/delegate.dart';
 
 class RelaysEntry extends StatelessWidget {
-  final String name;
+  final String url;
   final Relay relay;
   final Contact user;
   final ImageProvider<Object>? picture;
@@ -19,7 +19,7 @@ class RelaysEntry extends StatelessWidget {
 
   const RelaysEntry({
     Key? key,
-    required this.name,
+    required this.url,
     required this.relay,
     required this.user,
     this.picture,
@@ -72,6 +72,6 @@ class RelaysEntry extends StatelessWidget {
   }
 
   String getTitle() {
-    return relay.name;
+    return relay.url;
   }
 }

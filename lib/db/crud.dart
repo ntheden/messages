@@ -78,6 +78,7 @@ Future<Contact> createContactFromNpubs(
   Contact contact = Contact(
     await getDbContactFromNpub(npubs[0].pubkey),
     npubs,
+    [], // TODO
   );
   writeContact(contact);
   return contact;
@@ -252,31 +253,13 @@ nostr.EncryptedDirectMessage nostrEvent(Npub npub, DbEvent event) {
 
 Future<List<MessageEntry>> messageEntries(
   List<DbEvent> events,
-  Contact userHint, [
-  // Are these hint optimizations worth it?
-  Contact? peerHint,
-]) async {
+) async {
   List<MessageEntry> messages = [];
   for (final event in events) {
     Npub npub = await getNpubFromId(event.pubkeyRef);
     Npub receiver = await getNpubFromId(event.receiverRef);
     Contact? from = await getContactFromNpub(npub.pubkey);
     Contact? to = await getContactFromNpub(receiver.pubkey);
-    /* Stupid optimizations
-    try {
-      userHint.npubs.firstWhere((n) => n.pubkey == npub.pubkey);
-      from = userHint;
-      if (peerHint == null) {
-        Npub receiver = await getNpubFromId(event.receiverRef);
-        to = await getContactFromNpub(receiver.pubkey);
-      } else {
-        to = peerHint;
-      }
-    } catch (error) {
-      to = userHint;
-      from = peerHint == null ? await getContactFromNpub(npub.pubkey) : peerHint;
-    }
-    */
     messages
         .add(MessageEntry(npub, event, nostrEvent(npub, event), from!, to!));
   }
@@ -295,7 +278,7 @@ Future<List<MessageEntry>> getUserMessages(Contact user) async {
               )
         ]))
       .get();
-  List<MessageEntry> messages = await messageEntries(entries, user);
+  List<MessageEntry> messages = await messageEntries(entries);
   return messages;
 }
 
@@ -312,7 +295,7 @@ Future<List<MessageEntry>> getChatMessages(Contact user, Contact peer) async {
               )
         ]))
       .get();
-  List<MessageEntry> messages = await messageEntries(entries, user, peer);
+  List<MessageEntry> messages = await messageEntries(entries);
   return messages;
 }
 
@@ -334,7 +317,7 @@ Stream<List<MessageEntry>> watchUserMessages(Contact user, {
   await for (final entryList in entries) {
     // intermediate step of converting to nostr events in order to
     // perform the decryption
-    List<MessageEntry> messages = await messageEntries(entryList, user);
+    List<MessageEntry> messages = await messageEntries(entryList);
     yield messages;
   }
 }
@@ -353,7 +336,7 @@ Stream<List<MessageEntry>> watchMessages(Contact user, Contact peer) async* {
         ]))
       .watch();
   await for (final entryList in entries) {
-    List<MessageEntry> messages = await messageEntries(entryList, user, peer);
+    List<MessageEntry> messages = await messageEntries(entryList);
     yield messages;
   }
 }
@@ -445,7 +428,7 @@ Stream<Contact> watchContact(int id) {
   // now, we can merge the two queries together in one stream
   return Rx.combineLatest2(contactStream, npubStream,
       (DbContact contact, List<Npub> npubs) {
-    return Contact(contact, npubs);
+    return Contact(contact, npubs, []);
   });
 }
 
@@ -484,7 +467,7 @@ Future<Contact?> getContactFromNpub(String publickey) async {
   }).toList();
 
   if (contacts.length > 0) {
-    return Contact(contacts[0], [npub]);
+    return Contact(contacts[0], [npub], []);
   }
 }
 
@@ -555,41 +538,57 @@ Future<Contact> getContact(DbContact contact) async {
     return row.readTable(database.npubs);
   }).toList();
 
-  return Contact(contact, npubs);
+  return Contact(contact, npubs, []);
 }
 
 Future<int> insertRelay({
   required String url,
-  String name: "",
+  required bool read,
+  required bool write,
+  List<String> groups: const [], // TODO
   String notes: "",
-}) {
-  RelaysCompanion relay = RelaysCompanion.insert(
+}) async {
+  DbRelaysCompanion relay = DbRelaysCompanion.insert(
     url: url,
-    name: name,
     notes: notes,
+    read: read,
+    write: read,
   );
-  return database.into(database.relays).insert(
+  return database.into(database.dbRelays).insert(
         relay,
         onConflict: DoUpdate(
-          (old) => RelaysCompanion.custom(
-            url: Constant(url),
-            name: name.isEmpty ? old.name : Constant(name),
+          (old) => DbRelaysCompanion.custom(
             notes: notes.isEmpty ? old.notes : Constant(notes),
+            read: Constant(read),
+            write: Constant(write),
           ),
-          target: [database.relays.url],
+          target: [database.dbRelays.url],
         ),
       );
 }
 
-Future<Relay?> getRelay(String url) {
-  return (database.select(database.relays)
-    ..where((r) => r.url.equals(url))).getSingle();
+Future<Relay?> getRelay(String url) async {
+  DbRelay? relay = await ((database.select(database.dbRelays)
+    ..where((r) => r.url.equals(url))).getSingle());
+  return relay == null ? null : Relay(relay, []);
 }
 
-Future<List<Relay>> getAllRelays() {
-  return database.select(database.relays).get();
+List<Relay> getRelaysHELPER(relaysList) {
+  List<Relay> relays = [];
+  for (final relay in relaysList) {
+    relays.add(Relay(relay, []));
+  }
+  return relays;
 }
 
-Stream<List<Relay>> watchAllRelays() {
-  return database.select(database.relays).watch();
+Future<List<Relay>> getAllRelays() async {
+  final List<DbRelay> entries = await (database.select(database.dbRelays).get());
+  return getRelaysHELPER(entries);
+}
+
+Stream<List<Relay>> watchAllRelays() async* {
+  Stream<List<DbRelay>> entries = await (database.select(database.dbRelays).watch());
+  await for (final entryList in entries) {
+    yield getRelaysHELPER(entryList);
+  }
 }

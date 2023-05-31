@@ -32,7 +32,6 @@ class RelayEdit extends StatefulWidget {
 }
 
 class RelayData {
-  String? name = '';
   String? url = '';
   String? notes = '';
 }
@@ -40,8 +39,7 @@ class RelayData {
 class _RelayEditState extends State<RelayEdit> with RestorationMixin {
   final RouterDelegate routerDelegate = Get.put(MyRouterDelegate());
   RelayData relayData = RelayData();
-  late FocusNode _name, _url, _notes;
-  TextEditingController nameController = TextEditingController();
+  late FocusNode _url, _notes;
   TextEditingController urlController = TextEditingController();
   TextEditingController notesController = TextEditingController();
   String _title = "New Relay";
@@ -49,7 +47,6 @@ class _RelayEditState extends State<RelayEdit> with RestorationMixin {
   @override
   void initState() {
     super.initState();
-    _name = FocusNode();
     _url = FocusNode();
     _notes = FocusNode();
     if (widget.relay != null) {
@@ -58,11 +55,9 @@ class _RelayEditState extends State<RelayEdit> with RestorationMixin {
   }
 
   void updateFields(Relay relay) {
-    _title = 'Edit Relay - ${relay!.name}';
-    relayData.name = relay!.name;
+    _title = 'Edit Relay - ${relay!.url}';
     relayData.url = relay!.url;
-    relayData.notes = '';//relay!.notes; 
-    nameController.text = relay!.name;
+    relayData.notes = relay!.notes; 
     urlController.text = relayData.url!;
     notesController.text = relayData.notes!;
   }
@@ -70,9 +65,7 @@ class _RelayEditState extends State<RelayEdit> with RestorationMixin {
   @override
   void dispose() {
     _url.dispose();
-    _name.dispose();
     _notes.dispose();
-    nameController.dispose();
     urlController.dispose();
     notesController.dispose();
     super.dispose();
@@ -115,29 +108,13 @@ class _RelayEditState extends State<RelayEdit> with RestorationMixin {
 
     insertRelay(
       url: urlController.text,
-      name: () {
-        if (nameController.text.isEmpty) {
-          if (widget.relay == null || widget.relay!.name.isEmpty) {
-            return Url(urlController.text).domain!;
-          }
-          return widget.relay!.name;
-        }
-        return nameController.text;
-      }(),
+      notes: notesController.text,
+      // TODO below properties
+      read: true,
+      write: true,
+      groups: [],
     );
     Navigator.pop(context);
-  }
-
-  String? _validateName(String? value) {
-    if (value == null || value.isEmpty) {
-      return MessagesLocalizations.of(context)!.demoTextFieldNameRequired;
-    }
-    final nameExp = RegExp(r'^[A-Za-z ]+$');
-    if (!nameExp.hasMatch(value)) {
-      return MessagesLocalizations.of(context)!
-          .demoTextFieldOnlyAlphabeticalChars;
-    }
-    return null;
   }
 
   String? _validateUrl(String? text) {
@@ -241,40 +218,21 @@ class _RelayEditState extends State<RelayEdit> with RestorationMixin {
                 keyboardType: TextInputType.text,
                 onSaved: (value) {
                   relayData.url = value;
-                  _name.requestFocus();
+                  _notes.requestFocus();
                 },
                 onChanged: (value) {
+                  setState(() => _title = "${widget.relay == null ? 'New' : 'Edit'} Relay - $value");
                   getRelay(value).then((relay) {
                     if (relay != null && widget.relay == null) {
-                      setState(() => updateFields(relay));
+                      setState(() {
+                        updateFields(relay);
+                      });
                     }
                   });
                 },
                 maxLength: 256,
                 maxLengthEnforcement: MaxLengthEnforcement.none,
                 validator: _validateUrl,
-              ),
-              sizedBoxSpace,
-              TextFormField(
-                restorationId: 'name_field',
-                controller: nameController,
-                textInputAction: TextInputAction.next,
-                textCapitalization: TextCapitalization.words,
-                decoration: InputDecoration(
-                  filled: true,
-                  icon: const Icon(Icons.computer),
-                  hintText: "Optional name",
-                  labelText: "Name",
-                ),
-                onSaved: (value) {
-                  relayData.name = value;
-                  _notes.requestFocus();
-                },
-                //validator: _validateName,
-                onChanged: (value) {
-                  // TODO: Get rid of "name" and put this logic in "url"
-                  setState(() => _title = "${widget.relay == null ? 'New' : 'Edit'} Relay - $value");
-                },
               ),
               sizedBoxSpace,
               TextFormField(

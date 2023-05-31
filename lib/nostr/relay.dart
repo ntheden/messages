@@ -15,7 +15,6 @@ class DeferredEvent {
 }
 
 class Relay {
-  String name;
   String url;
   Map<String, WebSocketChannel> socketMap = {};
   List<int>? supportedNips;
@@ -30,13 +29,13 @@ class Relay {
   ];
   Map<String, Queue<DeferredEvent>> queues = {};
 
-  Relay(this.name, this.url, [filters]) {
+  Relay(this.url, [filters]) {
     this.filters = this.filters + (filters ?? []);
-    socketMap[name] = socketConnect(url);
+    socketMap[url] = socketConnect(url);
     subscribe();
   }
 
-  WebSocketChannel get socket => socketMap[name]!;
+  WebSocketChannel get socket => socketMap[url]!;
 
   static WebSocketChannel socketConnect(String host) {
     host = host.split('//').last;
@@ -79,7 +78,7 @@ class Relay {
     socket.stream.listen(
       func,
       onError: (err) => print("Error in creating connection to $url."),
-      onDone: () => print('Relay[$name]: In onDone'),
+      onDone: () => print('Relay[$url]: In onDone'),
     );
   }
 
@@ -94,7 +93,7 @@ class Relay {
 
     String? receiver = (event as nostr.EncryptedDirectMessage).receiver;
     if (receiver == null) {
-      print('{name} Filter: event destination (tag p) is not present');
+      print('{url} Filter: event destination (tag p) is not present');
       return;
     }
     db.Contact? toContact = await getContactFromNpub(receiver!);
@@ -103,7 +102,7 @@ class Relay {
       return;
     }
     print('#################################');
-    print(name);
+    print(url);
     print('Received event ${event.id}');
     print('receiver ${event.receiver}');
     print('sender ${event.pubkey}');
@@ -153,7 +152,7 @@ class Relay {
       socket.sink.close();
     } catch (err) {
       // TODO: Logging
-      print('Close exception error $err for relay $name');
+      print('Close exception error $err for relay $url');
     }
   }
 

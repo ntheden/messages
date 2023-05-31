@@ -28,8 +28,7 @@ class RelaysList extends StatefulWidget {
     subscription = stream.stream.listen((entries) {
       relays = entries;
       relays.sort((a, b) {
-        // get rid of name and use url
-        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+        return a.url.toLowerCase().compareTo(b.url.toLowerCase());
       });
       _stateObj?.toggleState();
     });
@@ -132,7 +131,7 @@ class _RelaysListState extends State<RelaysList> {
   getRelayWidget(BuildContext context, int index) {
     Relay relay = widget.relays[index];
     return RelaysEntry(
-      name: '${relay.name}',
+      url: '${relay.url}',
       user: widget.currentUser,
       relay: relay,
       picture: AssetImage('assets/server.jpg'),
