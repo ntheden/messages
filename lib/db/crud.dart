@@ -251,7 +251,7 @@ nostr.EncryptedDirectMessage nostrEvent(Npub npub, DbEvent event) {
   return nostr.EncryptedDirectMessage(nEvent, verify: false);
 }
 
-Future<List<MessageEntry>> messageEntries(
+Future<List<MessageEntry>> getMessagesHELPER(
   List<DbEvent> events,
 ) async {
   List<MessageEntry> messages = [];
@@ -278,7 +278,7 @@ Future<List<MessageEntry>> getUserMessages(Contact user) async {
               )
         ]))
       .get();
-  List<MessageEntry> messages = await messageEntries(entries);
+  List<MessageEntry> messages = await getMessagesHELPER(entries);
   return messages;
 }
 
@@ -295,7 +295,7 @@ Future<List<MessageEntry>> getChatMessages(Contact user, Contact peer) async {
               )
         ]))
       .get();
-  List<MessageEntry> messages = await messageEntries(entries);
+  List<MessageEntry> messages = await getMessagesHELPER(entries);
   return messages;
 }
 
@@ -317,7 +317,7 @@ Stream<List<MessageEntry>> watchUserMessages(Contact user, {
   await for (final entryList in entries) {
     // intermediate step of converting to nostr events in order to
     // perform the decryption
-    List<MessageEntry> messages = await messageEntries(entryList);
+    List<MessageEntry> messages = await getMessagesHELPER(entryList);
     yield messages;
   }
 }
@@ -336,7 +336,7 @@ Stream<List<MessageEntry>> watchMessages(Contact user, Contact peer) async* {
         ]))
       .watch();
   await for (final entryList in entries) {
-    List<MessageEntry> messages = await messageEntries(entryList);
+    List<MessageEntry> messages = await getMessagesHELPER(entryList);
     yield messages;
   }
 }
@@ -568,9 +568,13 @@ Future<int> insertRelay({
 }
 
 Future<Relay?> getRelay(String url) async {
-  DbRelay? relay = await ((database.select(database.dbRelays)
-    ..where((r) => r.url.equals(url))).getSingle());
-  return relay == null ? null : Relay(relay, []);
+  try {
+    DbRelay relay = await ((database.select(database.dbRelays)
+      ..where((r) => r.url.equals(url))).getSingle());
+    return Relay(relay, []);
+  } catch (error) {
+    return null;
+  }
 }
 
 List<Relay> getRelaysHELPER(relaysList) {
