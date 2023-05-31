@@ -59,6 +59,8 @@ class ChatsList extends StatefulWidget {
     for (final contact in contacts) {
       conversations.add(Pair(contact, peers[contact.id]));
     }
+    // descending sort
+    conversations.sort((b, a) => a.b.timestamp.compareTo(b.b.timestamp));
   }
 
   @override
