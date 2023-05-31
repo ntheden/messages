@@ -65,6 +65,7 @@ class DrawerScreenState extends State<DrawerScreen> {
                   'contact': currentUser,
                   'intent': 'lookup',
                 });
+                Navigator.pop(context); // dismiss the drawer
               },
               child: SizedBox.fromSize(
                 size: Size(50, 50),
@@ -169,11 +170,7 @@ class DrawerScreenState extends State<DrawerScreen> {
           onTap: () {
             switchUser(user.contact.id).then(
               (_) => queryUsers().then(
-              // TODO: Need to remove pages that have the old user, pushing does it for
-              // chats, but once we have channels working, then we can't just push
-              // chats here.
               (_) {
-                //routerDelegate.removeOtherUserPages(user: currentUser!);
                 routerDelegate.pushPage(name: '/chats', arguments: currentUser);
               }));
           },

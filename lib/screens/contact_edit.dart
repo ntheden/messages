@@ -421,21 +421,22 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
                         ),
                       ),
                     ),
-                    Container(
-                      height: 50,
-                      width: screenAwareWidth(0.25, context),
-                      padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
-                      child: TextButton(
-                        onPressed: _saveAndSendButton,
-                        child: Text(
-                          'Save and Send',
-                        ),
-                        style: TextButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white,
+                    if (widget.intent == 'lookup')
+                      Container(
+                        height: 50,
+                        width: screenAwareWidth(0.25, context),
+                        padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+                        child: TextButton(
+                          onPressed: _saveAndSendButton,
+                          child: Text(
+                            'Enter Chat',
+                          ),
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            foregroundColor: Colors.white,
+                          ),
                         ),
                       ),
-                    ),
                     Spacer(),
                   ],
                 ),

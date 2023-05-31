@@ -30,32 +30,38 @@ class Chat extends StatefulWidget {
 
 class ChatState extends State<Chat> {
   final List<dynamic> _messages = [];
-  final TextEditingController textEntryField = TextEditingController();
+  final TextEditingController _controller = TextEditingController();
   final FocusNode focusNode = FocusNode();
   final ScrollController scrollController = ScrollController();
   bool newMessageToggle = false;
   Contact currentUser;
   Contact peerContact;
   Set<int> _seen = {};
-  StreamController<List<MessageEntry>> _stream = StreamController<List<MessageEntry>>();
+  StreamController<List<MessageEntry>> _stream =
+      StreamController<List<MessageEntry>>();
   StreamSubscription<List<MessageEntry>>? subscription;
 
   ChatState(this.currentUser, this.peerContact) {
     focusNode.requestFocus();
   }
 
+  void _textControlListener() {
+    final String text = _controller.text;
+    final oldSelection = _controller.selection;
+
+    // TODO: This is where I would send meta info that I am typing.
+
+    final newSelection = _controller.selection;
+    if (newSelection.baseOffset != oldSelection.baseOffset) {
+      // User moved cursor with arrow keys
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    textEntryField.addListener(() {
-      final String text = textEntryField.text;
-      textEntryField.value = textEntryField.value.copyWith(
-        text: text,
-        selection:
-            TextSelection(baseOffset: text.length, extentOffset: text.length),
-        composing: TextRange.empty,
-      );
-    });
+
+    _controller.addListener(_textControlListener);
     _stream.addStream(watchMessages(currentUser, peerContact));
     subscription = _stream.stream.listen((entries) {
       if (entries.isEmpty) {
@@ -65,7 +71,6 @@ class ChatState extends State<Chat> {
         // TODO: This needs to be optimized - possibly cancel the stream
         // and restart it from the latest message.id or something
         if (_seen.contains(message.id)) {
-          //print('"${message.content}" was already seen');
           continue;
         }
         _seen.add(message.id);
@@ -78,7 +83,8 @@ class ChatState extends State<Chat> {
 
   @override
   void dispose() {
-    textEntryField.dispose();
+    _controller.removeListener(_textControlListener);
+    _controller.dispose();
     subscription?.cancel();
     _stream.close();
     super.dispose();
@@ -99,9 +105,14 @@ class ChatState extends State<Chat> {
                   onPressed: () {
                     Navigator.pop(context);
                   },
-                  icon: Icon(Icons.arrow_back, color: Colors.white,),
+                  icon: Icon(
+                    Icons.arrow_back,
+                    color: Colors.white,
+                  ),
                 ),
-                SizedBox(width: 2,),
+                SizedBox(
+                  width: 2,
+                ),
                 SizedBox.fromSize(
                   size: Size(50, 50),
                   /*
@@ -130,19 +141,26 @@ class ChatState extends State<Chat> {
                   maxRadius: 20,
                 ),
                 */
-                SizedBox(width: 12,),
+                SizedBox(
+                  width: 12,
+                ),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
-                      Text('${peerContact.name} (${peerContact.npub.substring(59, 63)})',
-                        style: TextStyle( fontSize: 16 ,fontWeight: FontWeight.w600),
+                      Text(
+                        '${peerContact.name} (${peerContact.npub.substring(59, 63)})',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
                 ),
-                Icon(Icons.settings, color: Colors.white,),
+                Icon(
+                  Icons.settings,
+                  color: Colors.white,
+                ),
               ],
             ),
           ),
@@ -172,8 +190,7 @@ class ChatState extends State<Chat> {
               child: Row(
                 children: <Widget>[
                   GestureDetector(
-                    onTap: () {
-                    },
+                    onTap: () {},
                     child: Container(
                       height: 30,
                       width: 30,
@@ -181,37 +198,42 @@ class ChatState extends State<Chat> {
                         color: Colors.lightBlue,
                         borderRadius: BorderRadius.circular(30),
                       ),
-                      child: Icon(Icons.add, color: Colors.white, size: 20, ),
+                      child: Icon(
+                        Icons.add,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ),
                   ),
-                  SizedBox(width: 15,),
+                  SizedBox(
+                    width: 15,
+                  ),
                   Expanded(
                     child: TextField(
                       focusNode: focusNode,
-                      controller: textEntryField,
+                      controller: _controller,
                       decoration: InputDecoration(
                         hintText: "Write message...",
                         hintStyle: TextStyle(color: Colors.black54),
                         border: InputBorder.none,
                       ),
-                      onSubmitted: (String value) {
-                        sendMessage(value);
-                        textEntryField.clear();
-                        focusNode.requestFocus();
-                        scrollController.animateTo(
-                          scrollController.position.minScrollExtent,
-                          duration: const Duration(milliseconds: 100),
-                          curve: Curves.easeOut
-                        );
-                      },
+                      onSubmitted: (String value) => submitText(),
                     ),
                   ),
-                  SizedBox(width: 15,),
+                  SizedBox(
+                    width: 15,
+                  ),
                   FloatingActionButton(
                     onPressed: () {
-                      // TODO!!!!!!!!!!!!!!!!!!
+                      if (_controller.text.isNotEmpty) {
+                        submitText();
+                      }
                     },
-                    child: Icon(Icons.send, color: Colors.white, size: 18,),
+                    child: Icon(
+                      Icons.send,
+                      color: Colors.white,
+                      size: 18,
+                    ),
                     backgroundColor: Colors.blue,
                     elevation: 0,
                   ),
@@ -224,19 +246,29 @@ class ChatState extends State<Chat> {
     );
   }
 
+  void submitText() {
+    sendMessage(_controller.text);
+    _controller.clear();
+    focusNode.requestFocus();
+    scrollController.animateTo(
+        scrollController.position.minScrollExtent,
+        duration: const Duration(milliseconds: 100),
+        curve: Curves.easeOut);
+  }
+
   sendMessage(String content) {
     Relays relays = getRelays({});
     relays.sendMessage(content, from: currentUser, to: peerContact);
   }
 
   void addMessage(MessageEntry entry) {
-    //print('@@@@@@@@@@@@@@@@@ received a msg "${entry.content}"');
     _messages.insert(0, entry);
   }
 
   void addMarkers() {
     // Remove markers before re-adding them
-    List<dynamic> cleaned = _messages.where((widget) => !(widget is String)).toList();
+    List<dynamic> cleaned =
+        _messages.where((widget) => !(widget is String)).toList();
     _messages.clear();
     _messages.addAll(cleaned);
     _messages.replaceRange(0, _messages.length, insertStrings(_messages));
@@ -250,26 +282,32 @@ class ChatState extends State<Chat> {
   Widget? listBuilderEntry(context, index) {
     if (_messages[index] is String) {
       return Container(
-        padding: EdgeInsets.only(left: 14,right: 14,top: 5, bottom: 5),
+        padding: EdgeInsets.only(left: 14, right: 14, top: 5, bottom: 5),
         child: Align(
           alignment: Alignment.topCenter,
           child: Container(
-            child: Text(_messages[index], style: TextStyle(fontSize: 10),),
+            child: Text(
+              _messages[index],
+              style: TextStyle(fontSize: 10),
+            ),
           ),
         ),
       );
     }
     Alignment alignment;
     Color? color;
-    if (_messages[index].toId == currentUser.id && _messages[index].toId != peerContact.id) {
+    if (_messages[index].toId == currentUser.id &&
+        _messages[index].toId != peerContact.id) {
       alignment = Alignment.topLeft;
       color = Colors.green.shade400;
     } else {
-      alignment = screenAwareWidth(1, context) < 675 ? Alignment.topRight : Alignment.topLeft;
+      alignment = screenAwareWidth(1, context) < 675
+          ? Alignment.topRight
+          : Alignment.topLeft;
       color = Colors.blue[400];
     }
     return Container(
-      padding: EdgeInsets.only(left: 14, right: 14,top: 10,bottom: 10),
+      padding: EdgeInsets.only(left: 14, right: 14, top: 10, bottom: 10),
       child: Align(
         alignment: alignment,
         child: Container(
@@ -278,7 +316,10 @@ class ChatState extends State<Chat> {
             color: color,
           ),
           padding: EdgeInsets.all(16),
-          child: Text(_messages[index].content, style: TextStyle(fontSize: 15),),
+          child: Text(
+            _messages[index].content,
+            style: TextStyle(fontSize: 15),
+          ),
         ),
       ),
     );
@@ -308,7 +349,8 @@ List<dynamic> insertStrings(List<dynamic> messages) {
     }
 
     if (currentTimestamp.day != previousTimestamp.day) {
-      if (currentTimestamp.day != firstMessage.day) { // firstMessage gets inserted at the end
+      if (currentTimestamp.day != firstMessage.day) {
+        // firstMessage gets inserted at the end
         result.add(currentTimestamp.formattedDate());
       }
     }
