@@ -63,9 +63,15 @@ class Relay {
       if (data == null || data == 'null') {
         return;
       }
-      nostr.Message m = nostr.Message.deserialize(data);
+      nostr.Message? m;
+      try {
+        m = nostr.Message.deserialize(data);
+      } catch (error) {
+        // error deserializing. Log it (maybe) and punt
+        return;
+      }
       if ([
-        m.type,
+        m!.type,
       ].contains("EVENT")) {
         storeEvent(m.message);
       }
@@ -115,8 +121,8 @@ class Relay {
       queues[pubkey]?.add(DeferredEvent(event, receiver, toContact));
       // TODO: Look up name from directory
       // TODO: SPAM/DOS Protection
-      createContact([pubkey], "Unnamed")
-          .then((_) => getContactFromNpub(pubkey).then((fromContact) {
+      createContact([pubkey], "Unnamed", DateTime.fromMillisecondsSinceEpoch(event.createdAt * 1000),
+          ).then((_) => getContactFromNpub(pubkey).then((fromContact) {
                 // TODO: batch these
                 Queue<DeferredEvent> q = queues[pubkey]!;
                 while (q.isNotEmpty) {

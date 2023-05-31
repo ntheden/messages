@@ -55,6 +55,7 @@ Future<Contact> createContactFromNpubs(
     notes: "",
     picture_url: "",
     picture_pathname: "",
+    createdAt: DateTime.now(),
     isLocal: isLocal,
     active: false,
     npub: npubs[0].pubkey,
@@ -84,7 +85,8 @@ Future<Contact> createContactFromNpubs(
 
 Future<Contact> createContact(
   List<String> npubs,
-  String name, {
+  String name,
+  DateTime createdAt, {
   bool isLocal = false,
   bool active = false,
 }) async {
@@ -208,7 +210,10 @@ Future<void> storeReceivedEvent(
     // TODO: SPAM/DOS Protection
     print('New contact? From ${event.pubkey}');
     await createContact(
-        [event.pubkey], "Unnamed"); // TODO: Look up name from directory
+      [event.pubkey],
+      "Unnamed", // TODO: Look up name from directory
+      DateTime.fromMillisecondsSinceEpoch(event.createdAt * 1000),
+    );
     fromContact = await getContactFromNpub(event.pubkey);
     print('@@@@@@@@@@@@@@@@@@@@@@ created contact $fromContact');
   }
@@ -312,14 +317,17 @@ Future<List<MessageEntry>> getChatMessages(Contact user, Contact peer) async {
 }
 
 // Watches all messages to/from current user
-Stream<List<MessageEntry>> watchUserMessages(Contact user) async* {
+Stream<List<MessageEntry>> watchUserMessages(Contact user, {
+    OrderingMode orderingMode: OrderingMode.asc
+  }) async* {
   Stream<List<DbEvent>> entries = await (database.select(database.dbEvents)
         ..where(
             (m) => m.fromContact.equals(user.id) | m.toContact.equals(user.id))
         ..orderBy([
           (t) => OrderingTerm(
+                // this doesn't seem to work
                 expression: t.createdAt,
-                mode: OrderingMode.desc,
+                mode: orderingMode,
               )
         ]))
       .watch();
@@ -504,9 +512,17 @@ Future<Contact> getContactFromId(int id) async {
   return getContact(await contactQuery.getSingle());
 }
 
-Future<List<Contact>> getContacts(List<int> ids) async {
+Future<List<Contact>> getContacts(List<int> ids, {
+  OrderingMode orderingMode: OrderingMode.asc,
+}) async {
   final contactQuery = database.select(database.dbContacts)
-    ..where((c) => c.id.isIn(ids));
+    ..where((c) => c.id.isIn(ids))
+    ..orderBy([
+      (c) => OrderingTerm(
+            expression: c.createdAt,
+            mode: orderingMode,
+          )
+    ]);
 
   List<Contact> contacts = [];
   for (final contact in await contactQuery.get()) {
@@ -550,7 +566,7 @@ Future<int> insertRelay({
   RelaysCompanion relay = RelaysCompanion.insert(
     url: url,
     name: name,
-    //notes: notes,
+    notes: notes,
   );
   return database.into(database.relays).insert(
         relay,
@@ -558,7 +574,7 @@ Future<int> insertRelay({
           (old) => RelaysCompanion.custom(
             url: Constant(url),
             name: Constant(name),
-            //notes: notes.isEmpty ? old.notes : Constant(notes),
+            notes: notes.isEmpty ? old.notes : Constant(notes),
           ),
           target: [database.relays.url, database.relays.name],
         ),

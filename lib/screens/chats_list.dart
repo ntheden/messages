@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:drift/drift.dart' as db;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -51,7 +52,7 @@ class ChatsList extends StatefulWidget {
       }
     });
 
-    List<Contact> contacts = await getContacts(peers.keys.toList());
+    List<Contact> contacts = await getContacts(peers.keys.toList(), orderingMode: db.OrderingMode.desc);
 
     List<Widget> entries = [];
     conversations.clear();
@@ -70,6 +71,8 @@ class ChatsList extends StatefulWidget {
 class _ChatsListState extends State<ChatsList> {
 
   bool _stateToggle = false;
+  GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
+  ScrollController _scrollController = ScrollController();
 
   void toggleState() {
     setState(() => _stateToggle = !_stateToggle);
@@ -79,11 +82,21 @@ class _ChatsListState extends State<ChatsList> {
   void dispose() {
     widget.stream.close();
     widget.subscription.cancel();
+    _scrollController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    Timer(Duration(milliseconds: 500), () {
+        _scrollController.animateTo(
+          //0.0,
+          _scrollController.position.maxScrollExtent,
+          duration: Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+        );
+      }
+    );
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -102,6 +115,8 @@ class _ChatsListState extends State<ChatsList> {
         ],
       ),
       body: ListView.builder(
+        key: _listKey,
+        controller: _scrollController,
         itemCount: widget.conversations.length,
         itemBuilder: (BuildContext context, int index) {
           return Column(children: [

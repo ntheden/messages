@@ -230,7 +230,7 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
         alignment: Alignment.center,
         child: Container(
           height: screenAwareHeight(0.8, context),
-          width: min(550, screenAwareWidth(0.8, context)),
+          width: min(650, screenAwareWidth(0.8, context)),
           child: ListView(
             children: [
               //SizedBox(height: 5.0,),

@@ -58,7 +58,14 @@ class DrawerScreenState extends State<DrawerScreen> {
               });
             },
             currentAccountPicture: InkWell(
-              onTap: () => print('@@@@@ open edit contact'),
+              onTap: () {
+                final routerDelegate = Get.put(MyRouterDelegate());
+                routerDelegate.pushPage(name: '/contactEdit', arguments: {
+                  'user': currentUser,
+                  'contact': currentUser,
+                  'intent': 'lookup',
+                });
+              },
               child: SizedBox.fromSize(
                 size: Size(50, 50),
                 /*
