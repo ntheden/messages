@@ -48,6 +48,8 @@ class Contact {
   bool get isLocal => contact.isLocal;
   bool get active => contact.active;
   String get name => contact.name;
+  String get surname => contact.surname;
+  String get username => contact.username;
   String get pubkey => npubs[0].pubkey; // FIXME
   String get privkey => npubs[0].privkey;
   String get npub => hexToBech32('npub', pubkey);

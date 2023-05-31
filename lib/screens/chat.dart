@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:nostr/nostr.dart';
 
@@ -10,6 +11,7 @@ import '../constants/messages.dart';
 import '../db/crud.dart';
 import '../db/db.dart';
 import '../nostr/relays.dart';
+import '../router/delegate.dart';
 import '../util/date.dart';
 import '../util/screen.dart';
 
@@ -108,7 +110,17 @@ class ChatState extends State<Chat> {
                     backgroundColor: Colors.grey,
                   ),
                   */
-                  child: peerContact.avatar,
+                  child: InkWell(
+                    child: peerContact.avatar,
+                    onTap: () {
+                      final routerDelegate = Get.put(MyRouterDelegate());
+                      routerDelegate.pushPage(name: '/contactEdit', arguments: {
+                        'user': currentUser,
+                        'contact': peerContact,
+                        'intent': 'chat',
+                      });
+                    },
+                  ),
                 ),
                 /*
                 CircleAvatar(

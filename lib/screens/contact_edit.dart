@@ -113,7 +113,11 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
   final _UsNumberTextInputFormatter _phoneNumberFormatter =
       _UsNumberTextInputFormatter();
 
-  void _handleSubmitted() {
+  void _saveAndSendButton() {
+    _handleSubmitted(enterChat: true);
+  }
+
+  void _handleSubmitted({bool enterChat: false}) {
     final form = _formKey.currentState!;
     if (!form.validate()) {
       _autoValidateModeIndex.value =
@@ -124,9 +128,11 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
       return;
     }
     form.save();
-    showInSnackBar(
-      "Saved ${person.npub}",
-    );
+    if (widget.intent == 'lookup' && !enterChat) {
+      showInSnackBar(
+        "Saved ${person.npub}",
+      );
+    }
 
     String pubkey = bech32_decode('npub', person.npub!);
     insertNpub(pubkey, nameController.text).then((_) =>
@@ -138,7 +144,7 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
             MyRouterDelegate routerDelegate = Get.put(MyRouterDelegate());
             // So that back button doesn't send us back here.
             routerDelegate.removePage(name: '/contactEdit');
-            if (widget.intent == 'lookup') {
+            if (widget.intent == 'lookup' && !enterChat) {
               routerDelegate.pushPage(name: '/contacts', arguments: {
                 'intent': widget.intent,
                 'user': widget.currentUser,
@@ -397,20 +403,41 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
               ),
               sizedBoxSpace,
               Center(
-                child: Container(
-                  height: 50,
-                  width: screenAwareWidth(0.5, context),
-                  padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
-                  child: TextButton(
-                    onPressed: _handleSubmitted,
-                    child: Text(
-                      'Save',
+                child: Row(
+                  children: [
+                    Spacer(),
+                    Container(
+                      height: 50,
+                      width: screenAwareWidth(0.2, context),
+                      padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+                      child: TextButton(
+                        onPressed: _handleSubmitted,
+                        child: Text(
+                          'Save',
+                        ),
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
                     ),
-                    style: TextButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
+                    Container(
+                      height: 50,
+                      width: screenAwareWidth(0.25, context),
+                      padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+                      child: TextButton(
+                        onPressed: _saveAndSendButton,
+                        child: Text(
+                          'Save and Send',
+                        ),
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
                     ),
-                  ),
+                    Spacer(),
+                  ],
                 ),
               ),
               sizedBoxSpace,

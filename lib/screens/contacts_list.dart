@@ -38,6 +38,11 @@ class ContactsList extends StatefulWidget {
     List<int> ids = [];
     dbContacts.forEach((c) => ids.add(c.id));
     contacts = await getContacts(ids);
+    contacts.sort((a, b) {
+      String nameA = a.name ?? a.surname ?? a.username ?? "";
+      String nameB = b.name ?? b.surname ?? b.username ?? "";
+      return nameA.toLowerCase().compareTo(nameB.toLowerCase());
+    });
   }
 
   @override
