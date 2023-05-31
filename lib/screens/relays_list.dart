@@ -18,30 +18,59 @@ class RelaysList extends StatefulWidget {
   late Contact currentUser; // will be per-user later
   late StreamController<List<Relay>> stream;
   late StreamSubscription<List<Relay>> subscription;
+  _RelaysListState? _stateObj;
 
   RelaysList(Map<String, dynamic> options, {Key? key, this.title='Relays'}) : super(key: key) {
     currentUser = options['user'];
 
     stream = StreamController<List<Relay>>();
     stream.addStream(watchAllRelays());
-    subscription = stream.stream.listen((entries) => relays = entries);
+    subscription = stream.stream.listen((entries) {
+      relays = entries;
+      relays.sort((a, b) {
+        // get rid of name and use url
+        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      });
+      _stateObj?.toggleState();
+    });
   }
 
   @override
-  _RelaysListState createState() => _RelaysListState();
+  _RelaysListState createState() {
+    _stateObj = _RelaysListState();
+    return _stateObj!;
+  }
 }
 
 class _RelaysListState extends State<RelaysList> {
+
+  bool _stateToggle = false;
+  GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
+  ScrollController _scrollController = ScrollController();
+
+  void toggleState() {
+    setState(() => _stateToggle = !_stateToggle);
+  }
 
   @override
   void dispose() {
     widget.subscription.cancel();
     widget.stream.close();
+    _scrollController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    Timer(Duration(milliseconds: 500), () {
+        _scrollController.animateTo(
+          //0.0,
+          _scrollController.position.maxScrollExtent,
+          duration: Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+        );
+      }
+    );
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
@@ -76,6 +105,8 @@ class _RelaysListState extends State<RelaysList> {
         ),
       ),
       body: ListView.builder(
+        key: _listKey,
+        controller: _scrollController,
         itemCount: widget.relays.length,
         itemBuilder: (BuildContext context, int index) {
           return Column(
@@ -108,5 +139,3 @@ class _RelaysListState extends State<RelaysList> {
     );
   }
 }
-
-

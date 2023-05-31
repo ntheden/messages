@@ -560,7 +560,7 @@ Future<Contact> getContact(DbContact contact) async {
 
 Future<int> insertRelay({
   required String url,
-  required String name,
+  String name: "",
   String notes: "",
 }) {
   RelaysCompanion relay = RelaysCompanion.insert(
@@ -573,12 +573,17 @@ Future<int> insertRelay({
         onConflict: DoUpdate(
           (old) => RelaysCompanion.custom(
             url: Constant(url),
-            name: Constant(name),
+            name: name.isEmpty ? old.name : Constant(name),
             notes: notes.isEmpty ? old.notes : Constant(notes),
           ),
-          target: [database.relays.url, database.relays.name],
+          target: [database.relays.url],
         ),
       );
+}
+
+Future<Relay?> getRelay(String url) {
+  return (database.select(database.relays)
+    ..where((r) => r.url.equals(url))).getSingle();
 }
 
 Future<List<Relay>> getAllRelays() {

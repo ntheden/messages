@@ -115,7 +115,15 @@ class _RelayEditState extends State<RelayEdit> with RestorationMixin {
 
     insertRelay(
       url: urlController.text,
-      name: nameController.text.isEmpty ? Url(urlController.text).domain! : nameController.text,
+      name: () {
+        if (nameController.text.isEmpty) {
+          if (widget.relay == null || widget.relay!.name.isEmpty) {
+            return Url(urlController.text).domain!;
+          }
+          return widget.relay!.name;
+        }
+        return nameController.text;
+      }(),
     );
     Navigator.pop(context);
   }
@@ -235,7 +243,13 @@ class _RelayEditState extends State<RelayEdit> with RestorationMixin {
                   relayData.url = value;
                   _name.requestFocus();
                 },
-                onChanged: (value) { },
+                onChanged: (value) {
+                  getRelay(value).then((relay) {
+                    if (relay != null && widget.relay == null) {
+                      setState(() => updateFields(relay));
+                    }
+                  });
+                },
                 maxLength: 256,
                 maxLengthEnforcement: MaxLengthEnforcement.none,
                 validator: _validateUrl,
@@ -258,6 +272,7 @@ class _RelayEditState extends State<RelayEdit> with RestorationMixin {
                 },
                 //validator: _validateName,
                 onChanged: (value) {
+                  // TODO: Get rid of "name" and put this logic in "url"
                   setState(() => _title = "${widget.relay == null ? 'New' : 'Edit'} Relay - $value");
                 },
               ),

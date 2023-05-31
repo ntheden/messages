@@ -10,7 +10,7 @@ import 'package:path_provider/path_provider.dart';
 class Relays extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get url => text().unique().withLength(min: 0, max: 1024)();
-  TextColumn get name => text().unique().withLength(min: 0, max: 64)();
+  TextColumn get name => text().withLength(min: 0, max: 64)();
   TextColumn get notes => text()();
 }
 
