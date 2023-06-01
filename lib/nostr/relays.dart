@@ -10,7 +10,7 @@ import 'relay.dart';
 
 class Relays {
   String groupName; // private relay, group/org relay, public relay, etc.
-  List<Relay> relays = [];
+  List<Relay> _relays = [];
   Set<Event>? rEvents;
   Set<String>? uniqueIdsReceived; // to reject duplicates, but may check database instead
 
@@ -18,36 +18,33 @@ class Relays {
   Relays({
     this.groupName='default',
   }) {
-    relays = [];
+    _relays = [];
     rEvents = {};
     uniqueIdsReceived = {};
   }
 
   void close() {
-    relays.forEach((relay) {
+    _relays.forEach((relay) {
       relay.close();
     });
   }
 
   void addRelay(Relay relay) {
     // TODO: properties such as read/write may have changed
-    if (!relays.any((relay) => relay.url == relay.url)) {
-      if (relay.socketMap[relay.url] != null) {
-        print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ adding relay $relay');
-        relays.add(relay);
-      }
+    if (relay.channel != null) {
+      _relays.add(relay);
     }
   }
 
   void add(url) {
     Relay relay = Relay(url);
-    if (relay.socketMap[url] != null) {
-      relays.add(relay);
+    if (relay.channel != null) {
+      _relays.add(relay);
     }
   }
 
   send(String request) {
-    relays.forEach((relay) {
+    _relays.forEach((relay) {
       relay.send(request);
     });
   }
@@ -66,15 +63,15 @@ class Relays {
   }
 
   sendEvent(Event event, from, to, plaintext) {
-    assert(relays.isNotEmpty);
-    relays.forEach((relay) {
+    assert(_relays.isNotEmpty);
+    _relays.forEach((relay) {
       relay.sendEvent(event, from, to, plaintext);
     });
     storeSentEvent(event, from, to, plaintext);
   }
 
   void listen([void Function(dynamic)? func=null]) {
-    relays.forEach((relay) {
+    _relays.forEach((relay) {
       relay.listen(func);
     });
   }
@@ -104,9 +101,10 @@ class RelaysWatcher {
     _stream.addStream(watchAllRelays());
     _subscription = _stream.stream.listen((entries) {
       for (final db.Relay relay in entries) {
-        print('@@@@@@@@@@@@@@@@@@@@@ adding relay $relay');
         // TODO: manage these fully
-        relays.addRelay(Relay.fromDb(relay));
+        if (!relays._relays.any((entry) => entry.url == relay.url)) {
+          relays.addRelay(Relay.fromDb(relay));
+        }
       }
       relays.listen();
     });

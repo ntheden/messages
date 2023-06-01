@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:collection';
 import 'dart:io';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -15,8 +16,11 @@ class DeferredEvent {
 }
 
 class Relay {
-  String url;
-  Map<String, WebSocketChannel> socketMap = {};
+  final String url;
+  final bool read;
+  final bool write;
+  bool _listening = false;
+  late WebSocketChannel _channel;
   List<int>? supportedNips;
   List<nostr.Filter> filters = [
     nostr.Filter(
@@ -29,31 +33,43 @@ class Relay {
   ];
   Map<String, Queue<DeferredEvent>> queues = {};
 
-  Relay(this.url, [filters]) {
+  WebSocketChannel get channel => _channel;
+
+  Relay(this.url, {this.read: true, this.write: true, List<nostr.Filter>? filters,}) {
     this.filters = this.filters + (filters ?? []);
-    socketMap[url] = socketConnect(url);
+    _channel = channelConnect(url);
     subscribe();
   }
 
-  void init() {
+  @override
+  String toString() {
+    return (StringBuffer('Relay(')
+          ..write('url: $url, ')
+          ..write('read: $read, ')
+          ..write('write: $write, ')
+          ..write(')'))
+        .toString();
   }
 
   factory Relay.fromDb(db.Relay relay, [filters]) {
-    return Relay(relay.url, filters);
+    return Relay(
+      relay.url,
+      read: relay.read,
+      write: relay.write,
+      filters: filters
+    );
   }
 
-  WebSocketChannel get socket => socketMap[url]!;
-
-  static WebSocketChannel socketConnect(String host) {
+  static WebSocketChannel channelConnect(String host) {
     host = host.split('//').last;
-    WebSocketChannel socket;
+    WebSocketChannel channel;
     try {
       // with 'wss' seeing WRONG_VERSION_NUMBER error against some servers
-      socket = WebSocketChannel.connect(Uri.parse('ws://${host}'));
+      channel = WebSocketChannel.connect(Uri.parse('ws://${host}'));
     } on HandshakeException catch (e) {
-      socket = WebSocketChannel.connect(Uri.parse('wss://${host}'));
+      channel = WebSocketChannel.connect(Uri.parse('wss://${host}'));
     }
-    return socket;
+    return channel;
   }
 
   void subscribe() {
@@ -61,10 +77,13 @@ class Relay {
     nostr.Request requestWithFilter =
         nostr.Request(nostr.generate64RandomHexChars(), filters);
     print('sending request: ${requestWithFilter.serialize()}');
-    socket.sink.add(requestWithFilter.serialize());
+    _channel.sink.add(requestWithFilter.serialize());
   }
 
   void listen(void Function(dynamic)? func) {
+    if (_listening) {
+      return;
+    }
     func ??= (data) {
       if (data == null || data == 'null') {
         return;
@@ -82,10 +101,11 @@ class Relay {
         storeEvent(m.message);
       }
     };
-    socket.stream.listen(
+    _listening = true;
+    _channel.stream.listen(
       func,
-      onError: (err) => print("Error in creating connection to $url."),
-      onDone: () => print('Relay[$url]: In onDone'),
+      onError: (err) => _listening = false,
+      onDone: () => _listening = false,
     );
   }
 
@@ -156,7 +176,7 @@ class Relay {
 
   void close() {
     try {
-      socket.sink.close();
+      _channel.sink.close();
     } catch (err) {
       // TODO: Logging
       print('Close exception error $err for relay $url');
@@ -164,7 +184,7 @@ class Relay {
   }
 
   Future<void> send(String request) async {
-    socket.sink.add(request);
+    _channel.sink.add(request);
     // TODO: check the return OK if relay supports that NIP
   }
 

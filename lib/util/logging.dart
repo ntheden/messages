@@ -1,4 +1,3 @@
-import '../config/settings.dart';
 import '../db/db.dart';
 import '../util/date.dart';
 

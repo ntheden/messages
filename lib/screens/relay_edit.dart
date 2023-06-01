@@ -250,20 +250,41 @@ class _RelayEditState extends State<RelayEdit> with RestorationMixin {
               ),
               sizedBoxSpace,
               Center(
-                child: Container(
-                  height: 50,
-                  width: screenAwareWidth(0.5, context),
-                  padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
-                  child: TextButton(
-                    onPressed: _handleSubmitted,
-                    child: Text(
-                      'Save',
+                child: Row(
+                  children: [
+                    Spacer(),
+                    Container(
+                      height: 50,
+                      width: screenAwareWidth(0.1, context),
+                      padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+                      child: TextButton(
+                        onPressed: _handleSubmitted,
+                        child: Text(
+                          'Save',
+                        ),
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
                     ),
-                    style: TextButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
+                    Container(
+                      height: 50,
+                      width: screenAwareWidth(0.1, context),
+                      padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+                      child: TextButton(
+                        onPressed: () {},
+                        child: Text(
+                          'Delete',
+                        ),
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
                     ),
-                  ),
+                    Spacer(),
+                  ],
                 ),
               ),
               sizedBoxSpace,

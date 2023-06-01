@@ -7,7 +7,6 @@ import 'package:multiavatar/multiavatar.dart';
 
 import '../db/db.dart';
 import '../db/crud.dart';
-import '../db/sink.dart';
 import '../router/delegate.dart';
 import '../nostr/relays.dart';
 import '../util/screen.dart';
