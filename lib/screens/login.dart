@@ -9,6 +9,7 @@ import '../db/db.dart';
 import '../db/crud.dart';
 import '../db/sink.dart';
 import '../router/delegate.dart';
+import '../nostr/relays.dart';
 import '../util/screen.dart';
 
 class Login extends StatefulWidget {
@@ -74,7 +75,7 @@ class _LoginState extends State<Login> {
     await switchUser(user!.contact.id);
     Navigator.pop(context);
     routerDelegate.pushPage(name: '/chats', arguments: user!);
-    runEventSink();
+    getRelays();
   }
 
   @override

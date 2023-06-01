@@ -35,6 +35,13 @@ class Relay {
     subscribe();
   }
 
+  void init() {
+  }
+
+  factory Relay.fromDb(db.Relay relay, [filters]) {
+    return Relay(relay.url, filters);
+  }
+
   WebSocketChannel get socket => socketMap[url]!;
 
   static WebSocketChannel socketConnect(String host) {
@@ -93,7 +100,7 @@ class Relay {
 
     String? receiver = (event as nostr.EncryptedDirectMessage).receiver;
     if (receiver == null) {
-      print('{url} Filter: event destination (tag p) is not present');
+      // Filter: event destination (tag p) is not present
       return;
     }
     db.Contact? toContact = await getContactFromNpub(receiver!);

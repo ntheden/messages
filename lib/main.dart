@@ -12,11 +12,11 @@ import 'screens/chats_list.dart';
 import 'config/preferences.dart';
 import 'db/crud.dart';
 import 'db/db.dart';
-import 'db/sink.dart';
 import 'router/delegate.dart';
 import 'util/date.dart';
 import 'util/messages_localizations.dart';
 import 'util/first_time.dart';
+import 'nostr/relays.dart';
 
 void main() async {
   try {
@@ -50,7 +50,7 @@ class MessagesAppState extends State<MessagesApp> {
     } else {
       routerDelegate.pushPage(name: '/chats', arguments: user);
       // FIXME: This is causing performance bottleneck at startup
-      runEventSink();
+      getRelays();
     }
   }
 

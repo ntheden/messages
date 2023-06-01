@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:nostr/nostr.dart';
 
-import '../config/settings.dart';
 import '../components/chats/chats_entry.dart';
 import '../components/drawer/index.dart';
 import '../constants/messages.dart';
@@ -257,7 +256,7 @@ class ChatState extends State<Chat> {
   }
 
   sendMessage(String content) {
-    Relays relays = getRelays({});
+    Relays relays = getRelays();
     relays.sendMessage(content, from: currentUser, to: peerContact);
   }
 
