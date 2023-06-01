@@ -91,6 +91,20 @@ class _RelayEditState extends State<RelayEdit> with RestorationMixin {
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  void _handleDeleted() {
+    if (widget.relay == null) {
+      showInSnackBar(
+        "Cannot delete ${relayData.url}",
+      );
+      return;
+    }
+    deleteRelay(widget.relay!.url);
+    showInSnackBar(
+      "Deleted ${widget.relay!.url}",
+    );
+    Navigator.pop(context);
+  }
+
   void _handleSubmitted() {
     final form = _formKey.currentState!;
     if (!form.validate()) {
@@ -273,12 +287,12 @@ class _RelayEditState extends State<RelayEdit> with RestorationMixin {
                       width: screenAwareWidth(0.1, context),
                       padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
                       child: TextButton(
-                        onPressed: () {},
+                        onPressed: widget.relay == null ? null : _handleDeleted,
                         child: Text(
                           'Delete',
                         ),
                         style: TextButton.styleFrom(
-                          backgroundColor: Colors.red,
+                          backgroundColor: widget.relay == null ? Colors.grey : Colors.red,
                           foregroundColor: Colors.white,
                         ),
                       ),

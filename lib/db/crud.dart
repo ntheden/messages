@@ -596,3 +596,8 @@ Stream<List<Relay>> watchAllRelays() async* {
     yield getRelaysHELPER(entryList);
   }
 }
+
+Future<void> deleteRelay(String url) async {
+  (database.delete(database.dbRelays)..where((r) => r.url.equals(url))).go();
+}
+
