@@ -3,13 +3,11 @@ import 'dart:io';
 import 'dart:core';
 import 'package:dart_bech32/dart_bech32.dart';
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
 import 'package:nostr/nostr.dart';
-import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:multiavatar/multiavatar.dart';
 
+import 'connection/connection.dart' as impl;
 import 'models.dart';
 part 'db.g.dart';
 
@@ -136,8 +134,9 @@ class Event {
   DbRelays,
   DbRelayGroups,
 ])
+
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection());
+  AppDatabase() : super(impl.connect());
 
   @override
   int get schemaVersion => 1;
@@ -150,14 +149,6 @@ class AppDatabase extends _$AppDatabase {
       },
     );
   }
-}
-
-LazyDatabase _openConnection() {
-  return LazyDatabase(() async {
-    final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(join(dbFolder.path, 'messages.sqlite'));
-    return NativeDatabase(file);
-  });
 }
 
 final AppDatabase database = AppDatabase();
