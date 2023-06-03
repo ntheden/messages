@@ -29,9 +29,6 @@ dependencies:
       url: https://github.com/no-prob/dart-nostr.git
       ref: message-types
       resolved-ref: "3b1bf377f73e1dd4c80b02dde9a9ef51fa9003df"
-  file_picker:
-    git:
-      url: https://github.com/miguelpruivo/flutter_file_picker.git
   drift: ^2.7.0
   badges: ^3.1.1
   intl: ^0.18.0
