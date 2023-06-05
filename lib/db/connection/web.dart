@@ -5,7 +5,7 @@ import 'package:drift/wasm.dart';
 import 'package:drift/web/worker.dart';
 import 'package:sqlite3/wasm.dart';
 
-const _useWorker = true;
+const _useWorker = false;
 
 /// Obtains a database connection for running drift on the web.
 DatabaseConnection connect({bool isInWebWorker = false}) {
