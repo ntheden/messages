@@ -64,4 +64,3 @@ jobs:
         with:
           artifacts: build/app/outputs/apk/debug/*
           tag: v0.0.${{ github.run_number }}
-      - run: flutter build linux
