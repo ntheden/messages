@@ -39,7 +39,7 @@ jobs:
           name: web-build
           path: build/web
       - name: Download Artifact
-      - uses: actions/download-artifact@master
+        uses: actions/download-artifact@master
         with:
           name: web-build
       - name: Display structure of build files
