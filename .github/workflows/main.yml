@@ -58,9 +58,4 @@ jobs:
           git add --all
           git commit -m "update"
           git push origin gh-pages -f
-      - run: flutter build apk
-      - name: Push Apk to Releases
-        uses: ncipollo/release-action@v1
-        with:
-          artifacts: build/app/outputs/apk/debug/*
-          tag: v0.0.${{ github.run_number }}
+
