@@ -81,14 +81,13 @@ class Relays {
 RelaysWatcher? watcher;
 
 
-Relays getRelays() {
+Relays getNetwork() {
   if (watcher != null) {
     return watcher!.relays;
   }
   watcher = RelaysWatcher();
   return watcher!.relays;
 }
-
 
 class RelaysWatcher {
   late Relays relays;
