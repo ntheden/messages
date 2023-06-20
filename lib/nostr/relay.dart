@@ -185,7 +185,7 @@ class Relay {
 
   Future<void> sendEvent(nostr.Event event, db.Contact from, db.Contact to,
       [String? plaintext]) async {
-    // we don't await it, but we might want to to get confirmation
+    // we don't await it, but we might want to get confirmation
     send(event.serialize());
   }
 }

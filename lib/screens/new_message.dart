@@ -4,7 +4,6 @@ import 'package:nostr/nostr.dart';
 
 import '../components/chats/chats_entry.dart';
 import '../components/drawer/index.dart';
-import '../nostr/relays.dart';
 import '../db/crud.dart';
 import '../db/db.dart';
 import '../util/date.dart';

@@ -16,7 +16,7 @@ import 'router/delegate.dart';
 import 'util/date.dart';
 import 'util/messages_localizations.dart';
 import 'util/first_time.dart';
-import 'nostr/relays.dart';
+import 'nostr/network.dart';
 
 void main() async {
   try {
@@ -50,7 +50,7 @@ class MessagesAppState extends State<MessagesApp> {
     } else {
       routerDelegate.pushPage(name: '/chats', arguments: user);
       // FIXME: This is causing performance bottleneck at startup
-      getRelays();
+      getNetwork();
     }
   }
 

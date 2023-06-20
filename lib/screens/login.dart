@@ -8,7 +8,7 @@ import 'package:multiavatar/multiavatar.dart';
 import '../db/db.dart';
 import '../db/crud.dart';
 import '../router/delegate.dart';
-import '../nostr/relays.dart';
+import '../nostr/network.dart';
 import '../util/screen.dart';
 
 class Login extends StatefulWidget {
@@ -74,7 +74,7 @@ class _LoginState extends State<Login> {
     await switchUser(user!.contact.id);
     Navigator.pop(context);
     routerDelegate.pushPage(name: '/chats', arguments: user!);
-    getRelays();
+    getNetwork();
   }
 
   @override
