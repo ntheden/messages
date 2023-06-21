@@ -93,7 +93,7 @@ class _ChatsListState extends State<ChatsList> {
     Timer(Duration(milliseconds: 500), () {
         _scrollController.animateTo(
           //0.0,
-          _scrollController.position.maxScrollExtent,
+          _scrollController.position.minScrollExtent,
           duration: Duration(milliseconds: 200),
           curve: Curves.easeOut,
         );
