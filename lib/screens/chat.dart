@@ -256,7 +256,7 @@ class ChatState extends State<Chat> {
   }
 
   sendMessage(String content) {
-    Relays network = getNetwork();
+    Network network = getNetwork();
     network.sendMessage(content, from: currentUser, to: peerContact);
   }
 

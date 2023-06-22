@@ -1,51 +1,69 @@
 import 'dart:io';
 import 'dart:async';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:nostr/nostr.dart';
+import 'package:nostr/nostr.dart' as nostr;
 
 import '../db/crud.dart';
 import '../db/db.dart' as db;
-import 'relay.dart';
+import 'node.dart';
+import '../util/date.dart';
 
 
-class Relays {
+class Network {
   String groupName; // private relay, group/org relay, public relay, etc.
-  List<Relay> _relays = [];
-  Set<Event>? rEvents;
+  List<Node> _nodes = [];
+  Set<nostr.Event>? rEvents;
   Set<String>? uniqueIdsReceived; // to reject duplicates, but may check database instead
+  late List<nostr.Filter> _filters;
+
+  DateTime? _listenStart;
+   
+  List<nostr.Filter> initFilters() {
+    return [
+      nostr.Filter(
+        //kinds: [0, 1, 4, 2, 7],
+        kinds: [4],
+        //  date -d @1681878751
+        //Tue Apr 18 09:32:31 PM PDT 2023
+        since: yesterday(),
+        limit: 450,
+      )
+    ];
+  }
+
+  void updateFilters(List<db.Contact> users) {
+  }
 
     
-  Relays({
+  Network({
     this.groupName='default',
   }) {
-    _relays = [];
+    _nodes = [];
     rEvents = {};
     uniqueIdsReceived = {};
+    _filters = initFilters();
   }
 
   void close() {
-    _relays.forEach((relay) {
-      relay.close();
+    _nodes.forEach((node) {
+      node.close();
     });
   }
 
-  void addRelay(Relay relay) {
+  void addNode(Node node) {
     // TODO: properties such as read/write may have changed
-    if (relay.channel != null) {
-      _relays.add(relay);
-    }
-  }
-
-  void add(url) {
-    Relay relay = Relay(url);
-    if (relay.channel != null) {
-      _relays.add(relay);
+    if (node.channel != null) {
+      _nodes.add(node);
+      if (_listenStart != null) {
+        node.listen();
+      }
+      node.subscribe(_filters);
     }
   }
 
   send(String request) {
-    _relays.forEach((relay) {
-      relay.send(request);
+    _nodes.forEach((node) {
+      node.send(request);
     });
   }
 
@@ -54,7 +72,7 @@ class Relays {
     required db.Contact from,
     required db.Contact to
   }) {
-    EncryptedDirectMessage event = EncryptedDirectMessage.redact(
+    nostr.EncryptedDirectMessage event = nostr.EncryptedDirectMessage.redact(
       from.privkey,
       to.pubkey,
       content,
@@ -62,50 +80,50 @@ class Relays {
     sendEvent(event, from, to, content);
   }
 
-  sendEvent(Event event, from, to, plaintext) {
-    assert(_relays.isNotEmpty);
-    _relays.forEach((relay) {
-      relay.sendEvent(event, from, to, plaintext);
+  sendEvent(nostr.Event event, from, to, plaintext) {
+    assert(_nodes.isNotEmpty);
+    _nodes.forEach((node) {
+      node.sendEvent(event, from, to, plaintext);
     });
     storeSentEvent(event, from, to, plaintext);
   }
 
   void listen([void Function(dynamic)? func=null]) {
-    _relays.forEach((relay) {
-      relay.listen(func);
-    });
+    _listenStart = DateTime.now();
+    _nodes.forEach((node) => node.listen(func));
   }
 }
 
 
-RelaysWatcher? watcher;
+NetworkWatcher? watcher;
 
 
-Relays getNetwork() {
+Network getNetwork() {
   if (watcher != null) {
-    return watcher!.relays;
+    return watcher!.network;
   }
-  watcher = RelaysWatcher();
-  return watcher!.relays;
+  watcher = NetworkWatcher();
+  return watcher!.network;
 }
 
-class RelaysWatcher {
-  late Relays relays;
+class NetworkWatcher {
+  late Network network;
   late StreamController<List<db.Relay>> _stream;
   late StreamSubscription<List<db.Relay>> _subscription;
 
-  RelaysWatcher() {
-    relays = Relays();
+  NetworkWatcher() {
+    network = Network();
     _stream = StreamController<List<db.Relay>>();
     _stream.addStream(watchAllRelays());
     _subscription = _stream.stream.listen((entries) {
       for (final db.Relay relay in entries) {
         // TODO: manage these fully
-        if (!relays._relays.any((entry) => entry.url == relay.url)) {
-          relays.addRelay(Relay.fromDb(relay));
+        if (!network._nodes.any((entry) => entry.url == relay.url)) {
+          Node node = Node.fromDb(relay);
+          network.addNode(node);
         }
       }
-      relays.listen();
+      network.listen();
     });
   }
 

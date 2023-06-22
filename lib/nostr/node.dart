@@ -15,35 +15,24 @@ class DeferredEvent {
   DeferredEvent(this.event, this.receiver, this.toContact);
 }
 
-class Relay {
+class Node {
   final String url;
   final bool read;
   final bool write;
   bool _listening = false;
   late WebSocketChannel _channel;
   List<int>? supportedNips;
-  List<nostr.Filter> filters = [
-    nostr.Filter(
-      //kinds: [0, 1, 4, 2, 7],
-      kinds: [4],
-      since:
-          1681878751, // TODO: Today minus 30 or something, or based on last received in db
-      limit: 450,
-    )
-  ];
   Map<String, Queue<DeferredEvent>> queues = {};
 
   WebSocketChannel get channel => _channel;
 
-  Relay(this.url, {this.read: true, this.write: true, List<nostr.Filter>? filters,}) {
-    this.filters = this.filters + (filters ?? []);
+  Node(this.url, {this.read: true, this.write: true}) {
     _channel = channelConnect(url);
-    subscribe();
   }
 
   @override
   String toString() {
-    return (StringBuffer('Relay(')
+    return (StringBuffer('Node(')
           ..write('url: $url, ')
           ..write('read: $read, ')
           ..write('write: $write, ')
@@ -51,12 +40,11 @@ class Relay {
         .toString();
   }
 
-  factory Relay.fromDb(db.Relay relay, [filters]) {
-    return Relay(
+  factory Node.fromDb(db.Relay relay) {
+    return Node(
       relay.url,
       read: relay.read,
       write: relay.write,
-      filters: filters
     );
   }
 
@@ -67,17 +55,17 @@ class Relay {
     return WebSocketChannel.connect(Uri.parse(host));
   }
 
-  void subscribe() {
+  void subscribe(List<nostr.Filter> filters) {
     // TODO: query supported nips
     nostr.Request requestWithFilter =
         nostr.Request(nostr.generate64RandomHexChars(), filters);
-    print('sending request: ${requestWithFilter.serialize()}');
+    print('${url} ${requestWithFilter.serialize()}');
     _channel.sink.add(requestWithFilter.serialize());
   }
 
-  void listen(void Function(dynamic)? func) {
+  void listen([void Function(dynamic)? func]) {
     if (_listening) {
-      return;
+      close();
     }
     func ??= (data) {
       if (data == null || data == 'null') {
@@ -172,6 +160,7 @@ class Relay {
   void close() {
     try {
       _channel.sink.close();
+      _listening = false;
     } catch (err) {
       // TODO: Logging
       print('Close exception error $err for relay $url');
