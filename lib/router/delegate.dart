@@ -56,7 +56,7 @@ class MyRouterDelegate extends RouterDelegate<List<RouteSettings>>
         break;
       case '/chats':
         // argument is current user
-        child = ChatsList(routeSettings.arguments as Contact);
+        child = ChatsList(routeSettings.arguments as Contact, key: UniqueKey());
         break;
       case '/contactEdit':
         child = ContactEdit(routeSettings.arguments as Map<String, dynamic>);

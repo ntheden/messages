@@ -28,7 +28,12 @@ class ChatsList extends StatefulWidget {
       // TODO: This stream should be from not far back in time and
       // has to add its data to the existing list
       getConversations(entries);
-      _stateObj?.toggleState();
+      if (_stateObj == null) {
+        subscription.cancel();
+        stream.close();
+      } else {
+        _stateObj?.toggleState();
+      }
     });
   }
 
@@ -81,9 +86,13 @@ class _ChatsListState extends State<ChatsList> {
   }
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   void dispose() {
-    widget.stream.close();
-    widget.subscription.cancel();
+    widget._stateObj = null;
     _scrollController.dispose();
     super.dispose();
   }
