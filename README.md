@@ -2,13 +2,16 @@
 
 Built upon nip04 encrypted directed messages. Nostr channels are next up.
 
+Demo is running at https://ntheden.github.io/demo-site
+
+
 To build and run:
 
-Linux
+Linux & Web App
 ===
 ```
 flutter pub get
-flutter pub run build_runner build
+dart run build_runner build --delete-conflicting-outputs -o web:build/web/
 flutter run
 ```
 

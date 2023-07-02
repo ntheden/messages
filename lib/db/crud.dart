@@ -216,7 +216,7 @@ Future<void> storeReceivedEvent(
       DateTime.fromMillisecondsSinceEpoch(event.createdAt * 1000),
     );
     fromContact = await getContactFromNpub(event.pubkey);
-    print('@@@@@@@@@@@@@@@@@@@@@@ created contact $fromContact');
+    print('created contact $fromContact');
   }
 
   Npub receiveNpub = await getNpub(receiver!);
