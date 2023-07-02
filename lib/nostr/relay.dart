@@ -61,15 +61,10 @@ class Relay {
   }
 
   static WebSocketChannel channelConnect(String host) {
-    host = host.split('//').last;
-    WebSocketChannel channel;
-    try {
-      // with 'wss' seeing WRONG_VERSION_NUMBER error against some servers
-      channel = WebSocketChannel.connect(Uri.parse('ws://${host}'));
-    } on HandshakeException catch (e) {
-      channel = WebSocketChannel.connect(Uri.parse('wss://${host}'));
+    if (!host.startsWith(RegExp(r'^(wss?://)'))) {
+      host = 'wss://' + host.split('//').last;
     }
-    return channel;
+    return WebSocketChannel.connect(Uri.parse(host));
   }
 
   void subscribe() {
