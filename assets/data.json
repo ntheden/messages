@@ -1,7 +1,16 @@
 {
+  "keys": [
+    {
+      "name": "bob",
+      "nsec": "nsec1sfh0p6fuzfutmzv52dml4kmtddganmklwnkdke9fduvf0wm8p05qdyjlar"
+    }, {
+      "name": "agena",
+      "nsec": "nsec1pv6qwrr37dkgjdke3rgyssmuuxn7c0fza588dgvn8kn7c723svcsn9r96d"
+    }
+  ],
   "relays": [
     {
-      "url": "https://192.168.50.144:8081",
+      "url": "ws://192.168.50.144:8081",
       "read": true,
       "write": false
     }

@@ -15,26 +15,9 @@ class Network {
   Set<nostr.Event>? rEvents;
   Set<String>? uniqueIdsReceived; // to reject duplicates, but may check database instead
   late List<nostr.Filter> _filters;
-
+  late String _subscriptionId;
   DateTime? _listenStart;
    
-  List<nostr.Filter> initFilters() {
-    return [
-      nostr.Filter(
-        //kinds: [0, 1, 4, 2, 7],
-        kinds: [4],
-        //  date -d @1681878751
-        //Tue Apr 18 09:32:31 PM PDT 2023
-        since: yesterday(),
-        limit: 450,
-      )
-    ];
-  }
-
-  void updateFilters(List<db.Contact> users) {
-  }
-
-    
   Network({
     this.groupName='default',
   }) {
@@ -42,8 +25,52 @@ class Network {
     rEvents = {};
     uniqueIdsReceived = {};
     _filters = initFilters();
+    _subscriptionId = nostr.generate64RandomHexChars();
   }
 
+  List<nostr.Filter> initFilters() {
+    return [
+      nostr.Filter(
+        //kinds: [0, 1, 4, 2, 7],
+        kinds: [4],
+        //  date -d @1681878751
+        //Tue Apr 18 09:32:31 PM PDT 2023
+        since: 1681878751,//yesterday(),
+        limit: 450,
+      )
+    ];
+  }
+
+  void updateFilters(List<db.Contact> users) {
+    // TODO: This will also need to be called when a user gets
+    // added or deleted
+        /*
+        ["REQ","26753b65-35a7-4f9f-9a16-d7086fda3d79", {
+           "kinds":[0],
+           "authors":["0f76c800a7ea76b83a3ae87de94c6046b98311bda8885cedd8420885b50de181"]
+         }]
+        */
+    int since = users[0].lastEventTime;
+    users.map((user) {
+      if (user.lastEventTime > 0 && user.lastEventTime < since) {
+        since = user.lastEventTime;
+      }
+    });
+    _filters = [
+      nostr.Filter(
+        //kinds: [0, 1, 4, 2, 7],
+        kinds: [4],
+        //  date -d @1681878751
+        //Tue Apr 18 09:32:31 PM PDT 2023
+        since: since > 0 ? since : null,
+        limit: 450,
+        authors: List.from(users.map((user) => user.pubkey)),
+        p: List.from(users.map((user) => user.pubkey)),
+      ),
+    ];
+  }
+
+    
   void close() {
     _nodes.forEach((node) {
       node.close();
@@ -57,7 +84,7 @@ class Network {
       if (_listenStart != null) {
         node.listen();
       }
-      node.subscribe(_filters);
+      node.subscribe(_subscriptionId, _filters);
     }
   }
 
@@ -113,17 +140,22 @@ class NetworkWatcher {
 
   NetworkWatcher() {
     network = Network();
-    _stream = StreamController<List<db.Relay>>();
-    _stream.addStream(watchAllRelays());
-    _subscription = _stream.stream.listen((entries) {
-      for (final db.Relay relay in entries) {
-        // TODO: manage these fully
-        if (!network._nodes.any((entry) => entry.url == relay.url)) {
-          Node node = Node.fromDb(relay);
-          network.addNode(node);
-        }
+    getUsers().then((users) {
+      if (users.isNotEmpty) {
+        network.updateFilters(users);
       }
-      network.listen();
+      _stream = StreamController<List<db.Relay>>();
+      _stream.addStream(watchAllRelays());
+      _subscription = _stream.stream.listen((entries) {
+        for (final db.Relay relay in entries) {
+          // TODO: manage these fully
+          if (!network._nodes.any((entry) => entry.url == relay.url)) {
+            Node node = Node.fromDb(relay);
+            network.addNode(node);
+          }
+        }
+        network.listen();
+      });
     });
   }
 

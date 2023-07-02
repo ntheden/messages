@@ -82,6 +82,7 @@ class DbContacts extends Table {
   TextColumn get picture_url => text()();
   TextColumn get picture_pathname => text()();
   DateTimeColumn get createdAt => dateTime()();
+  IntColumn get lastEventTime => integer()();
 }
 
 class DbEvents extends Table {

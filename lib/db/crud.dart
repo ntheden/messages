@@ -55,8 +55,9 @@ Future<Contact> createContactFromNpubs(
     notes: "",
     picture_url: "",
     picture_pathname: "",
-    createdAt: DateTime.now(),
     isLocal: isLocal,
+    createdAt: DateTime.now(),
+    lastEventTime: 0,
     active: false,
     npub: npubs[0].pubkey,
   );
@@ -367,6 +368,7 @@ Future<int> insertNpub(String pubkey, String label, {String? privkey}) async {
     pubkey: pubkey,
     label: label,
     privkey: privkey ?? "",
+    birth: DateTime.now(),
   );
 
   return database.into(database.npubs).insert(

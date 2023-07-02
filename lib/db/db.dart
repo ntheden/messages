@@ -76,6 +76,7 @@ class Contact {
   String get phone => contact.phone;
   String get email => contact.email;
   String get notes => contact.notes;
+  int get lastEventTime => contact.lastEventTime;
   //String get picture_url => contact.picture_url;
   //String get picture_pathname => contact.picture_pathname;
   int get id => contact.id;

@@ -55,10 +55,9 @@ class Node {
     return WebSocketChannel.connect(Uri.parse(host));
   }
 
-  void subscribe(List<nostr.Filter> filters) {
+  void subscribe(String subscriptionId, List<nostr.Filter> filters) {
     // TODO: query supported nips
-    nostr.Request requestWithFilter =
-        nostr.Request(nostr.generate64RandomHexChars(), filters);
+    nostr.Request requestWithFilter = nostr.Request(subscriptionId, filters);
     print('${url} ${requestWithFilter.serialize()}');
     _channel.sink.add(requestWithFilter.serialize());
   }
