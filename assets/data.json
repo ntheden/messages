@@ -1,7 +1,7 @@
 {
   "relays": [
     {
-      "url": "https://192.168.50.144:8081",
+      "url": "ws://192.168.50.144:8081",
       "read": true,
       "write": false
     }
