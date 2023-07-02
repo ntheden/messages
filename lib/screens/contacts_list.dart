@@ -28,20 +28,20 @@ class ContactsList extends StatefulWidget {
     stream = StreamController<List<DbContact>>();
     stream.addStream(watchAllDbContacts());
     subscription = stream.stream.listen((entries) {
-      makeContactsList(entries);
-      _stateObj?.toggleState();
+      makeContactsList().then((_) {
+        _stateObj?.toggleState();
+      });
     });
   }
 
-  void makeContactsList(dbContacts) async {
-    List<int> ids = [];
-    dbContacts.forEach((c) => ids.add(c.id));
-    contacts = await getContacts(ids);
+  Future<List<Contact>> makeContactsList() async {
+    contacts = await getAllContacts();
     contacts.sort((a, b) {
       String nameA = a.name ?? a.surname ?? a.username ?? "";
       String nameB = b.name ?? b.surname ?? b.username ?? "";
       return nameA.toLowerCase().compareTo(nameB.toLowerCase());
     });
+    return contacts;
   }
 
   @override

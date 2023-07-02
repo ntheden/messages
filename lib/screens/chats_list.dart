@@ -19,22 +19,34 @@ class ChatsList extends StatefulWidget {
   late StreamSubscription<List<MessageEntry>> subscription;
   List<Pair<Contact, MessageEntry>> conversations = [];
   _ChatsListState? _stateObj;
+  Timer? _timer;
 
   ChatsList(this.currentUser, {Key? key, this.title = 'Messages'})
       : super(key: key) {
     stream = StreamController<List<MessageEntry>>();
     stream.addStream(watchUserMessages(currentUser));
-    subscription = stream.stream.listen((entries) {
-      // TODO: This stream should be from not far back in time and
-      // has to add its data to the existing list
-      getConversations(entries);
-      if (_stateObj == null) {
-        subscription.cancel();
-        stream.close();
-      } else {
-        _stateObj?.toggleState();
+    subscription = stream.stream.listen((entries) => processMessages(entries));
+    // If offline, there will be no receive or database events to trigger a
+    // widget rebuild. We use timer that triggers the build and cancels itself
+    _timer = Timer.periodic(Duration(milliseconds: 500), (messages) {
+      if (_stateObj != null) {
+        getUserMessages(currentUser).then((messages) => processMessages(messages));
+        _timer?.cancel();
       }
     });
+  }
+
+  void processMessages(messages) {
+    // TODO: This stream should be from not far back in time and
+    // has to add its data to the existing list
+    getConversations(messages);
+    if (_stateObj == null) {
+      subscription.cancel();
+      stream.close();
+      _timer?.cancel();
+    } else {
+      _stateObj?.toggleState();
+    }
   }
 
   void getConversations(messages) async {
