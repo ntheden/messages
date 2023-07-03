@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:io';
+import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:nostr/nostr.dart' as nostr;
 
@@ -20,25 +21,21 @@ class Relay {
   final bool read;
   final bool write;
   bool _listening = false;
+  bool _connected = false;
   late WebSocketChannel _channel;
   List<int>? supportedNips;
-  List<nostr.Filter> filters = [
-    nostr.Filter(
-      //kinds: [0, 1, 4, 2, 7],
-      kinds: [4],
-      since:
-          1681878751, // TODO: Today minus 30 or something, or based on last received in db
-      limit: 450,
-    )
-  ];
+  List<nostr.Filter> _filters = [];
   Map<String, Queue<DeferredEvent>> queues = {};
 
   WebSocketChannel get channel => _channel;
+  void set filters(List<nostr.Filter> newFilters) => _filters = newFilters;
 
   Relay(this.url, {this.read: true, this.write: true, List<nostr.Filter>? filters,}) {
-    this.filters = this.filters + (filters ?? []);
-    _channel = channelConnect(url);
-    subscribe();
+    this._filters = this._filters + (filters ?? []);
+    channelConnect(url);
+    if (read == true && _filters.isNotEmpty) {
+      subscribe();
+    }
   }
 
   @override
@@ -60,17 +57,18 @@ class Relay {
     );
   }
 
-  static WebSocketChannel channelConnect(String host) {
+  void channelConnect(String host) {
     if (!host.startsWith(RegExp(r'^(wss?://)'))) {
       host = 'wss://' + host.split('//').last;
     }
-    return WebSocketChannel.connect(Uri.parse(host));
+    _channel = IOWebSocketChannel.connect(Uri.parse(host));
+    _connected = true;
   }
 
   void subscribe() {
     // TODO: query supported nips
     nostr.Request requestWithFilter =
-        nostr.Request(nostr.generate64RandomHexChars(), filters);
+        nostr.Request(nostr.generate64RandomHexChars(), _filters);
     print('sending request: ${requestWithFilter.serialize()}');
     _channel.sink.add(requestWithFilter.serialize());
   }
@@ -99,8 +97,15 @@ class Relay {
     _listening = true;
     _channel.stream.listen(
       func,
-      onError: (err) => _listening = false,
-      onDone: () => _listening = false,
+      onError: (err) {
+        _listening = false;
+        print('onError: $url');
+        print('$err');
+      },
+      onDone: () {
+        _connected = false;
+        print('onDone: $url');
+      },
     );
   }
 

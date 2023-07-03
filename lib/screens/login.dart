@@ -8,7 +8,7 @@ import 'package:multiavatar/multiavatar.dart';
 import '../db/db.dart';
 import '../db/crud.dart';
 import '../router/delegate.dart';
-import '../nostr/network.dart';
+import '../network/network.dart';
 import '../util/screen.dart';
 
 class Login extends StatefulWidget {

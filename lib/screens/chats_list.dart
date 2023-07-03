@@ -111,15 +111,17 @@ class _ChatsListState extends State<ChatsList> {
 
   @override
   Widget build(BuildContext context) {
-    Timer(Duration(milliseconds: 500), () {
-        _scrollController.animateTo(
-          //0.0,
-          _scrollController.position.minScrollExtent,
-          duration: Duration(milliseconds: 200),
-          curve: Curves.easeOut,
-        );
-      }
-    );
+    if (widget.conversations.length > 0) {
+      Timer(Duration(milliseconds: 500), () {
+          _scrollController.animateTo(
+            //0.0,
+            _scrollController.position.minScrollExtent,
+            duration: Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+          );
+        }
+      );
+    }
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -137,29 +139,31 @@ class _ChatsListState extends State<ChatsList> {
           )
         ],
       ),
-      body: ListView.builder(
-        key: _listKey,
-        controller: _scrollController,
-        itemCount: widget.conversations.length,
-        itemBuilder: (BuildContext context, int index) {
-          return Column(children: [
-            getChatsEntry(context, index),
-            const Divider(height: 0),
-          ]);
-        },
-      ),
-      drawer: DrawerScreen(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          final routerDelegate = Get.put(MyRouterDelegate());
-          routerDelegate.pushPage(name: '/contacts', arguments: {
-            'intent': 'chat',
-            'user': widget.currentUser,
-          });
-        },
-        child: const Icon(Icons.edit_rounded),
-      ),
-    );
+      body: widget.conversations.length == 0
+        ? LinearProgressIndicator()
+        : ListView.builder(
+          key: _listKey,
+          controller: _scrollController,
+          itemCount: widget.conversations.length,
+          itemBuilder: (BuildContext context, int index) {
+            return Column(children: [
+              getChatsEntry(context, index),
+              const Divider(height: 0),
+            ]);
+          },
+        ),
+        drawer: DrawerScreen(),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            final routerDelegate = Get.put(MyRouterDelegate());
+            routerDelegate.pushPage(name: '/contacts', arguments: {
+              'intent': 'chat',
+              'user': widget.currentUser,
+            });
+          },
+          child: const Icon(Icons.edit_rounded),
+        ),
+      );
   }
 
   ChatsEntry getChatsEntry(BuildContext context, int index) {

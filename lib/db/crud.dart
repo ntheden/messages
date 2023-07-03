@@ -432,6 +432,13 @@ Stream<Contact> watchContact(int id) {
   });
 }
 
+Stream<List<DbContact>> watchAllUsers() {
+  final contactQuery = database.select(database.dbContacts)
+    ..where((c) => c.isLocal.equals(true));
+
+  return contactQuery.watch();
+}
+
 Stream<List<DbContact>> watchAllDbContacts() {
   // Would be cool to transform this stream into a Stream<List<Contact>>
   // and return that.

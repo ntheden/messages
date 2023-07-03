@@ -16,7 +16,7 @@ import 'router/delegate.dart';
 import 'util/date.dart';
 import 'util/messages_localizations.dart';
 import 'util/first_time.dart';
-import 'nostr/network.dart';
+import 'network/network.dart';
 
 void main() async {
   try {
