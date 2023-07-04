@@ -146,9 +146,11 @@ class NetworkWatcher {
         network.updateFilters(users);
     }
     _userSubscription = _userStream.stream.listen((entries) async {
-      List<db.Contact> users = await getUsers();
-      network.updateFilters(users);
-      network.listen();
+      if (users.isNotEmpty) {
+        List<db.Contact> users = await getUsers();
+        network.updateFilters(users);
+        network.listen();
+      }
     });
     _relaySubscription = _relayStream.stream.listen((entries) {
       for (final db.Relay relay in entries) {

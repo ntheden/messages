@@ -12,7 +12,6 @@ import 'package:dart_bech32/dart_bech32.dart';
 import '../router/delegate.dart';
 import '../db/db.dart';
 import '../db/crud.dart';
-import '../util/messages_localizations.dart';
 import '../util/screen.dart';
 
 class ContactEdit extends StatefulWidget {
@@ -122,7 +121,7 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
       _autoValidateModeIndex.value =
           AutovalidateMode.always.index; // Start validating on every change.
       showInSnackBar(
-        MessagesLocalizations.of(context)!.demoTextFieldFormErrors,
+        'Please fix the errors in red before submitting.',
       );
       return;
     }
@@ -161,12 +160,11 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
 
   String? _validateName(String? value) {
     if (value == null || value.isEmpty) {
-      return MessagesLocalizations.of(context)!.demoTextFieldNameRequired;
+      return 'Name is required.';
     }
     final nameExp = RegExp(r'^[A-Za-z ]+$');
     if (!nameExp.hasMatch(value)) {
-      return MessagesLocalizations.of(context)!
-          .demoTextFieldOnlyAlphabeticalChars;
+      return 'Please enter only alphabetical characters.';
     }
     return null;
   }
@@ -182,7 +180,7 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
   String? _validatePhoneNumber(String? value) {
     final phoneExp = RegExp(r'^\(\d\d\d\) \d\d\d\-\d\d\d\d$');
     if (!phoneExp.hasMatch(value!)) {
-      return MessagesLocalizations.of(context)!.demoTextFieldEnterUSPhoneNumber;
+      return '(###) ###-#### - Enter a US phone number.';
     }
     return null;
   }
@@ -265,7 +263,6 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
 
   Widget buildForm(BuildContext context) {
     const sizedBoxSpace = SizedBox(height: 24);
-    final localizations = MessagesLocalizations.of(context)!;
 
     return Form(
       key: _formKey,
@@ -444,7 +441,7 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
               ),
               sizedBoxSpace,
               Text(
-                localizations.demoTextFieldRequiredField,
+                '* indicates required field',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               sizedBoxSpace,

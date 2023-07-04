@@ -12,7 +12,6 @@ import 'package:dart_bech32/dart_bech32.dart';
 import '../router/delegate.dart';
 import '../db/db.dart';
 import '../db/crud.dart';
-import '../util/messages_localizations.dart';
 import '../util/parse.dart';
 import '../util/screen.dart';
 
@@ -110,7 +109,7 @@ class _RelayEditState extends State<RelayEdit> with RestorationMixin {
       _autoValidateModeIndex.value =
           AutovalidateMode.always.index; // Start validating on every change.
       showInSnackBar(
-        MessagesLocalizations.of(context)!.demoTextFieldFormErrors,
+        'Please fix the errors in red before submitting.',
       );
       return;
     }
@@ -203,7 +202,6 @@ class _RelayEditState extends State<RelayEdit> with RestorationMixin {
 
   Widget buildForm(BuildContext context) {
     const sizedBoxSpace = SizedBox(height: 24);
-    final localizations = MessagesLocalizations.of(context)!;
 
     return Form(
       key: _formKey,
@@ -302,7 +300,7 @@ class _RelayEditState extends State<RelayEdit> with RestorationMixin {
               ),
               sizedBoxSpace,
               Text(
-                localizations.demoTextFieldRequiredField,
+                '* indicates required field',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               sizedBoxSpace,

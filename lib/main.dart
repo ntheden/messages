@@ -14,7 +14,6 @@ import 'db/crud.dart';
 import 'db/db.dart';
 import 'router/delegate.dart';
 import 'util/date.dart';
-import 'util/messages_localizations.dart';
 import 'util/first_time.dart';
 import 'network/network.dart';
 
@@ -85,8 +84,6 @@ class MessagesAppState extends State<MessagesApp> {
               primaryColor: PacificBlue,
               brightness: Brightness.dark,
             ),
-            localizationsDelegates: MessagesLocalizations.localizationsDelegates,
-            supportedLocales: MessagesLocalizations.supportedLocales,
             home: Router(
               routerDelegate: routerDelegate,
               backButtonDispatcher: RootBackButtonDispatcher(),
