@@ -46,10 +46,11 @@ class Network {
         kinds: [4],
         //  date -d @1681878751
         //Tue Apr 18 09:32:31 PM PDT 2023
-        since: since > 0 ? since : null,
+        //since: since > 0 ? since : null,
+        since: 1681878751,
         limit: 450,
-        authors: List.from(users.map((user) => user.pubkey)),
-        p: List.from(users.map((user) => user.pubkey)),
+        //authors: List.from(users.map((user) => user.pubkey)),
+        //p: List.from(users.map((user) => user.pubkey)),
       ),
     ];
     _relays.forEach((relay) {

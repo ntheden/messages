@@ -33,9 +33,6 @@ class Relay {
   Relay(this.url, {this.read: true, this.write: true, List<nostr.Filter>? filters,}) {
     _filters = _filters + (filters ?? []);
     channelConnect(url);
-    if (read == true && _filters.isNotEmpty) {
-      subscribe();
-    }
   }
 
   @override
@@ -67,6 +64,9 @@ class Relay {
 
   void subscribe() {
     // TODO: query supported nips
+    if (read == false ||  _filters.isEmpty) {
+      return;
+    }
     nostr.Request requestWithFilter =
         nostr.Request(nostr.generate64RandomHexChars(), _filters);
     print('sending request: ${requestWithFilter.serialize()}');
@@ -147,7 +147,7 @@ class Relay {
       queues[pubkey]?.add(DeferredEvent(event, receiver, toContact));
       // TODO: Look up name from directory
       // TODO: SPAM/DOS Protection
-      createContact([pubkey], "Unnamed", DateTime.fromMillisecondsSinceEpoch(event.createdAt * 1000),
+      createContact(pubkey, "Unnamed", DateTime.fromMillisecondsSinceEpoch(event.createdAt * 1000),
           ).then((_) => getContactFromKey(pubkey).then((fromContact) {
                 // TODO: batch these
                 Queue<DeferredEvent> q = queues[pubkey]!;

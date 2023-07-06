@@ -81,15 +81,30 @@ Future<Contact> createContactFromKey(
 }
 
 Future<Contact> createContact(
-  npub,
+  String npub,
   String name,
   DateTime createdAt, {
   bool isLocal = false,
   bool active = false,
 }) async {
-  NostrKey key = await getKeyFromNpub(npub);
+  NostrKey key;
+  try {
+    key = await getKeyFromNpub(npub);
+  } catch (err) {
+    NostrKeysCompanion insertable = NostrKeysCompanion.insert(
+      pubkey: npub,
+      label: name,
+      privkey: '',
+    );
+    await database.into(database.nostrKeys).insert(
+      insertable,
+    );
+    key = await getKeyFromNpub(npub);
+  }
   return createContactFromKey(key, name);
 }
+
+
 
 Future<DbEvent> getEvent(String id) async {
   return (database.select(database.dbEvents)
@@ -119,18 +134,22 @@ DbEventsCompanion _insertQuery(
   return insert;
 }
 
-Future<int> insertEvent(
+void insertEvent(
   nostr.Event event,
   Contact fromContact,
   Contact toContact, {
   String? plaintext,
   bool? decryptError,
 }) async {
-  return database.into(database.dbEvents).insert(
-        _insertQuery(event, fromContact, toContact,
-            plaintext: plaintext, decryptError: decryptError),
-        onConflict: DoNothing(),
-      );
+  try {
+    await database.into(database.dbEvents).insert(
+          _insertQuery(event, fromContact, toContact,
+              plaintext: plaintext, decryptError: decryptError),
+          onConflict: DoNothing(),
+        );
+  } catch (err) {
+    // don't care, do nothing. Not sure why DoNothing() doesn't work
+  }
 }
 
 Future<int> updateEvent(
@@ -148,7 +167,7 @@ Future<int> updateEvent(
 }
 
 // Locally sourced events call this directly, called by pages/chat
-Future<int> storeSentEvent(
+void storeSentEvent(
   nostr.Event event,
   Contact fromContact,
   Contact toContact,
@@ -156,7 +175,7 @@ Future<int> storeSentEvent(
 ) async {
   logEvent(event.createdAt * 1000, fromContact, toContact, plaintext,
       rx: false);
-  return insertEvent(
+  insertEvent(
     event,
     fromContact,
     toContact,
@@ -199,7 +218,7 @@ Future<void> storeReceivedEvent(
     // TODO: SPAM/DOS Protection
     print('New contact? From ${event.pubkey}');
     await createContact(
-      [event.pubkey],
+      event.pubkey,
       "Unnamed", // TODO: Look up name from directory
       DateTime.fromMillisecondsSinceEpoch(event.createdAt * 1000),
     );
@@ -409,7 +428,7 @@ Future<Contact?> getContactFromKey(String publickey) async {
   try {
     npub = await keyQuery.getSingle();
   } catch (error) {
-    print("key not in db, return null");
+    print("key not in db, return null: $publickey");
     return null;
   }
 
