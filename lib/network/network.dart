@@ -104,9 +104,10 @@ class Network {
     storeSentEvent(event, from, to, plaintext);
   }
 
-  void listen([void Function(dynamic)? func=null]) {
+  void restart([void Function(dynamic)? listenFunc=null]) {
     _relays.forEach((relay) {
-      relay.listen(func);
+      relay.subscribe();
+      relay.listen(listenFunc);
     });
   }
 }
@@ -144,12 +145,13 @@ class NetworkWatcher {
     List<db.Contact> users = await getUsers();
       if (users.isNotEmpty) {
         network.updateFilters(users);
+        network.restart();
     }
     _userSubscription = _userStream.stream.listen((entries) async {
       if (users.isNotEmpty) {
         List<db.Contact> users = await getUsers();
         network.updateFilters(users);
-        network.listen();
+        network.restart();
       }
     });
     _relaySubscription = _relayStream.stream.listen((entries) {
@@ -161,7 +163,7 @@ class NetworkWatcher {
           network.addRelay(Relay.fromDb(relay));
         }
       }
-      network.listen();
+      network.restart();
     });
   }
 

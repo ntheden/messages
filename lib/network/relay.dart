@@ -31,7 +31,7 @@ class Relay {
   void set filters(List<nostr.Filter> newFilters) => _filters = newFilters;
 
   Relay(this.url, {this.read: true, this.write: true, List<nostr.Filter>? filters,}) {
-    this._filters = this._filters + (filters ?? []);
+    _filters = _filters + (filters ?? []);
     channelConnect(url);
     if (read == true && _filters.isNotEmpty) {
       subscribe();
@@ -123,7 +123,7 @@ class Relay {
       // Filter: event destination (tag p) is not present
       return;
     }
-    db.Contact? toContact = await getContactFromNpub(receiver!);
+    db.Contact? toContact = await getContactFromKey(receiver!);
     if (toContact == null || !toContact.isLocal) {
       // TODO: This must be optimized, avoid db lookup every rx
       return;
@@ -136,7 +136,7 @@ class Relay {
     print('#################################');
 
     String pubkey = event.pubkey;
-    db.Contact? fromContact = await getContactFromNpub(pubkey);
+    db.Contact? fromContact = await getContactFromKey(pubkey);
     if (fromContact != null) {
       return receiveBottom(event, fromContact, toContact, receiver!);
     }
@@ -148,7 +148,7 @@ class Relay {
       // TODO: Look up name from directory
       // TODO: SPAM/DOS Protection
       createContact([pubkey], "Unnamed", DateTime.fromMillisecondsSinceEpoch(event.createdAt * 1000),
-          ).then((_) => getContactFromNpub(pubkey).then((fromContact) {
+          ).then((_) => getContactFromKey(pubkey).then((fromContact) {
                 // TODO: batch these
                 Queue<DeferredEvent> q = queues[pubkey]!;
                 while (q.isNotEmpty) {
@@ -162,7 +162,7 @@ class Relay {
 
   void receiveBottom(nostr.Event event, db.Contact fromContact,
       db.Contact toContact, String receiver) async {
-    db.Npub receiveNpub = await getNpub(receiver);
+    db.NostrKey receiveNpub = await getKeyFromNpub(receiver);
     String? plaintext = null;
     bool decryptError = false;
     try {

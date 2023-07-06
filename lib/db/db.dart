@@ -12,7 +12,7 @@ import 'models.dart';
 part 'db.g.dart';
 
 class MessageEntry {
-  final Npub npub; // public key in nostr event
+  final NostrKey npub; // public key in nostr event
   final DbEvent dbEvent;
   final EncryptedDirectMessage nostrEvent;
   Contact from;
@@ -57,18 +57,18 @@ class RelayGroup {
 
 class Contact {
   final DbContact contact;
-  final List<Npub> npubs;
+  final NostrKey key;
   final List<Relay> relays;
 
-  Contact(this.contact, this.npubs, this.relays);
+  Contact(this.contact, this.key, this.relays);
 
   bool get isLocal => contact.isLocal;
   bool get active => contact.active;
   String get name => contact.name;
   String get surname => contact.surname;
   String get username => contact.username;
-  String get pubkey => npubs[0].pubkey; // FIXME
-  String get privkey => npubs[0].privkey;
+  String get pubkey => key.pubkey;
+  String get privkey => key.privkey;
   String get npub => hexToBech32('npub', pubkey);
   String get nsec => hexToBech32('nsec', privkey);
   String get address => contact.address;
@@ -86,7 +86,7 @@ class Contact {
     return (StringBuffer('Contact(')
           ..write('id: ${contact.id}, ')
           ..write('name: ${contact.name}, ')
-          ..write('npubs: ${npubs.length}, ')
+          ..write('npub: ${npub}, ')
           ..write(')'))
         .toString();
   }
@@ -104,18 +104,18 @@ class Contact {
 
 class Event {
   final DbEvent event;
-  final Npub npub;
+  final NostrKey key;
   final List<Etag> etags;
-  final List<Npub> ptags;
+  final List<NostrKey> ptags;
 
-  Event(this.event, this.npub, this.etags, this.ptags);
+  Event(this.event, this.key, this.etags, this.ptags);
 
   @override
   String toString() {
     return (StringBuffer('Event(')
           ..write('id: ${event.id}, ')
           ..write('plaintext: ${event.plaintext}, ')
-          ..write('npub: ${npub}, ')
+          ..write('npub: ${key}, ')
           ..write('etags: ${etags}, ')
           ..write('ptags: ${ptags}, ')
           ..write(')'))
@@ -126,8 +126,7 @@ class Event {
 @DriftDatabase(tables: [
   DbContacts,
   DbEvents,
-  Npubs,
-  ContactNpubs,
+  NostrKeys,
   Etags,
   EventPtags,
   EventEtags,

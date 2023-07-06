@@ -27,26 +27,21 @@ Future<DbContact> getDbContact(int id) async {
     ..where((c) => c.id.equals(id))).getSingle();
 }
 
-Future<DbContact> getDbContactFromNpub(String npub) async {
+Future<DbContact> getDbContactFromKey(String npub) async {
   return (database.select(database.dbContacts)
     ..where((c) => c.npub.equals(npub))).getSingle();
 }
 
-Future<Contact> createContactFromNpubs(
-    List<Npub> npubs,
+Future<Contact> createContactFromKey(
+    NostrKey npub,
     String name) async {
 
-  bool isLocal = false;
-  npubs.forEach((npub) {
-    if (npub.privkey.length > 0) {
-      isLocal = true;
-    }
-  });
+  bool isLocal = npub.privkey.length > 0 ? true : false;
 
   DbContactsCompanion insertable = DbContactsCompanion.insert(
     name: name,
-    surname: "",
     username: "",
+    surname: "",
     address: "",
     city: "",
     phone: "",
@@ -58,7 +53,8 @@ Future<Contact> createContactFromNpubs(
     createdAt: DateTime.now(),
     isLocal: isLocal,
     active: false,
-    npub: npubs[0].pubkey,
+    npub: npub.pubkey,
+    keyRef: npub.id,
   );
 
   await database.into(database.dbContacts).insert(
@@ -73,11 +69,11 @@ Future<Contact> createContactFromNpubs(
         ),
       );
 
-  DbContact dbContact = await getDbContactFromNpub(npubs[0].pubkey);
+  DbContact dbContact = await getDbContactFromKey(npub.pubkey);
 
   Contact contact = Contact(
-    await getDbContactFromNpub(npubs[0].pubkey),
-    npubs,
+    await getDbContactFromKey(npub.pubkey),
+    npub,
     [], // TODO
   );
   writeContact(contact);
@@ -85,22 +81,14 @@ Future<Contact> createContactFromNpubs(
 }
 
 Future<Contact> createContact(
-  List<String> npubs,
+  npub,
   String name,
   DateTime createdAt, {
   bool isLocal = false,
   bool active = false,
 }) async {
-  List<Npub> npubList = [];
-  for (String npubStr in npubs) {
-    try {
-      npubList.add(await getNpub(npubStr));
-    } catch (err) {
-      int npubId = await insertNpub(npubStr, name);
-      npubList.add(await getNpubFromId(npubId));
-    }
-  }
-  return createContactFromNpubs(npubList, name);
+  NostrKey key = await getKeyFromNpub(npub);
+  return createContactFromKey(key, name);
 }
 
 Future<DbEvent> getEvent(String id) async {
@@ -118,8 +106,8 @@ DbEventsCompanion _insertQuery(
 }) {
   final insert = DbEventsCompanion.insert(
     eventId: event.id,
-    pubkeyRef: fromContact.npubs[0].id,
-    receiverRef: toContact.npubs[0].id,
+    pubkeyRef: fromContact.key.id,
+    receiverRef: toContact.key.id,
     fromContact: fromContact.contact.id,
     toContact: toContact.contact.id,
     content: event.content,
@@ -193,7 +181,7 @@ Future<void> storeReceivedEvent(
     print('Filter: event destination (tag p) is not present');
     return;
   }
-  Contact? toContact = await getContactFromNpub(receiver!);
+  Contact? toContact = await getContactFromKey(receiver!);
   if (toContact == null || !toContact.isLocal) {
     // TODO: This must be optimized.
     // FIXME: toContact dones't have to be a local user!!!
@@ -206,7 +194,7 @@ Future<void> storeReceivedEvent(
   print('sender ${event.pubkey}');
   print('#################################');
 
-  Contact? fromContact = await getContactFromNpub(event.pubkey);
+  Contact? fromContact = await getContactFromKey(event.pubkey);
   if (fromContact == null) {
     // TODO: SPAM/DOS Protection
     print('New contact? From ${event.pubkey}');
@@ -215,11 +203,11 @@ Future<void> storeReceivedEvent(
       "Unnamed", // TODO: Look up name from directory
       DateTime.fromMillisecondsSinceEpoch(event.createdAt * 1000),
     );
-    fromContact = await getContactFromNpub(event.pubkey);
+    fromContact = await getContactFromKey(event.pubkey);
     print('created contact $fromContact');
   }
 
-  Npub receiveNpub = await getNpub(receiver!);
+  NostrKey receiveNpub = await getKeyFromNpub(receiver!);
   String? plaintext = null;
   bool decryptError = false;
   try {
@@ -240,7 +228,7 @@ Future<void> storeReceivedEvent(
   );
 }
 
-nostr.EncryptedDirectMessage nostrEvent(Npub npub, DbEvent event) {
+nostr.EncryptedDirectMessage nostrEvent(NostrKey npub, DbEvent event) {
   nostr.Event nEvent = nostr.Event.partial();
   nEvent.id = event.eventId;
   nEvent.pubkey = npub.pubkey;
@@ -256,10 +244,10 @@ Future<List<MessageEntry>> getMessagesHELPER(
 ) async {
   List<MessageEntry> messages = [];
   for (final event in events) {
-    Npub npub = await getNpubFromId(event.pubkeyRef);
-    Npub receiver = await getNpubFromId(event.receiverRef);
-    Contact? from = await getContactFromNpub(npub.pubkey);
-    Contact? to = await getContactFromNpub(receiver.pubkey);
+    NostrKey npub = await getKeyFromId(event.pubkeyRef);
+    NostrKey receiver = await getKeyFromId(event.receiverRef);
+    Contact? from = await getContactFromKey(npub.pubkey);
+    Contact? to = await getContactFromKey(receiver.pubkey);
     messages
         .add(MessageEntry(npub, event, nostrEvent(npub, event), from!, to!));
   }
@@ -341,18 +329,18 @@ Stream<List<MessageEntry>> watchMessages(Contact user, Contact peer) async* {
   }
 }
 
-Future<Npub> getNpub(String publickey) async {
-  return (database.select(database.npubs)
+Future<NostrKey> getKeyFromNpub(String publickey) async {
+  return (database.select(database.nostrKeys)
         ..where((n) => n.pubkey.equals(publickey)))
       .getSingle();
 }
 
-Future<List<Npub>> getNpubs() async {
-  return database.select(database.npubs).get();
+Future<List<NostrKey>> getKeys() async {
+  return database.select(database.nostrKeys).get();
 }
 
-Future<Npub> getNpubFromId(int id) async {
-  return (database.select(database.npubs)..where((n) => n.id.equals(id)))
+Future<NostrKey> getKeyFromId(int id) async {
+  return (database.select(database.nostrKeys)..where((n) => n.id.equals(id)))
       .getSingle();
 }
 
@@ -362,23 +350,23 @@ Future<List<DbContact>> getContactsWithName(String name) async {
       .get();
 }
 
-Future<int> insertNpub(String pubkey, String label, {String? privkey}) async {
-  NpubsCompanion npub = NpubsCompanion.insert(
+Future<int> insertKey(String pubkey, String label, {String? privkey}) async {
+  NostrKeysCompanion npub = NostrKeysCompanion.insert(
     pubkey: pubkey,
     label: label,
     privkey: privkey ?? "",
   );
 
-  return database.into(database.npubs).insert(
+  return database.into(database.nostrKeys).insert(
         npub,
         onConflict: DoUpdate(
           (old) {
-            return NpubsCompanion.custom(
+            return NostrKeysCompanion.custom(
               privkey: privkey == null ? old.privkey : Constant(privkey),
               label: Constant(label),
             );
           },
-          target: [database.npubs.pubkey],
+          target: [database.nostrKeys.pubkey],
         ),
       );
 }
@@ -389,47 +377,15 @@ Future<void> writeContact(Contact entry) async {
   await database
       .into(database.dbContacts)
       .insert(contact, mode: InsertMode.replace);
-
-  await (database.delete(database.contactNpubs)
-        ..where((item) => item.contact.equals(contact.id)))
-      .go();
-
-  for (final npub in entry.npubs) {
-    await database
-        .into(database.contactNpubs)
-        .insert(ContactNpubsCompanion.insert(
-          contact: contact.id,
-          npub: npub.id,
-        ));
-  }
 }
 
-Stream<Contact> watchContact(int id) {
+Stream<Contact> watchContact(int id) async* {
   final contactQuery = database.select(database.dbContacts)
     ..where((contact) => contact.id.equals(id));
 
-  final npubsQuery = database.select(database.contactNpubs).join(
-    [
-      innerJoin(
-        database.npubs,
-        database.npubs.id.equalsExp(database.contactNpubs.npub),
-      ),
-    ],
-  )..where(database.contactNpubs.contact.equals(id));
-
-  final contactStream = contactQuery.watchSingle();
-
-  final npubStream = npubsQuery.watch().map((rows) {
-    // we join the contactNpubs with the npubs, but we only care about
-    // the npub here
-    return rows.map((row) => row.readTable(database.npubs)).toList();
-  });
-
-  // now, we can merge the two queries together in one stream
-  return Rx.combineLatest2(contactStream, npubStream,
-      (DbContact contact, List<Npub> npubs) {
-    return Contact(contact, npubs, []);
-  });
+  await for (final contact in contactQuery.watchSingle()) {
+    yield Contact(contact, await(getKeyFromId(contact.keyRef)), []);
+  }
 }
 
 Stream<List<DbContact>> watchAllUsers() {
@@ -445,36 +401,30 @@ Stream<List<DbContact>> watchAllDbContacts() {
   return database.select(database.dbContacts).watch();
 }
 
-Future<Contact?> getContactFromNpub(String publickey) async {
-  final npubQuery = database.select(database.npubs)
+Future<Contact?> getContactFromKey(String publickey) async {
+  final keyQuery = database.select(database.nostrKeys)
     ..where((n) => n.pubkey.equals(publickey));
 
-  Npub npub;
+  NostrKey npub;
   try {
-    npub = await npubQuery.getSingle();
+    npub = await keyQuery.getSingle();
   } catch (error) {
+    print("key not in db, return null");
     return null;
   }
 
-  final contactsQuery = database.select(database.contactNpubs).join(
-    [
-      innerJoin(
-        database.dbContacts,
-        database.dbContacts.id.equalsExp(database.contactNpubs.contact),
-      ),
-    ],
-  )..where(database.contactNpubs.npub.equals(npub.id));
+  final contactsQuery = database.select(database.dbContacts)
+    ..where((c) => c.keyRef.equals(npub.id));
 
-  // BUG: https://github.com/adamlofts/mysql1_dart/issues/106
-  await contactsQuery.get();
-  List<TypedResult> result = await contactsQuery.get();
+  DbContact? contact;
+  try {
+    contact = await contactsQuery.getSingle();
+  } catch (error) {
+    print("Error find contact with this key, create new contact");
+  }
 
-  final contacts = result.map((row) {
-    return row.readTable(database.dbContacts);
-  }).toList();
-
-  if (contacts.length > 0) {
-    return Contact(contacts[0], [npub], []);
+  if (contact != null) {
+    return Contact(contact, npub, []);
   }
 }
 
@@ -532,20 +482,11 @@ Future<List<Contact>> getAllContacts() async {
 }
 
 Future<Contact> getContact(DbContact contact) async {
-  final npubsQuery = database.select(database.contactNpubs).join(
-    [
-      innerJoin(
-        database.npubs,
-        database.npubs.id.equalsExp(database.contactNpubs.npub),
-      ),
-    ],
-  )..where(database.contactNpubs.contact.equals(contact.id));
-
-  final npubs = (await npubsQuery.get()).map((row) {
-    return row.readTable(database.npubs);
-  }).toList();
-
-  return Contact(contact, npubs, []);
+  final contactQuery = database.select(database.dbContacts)
+    ..where((c) => c.id.equals(contact.id));
+  final keyQuery = await database.select(database.nostrKeys)
+    ..where((k) => k.id.equals(contact.keyRef));
+  return Contact(contact, await keyQuery.getSingle(), []);
 }
 
 Future<int> insertRelay({

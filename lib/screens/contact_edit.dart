@@ -133,10 +133,10 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
     }
 
     String pubkey = bech32_decode('npub', person.npub!);
-    insertNpub(pubkey, nameController.text).then((_) =>
-      getNpub(pubkey).then((npub) =>
-        createContactFromNpubs(
-          [npub],
+    insertKey(pubkey, nameController.text).then((_) =>
+      getKeyFromNpub(pubkey).then((npub) =>
+        createContactFromKey(
+          npub,
           nameController.text.isEmpty ? "Unnamed" : nameController.text,
         ).then((contact) {
             MyRouterDelegate routerDelegate = Get.put(MyRouterDelegate());
@@ -300,7 +300,7 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
                       person.npub = "Welcome!";
                     }
                   });
-                  getContactFromNpub(bech32_decode('npub', person.npub!)).then((contact) {
+                  getContactFromKey(bech32_decode('npub', person.npub!)).then((contact) {
                     if (contact != null && widget.contact == null) {
                       setState(() => updateFields(contact));
                     }

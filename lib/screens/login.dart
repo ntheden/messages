@@ -60,11 +60,11 @@ class _LoginState extends State<Login> {
   }
 
   void createUserAndLogin(Keychain keys, String name) async {
-    await insertNpub(keys.public, name, privkey: keys.private);
+    await insertKey(keys.public, name, privkey: keys.private);
     Contact? user;
     try {
-      user = await createContactFromNpubs(
-        [await getNpub(keys.public)],
+      user = await createContactFromKey(
+        await getKeyFromNpub(keys.public),
         name,
       );
     } catch (error) {

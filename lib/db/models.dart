@@ -28,16 +28,11 @@ class ContactRelays extends Table {
   IntColumn get relay => integer().references(DbRelays, #id)();
 }
 
-class Npubs extends Table {
+class NostrKeys extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get pubkey => text().unique().withLength(min: 64, max: 64)();
   TextColumn? get label => text().withLength(min: 0, max: 64)();
   TextColumn? get privkey => text().withLength(min: 0, max: 64)();
-}
-
-class ContactNpubs extends Table {
-  IntColumn get contact => integer().references(DbContacts, #id)();
-  IntColumn get npub => integer().references(Npubs, #id)();
 }
 
 class Etags extends Table {
@@ -56,7 +51,7 @@ class EventEtags extends Table {
 
 class EventPtags extends Table {
   IntColumn get event => integer().references(DbEvents, #id)();
-  IntColumn get ptag => integer().references(Npubs, #id)();
+  IntColumn get ptag => integer().references(NostrKeys, #id)();
 }
 
 class DbContacts extends Table {
@@ -69,8 +64,8 @@ class DbContacts extends Table {
   TextColumn get username => text()();
   BoolColumn get isLocal => boolean()(); // Whether this is associated with a User
   BoolColumn get active => boolean()(); // Whether this is the active user
-  // There can be more in Contact.npubs (see db/db.dart), but we will
-  // use a primary npub here to maintain uniqueness of DbContact entries
+  // use npub here to maintain uniqueness of DbContact entries
+  IntColumn get keyRef => integer().references(NostrKeys, #id)();
   TextColumn get npub => text().unique().withLength(min: 64, max: 64)();
   TextColumn get address => text()();
   TextColumn get city => text()();
@@ -87,8 +82,8 @@ class DbEvents extends Table {
   /// All events table
   IntColumn get id => integer().autoIncrement()();
   TextColumn get eventId => text().unique().withLength(min: 0, max: 64)();
-  IntColumn get pubkeyRef => integer().references(Npubs, #id)();
-  IntColumn get receiverRef => integer().references(Npubs, #id)();
+  IntColumn get pubkeyRef => integer().references(NostrKeys, #id)();
+  IntColumn get receiverRef => integer().references(NostrKeys, #id)();
   IntColumn get toContact => integer().references(DbContacts, #id)();
   IntColumn get fromContact => integer().references(DbContacts, #id)();
   TextColumn get content => text().withLength(min: 0, max: 1024)();
