@@ -7,6 +7,7 @@ import 'package:nostr/nostr.dart' as nostr;
 
 import '../db/crud.dart';
 import '../db/db.dart' as db;
+import 'network.dart';
 
 class DeferredEvent {
   nostr.Event event;
@@ -19,18 +20,17 @@ class Relay {
   final String url;
   final bool read;
   final bool write;
+  final Network network;
   bool _listening = false;
   bool _connected = false;
   late WebSocketChannel _channel;
   List<int>? supportedNips;
-  List<nostr.Filter> _filters = [];
   Map<String, Queue<DeferredEvent>> queues = {};
+  String _subscriptionId = '';
 
   WebSocketChannel get channel => _channel;
-  void set filters(List<nostr.Filter> newFilters) => _filters = newFilters;
 
-  Relay(this.url, {this.read: true, this.write: true, List<nostr.Filter>? filters,}) {
-    _filters = _filters + (filters ?? []);
+  Relay(this.url, this.network, {this.read: true, this.write: true}) {
     channelConnect(url);
   }
 
@@ -44,12 +44,12 @@ class Relay {
         .toString();
   }
 
-  factory Relay.fromDb(db.Relay relay, [filters]) {
+  factory Relay.fromDb(db.Relay relay, Network network) {
     return Relay(
       relay.url,
+      network,
       read: relay.read,
       write: relay.write,
-      filters: filters
     );
   }
 
@@ -65,21 +65,30 @@ class Relay {
     // TODO: query supported nips
     // TODO: make consistent with listen, like accept filter as arg
     // and re-subscribe if it changed or something
-    print('@@@@@@@@@@ SUBSCRIBE CALLED $url');
-    if (read == false ||  _filters.isEmpty) {
-      print('@@@@@@@@@@ NOT SUBSCRIBING NOW');
+    print('$url SUBSCRIBE CALLED');
+    if (read == false ||  network.filters.isEmpty || network.subscriptionId.isEmpty) {
+      print('$url NOT SUBSCRIBING NOW');
       return;
     }
-    nostr.Request requestWithFilter =
-        nostr.Request(nostr.generate64RandomHexChars(), _filters);
-    print('sending request: ${requestWithFilter.serialize()}');
+    if (_subscriptionId == network.subscriptionId) {
+      // we already have this subscription
+      print('$url ALREADY HAVE THIS SUBSCRIPTION');
+      return;
+    }
+    if (_subscriptionId.isNotEmpty) {
+      // TODO: cancel previous subscription id
+    }
+    _subscriptionId = network.subscriptionId;
+    List<nostr.Filter> filters = (network.filters.sublist(1) as List<nostr.Filter>);
+    nostr.Request requestWithFilter = nostr.Request(_subscriptionId, filters);
+    print('TO $url: ${requestWithFilter.serialize()}');
     _channel.sink.add(requestWithFilter.serialize());
   }
 
   void listen(void Function(dynamic)? func) {
-    print('@@@@@@@@@@ LISTEN CALLED $url $func');
+    print('$url LISTEN CALLED $func');
     if (_listening) {
-      print('@@@@@@@@@@ ALREADY LISTENING');
+      print('$url ALREADY LISTENING');
       return;
     }
     func ??= (data) {
@@ -93,10 +102,12 @@ class Relay {
         // error deserializing. Log it (maybe) and punt
         return;
       }
-      if ([
-        m!.type,
-      ].contains("EVENT")) {
-        storeEvent(m.message);
+      if ([m.type,].contains("EVENT")) {
+        if (network.uniqueIdsReceived.contains(m.message.id)) {
+          return;
+        }
+        network.uniqueIdsReceived.add(m.message.id);
+        storeDirectMessage(m.message);
       }
     };
     _listening = true;
@@ -114,19 +125,19 @@ class Relay {
     );
   }
 
-  Future<void> storeEvent(nostr.Event event) async {
+  Future<void> storeDirectMessage(nostr.Event event) async {
+    String? receiver = (event as nostr.EncryptedDirectMessage).receiver;
+    if (receiver == null || !network.recipients.contains(receiver)) {
+      // - null: Filter: event destination (tag p) is not present, required for NIP04
+      // - not in recipient list: filter it
+      return;
+    }
     try {
       db.DbEvent entry = await getEvent(event.id);
       // If it's there then nothing to do
       return;
     } catch (err) {
       // event hasn't been seen/stored
-    }
-
-    String? receiver = (event as nostr.EncryptedDirectMessage).receiver;
-    if (receiver == null) {
-      // Filter: event destination (tag p) is not present, required for NIP04
-      return;
     }
     db.Contact? toContact = await getContactFromKey(receiver!);
     if (toContact == null || !toContact.isLocal) {

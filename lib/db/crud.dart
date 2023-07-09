@@ -362,13 +362,11 @@ Future<Contact?> getContactFromKey(String publickey) async {
   DbContact? contact;
   try {
     contact = await contactsQuery.getSingle();
-  } catch (error) {
-    print("Error find contact with this key, create new contact");
-  }
-
-  if (contact != null) {
     return Contact(contact, []);
+  } catch (error) {
+    // didn't find it
   }
+  return null;
 }
 
 Future<Contact> getUser() async {
