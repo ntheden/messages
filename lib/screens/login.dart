@@ -60,17 +60,14 @@ class _LoginState extends State<Login> {
   }
 
   void createUserAndLogin(Keychain keys, String name) async {
-    await insertKey(keys.public, name, privkey: keys.private);
     Contact? user;
     try {
-      user = await createContactFromKey(
-        await getKeyFromNpub(keys.public),
-        name,
-      );
+      user = await createContact(keys.public, name, privkey: keys.private);
     } catch (error) {
       print(error);
     }
-    _npub = keys.npub; // trying to get rid of that flash of the wrong avatar
+    // trying to get rid of that flash of the wrong avatar
+    //widget.instance.addPostFrameCallback((_) => setState(_npub = keys.npub));
     await switchUser(user!.contact.id);
     Navigator.pop(context);
     routerDelegate.pushPage(name: '/chats', arguments: user!);

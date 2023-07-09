@@ -133,29 +133,25 @@ class _ContactEditState extends State<ContactEdit> with RestorationMixin {
     }
 
     String pubkey = bech32_decode('npub', person.npub!);
-    insertKey(pubkey, nameController.text).then((_) =>
-      getKeyFromNpub(pubkey).then((npub) =>
-        createContactFromKey(
-          npub,
-          nameController.text.isEmpty ? "Unnamed" : nameController.text,
-        ).then((contact) {
-            MyRouterDelegate routerDelegate = Get.put(MyRouterDelegate());
-            // So that back button doesn't send us back here.
-            routerDelegate.removePage(name: '/contactEdit');
-            if (widget.intent == 'lookup' && !enterChat) {
-              routerDelegate.pushPage(name: '/contacts', arguments: {
-                'intent': widget.intent,
-                'user': widget.currentUser,
-              });
-            } else {
-              routerDelegate.pushPage(name: '/chat', arguments: {
-                'user': widget.currentUser,
-                'peer': contact,
-              });
-            }
-        })
-      )
-    );
+      createContact(
+        pubkey,
+        nameController.text.isEmpty ? "Unnamed" : nameController.text,
+      ).then((contact) {
+          MyRouterDelegate routerDelegate = Get.put(MyRouterDelegate());
+          // So that back button doesn't send us back here.
+          routerDelegate.removePage(name: '/contactEdit');
+          if (widget.intent == 'lookup' && !enterChat) {
+            routerDelegate.pushPage(name: '/contacts', arguments: {
+              'intent': widget.intent,
+              'user': widget.currentUser,
+            });
+          } else {
+            routerDelegate.pushPage(name: '/chat', arguments: {
+              'user': widget.currentUser,
+              'peer': contact,
+            });
+          }
+      });
   }
 
   String? _validateName(String? value) {

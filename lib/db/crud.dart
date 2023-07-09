@@ -27,21 +27,25 @@ Future<DbContact> getDbContact(int id) async {
     ..where((c) => c.id.equals(id))).getSingle();
 }
 
-Future<DbContact> getDbContactFromKey(String npub) async {
+Future<DbContact> getDbContactFromKey(String pubkey) async {
   return (database.select(database.dbContacts)
-    ..where((c) => c.npub.equals(npub))).getSingle();
+    ..where((c) => c.pubkey.equals(pubkey))).getSingle();
 }
 
-Future<Contact> createContactFromKey(
-    NostrKey npub,
-    String name) async {
+Future<Contact> createContact(
+    String pubkey,
+    String name,
+    {String? privkey,
+    }) async {
 
-  bool isLocal = npub.privkey.length > 0 ? true : false;
+  bool isLocal = privkey == null ? false : true;
 
   DbContactsCompanion insertable = DbContactsCompanion.insert(
+    pubkey: pubkey,
     name: name,
-    username: "",
+    privkey: privkey ?? "",
     surname: "",
+    username: "",
     address: "",
     city: "",
     phone: "",
@@ -53,8 +57,7 @@ Future<Contact> createContactFromKey(
     createdAt: DateTime.now(),
     isLocal: isLocal,
     active: false,
-    npub: npub.pubkey,
-    keyRef: npub.id,
+    npub: pubkey,
   );
 
   await database.into(database.dbContacts).insert(
@@ -63,48 +66,21 @@ Future<Contact> createContactFromKey(
           (old) {
             return DbContactsCompanion.custom(
               name: Constant(name), // will add more fields once working right.
+              privkey: privkey == null ? old.privkey : Constant(privkey),
             );
           },
-          target: [database.dbContacts.npub],
+          target: [database.dbContacts.pubkey],
         ),
       );
 
-  DbContact dbContact = await getDbContactFromKey(npub.pubkey);
+  DbContact dbContact = await getDbContactFromKey(pubkey);
 
   Contact contact = Contact(
-    await getDbContactFromKey(npub.pubkey),
-    npub,
+    dbContact,
     [], // TODO
   );
-  writeContact(contact);
   return contact;
 }
-
-Future<Contact> createContact(
-  String npub,
-  String name,
-  DateTime createdAt, {
-  bool isLocal = false,
-  bool active = false,
-}) async {
-  NostrKey key;
-  try {
-    key = await getKeyFromNpub(npub);
-  } catch (err) {
-    NostrKeysCompanion insertable = NostrKeysCompanion.insert(
-      pubkey: npub,
-      label: name,
-      privkey: '',
-    );
-    await database.into(database.nostrKeys).insert(
-      insertable,
-    );
-    key = await getKeyFromNpub(npub);
-  }
-  return createContactFromKey(key, name);
-}
-
-
 
 Future<DbEvent> getEvent(String id) async {
   return (database.select(database.dbEvents)
@@ -121,8 +97,6 @@ DbEventsCompanion _insertQuery(
 }) {
   final insert = DbEventsCompanion.insert(
     eventId: event.id,
-    pubkeyRef: fromContact.key.id,
-    receiverRef: toContact.key.id,
     fromContact: fromContact.contact.id,
     toContact: toContact.contact.id,
     content: event.content,
@@ -220,24 +194,26 @@ Future<void> storeReceivedEvent(
     await createContact(
       event.pubkey,
       "Unnamed", // TODO: Look up name from directory
-      DateTime.fromMillisecondsSinceEpoch(event.createdAt * 1000),
     );
     fromContact = await getContactFromKey(event.pubkey);
     print('created contact $fromContact');
   }
 
-  NostrKey receiveNpub = await getKeyFromNpub(receiver!);
   String? plaintext = null;
   bool decryptError = false;
   try {
-    plaintext = event.getPlaintext(receiveNpub.privkey);
+    plaintext = event.getPlaintext(toContact.privkey);
   } catch (error) {
     decryptError = true;
   }
 
-  logEvent(event.createdAt * 1000, fromContact!, toContact!,
-      plaintext ?? "<not decrypted>",
-      rx: true);
+  logEvent(
+    event.createdAt * 1000,
+    fromContact!,
+    toContact!,
+    plaintext ?? "<not decrypted>",
+    rx: true
+  );
   insertEvent(
     event,
     fromContact,
@@ -247,10 +223,10 @@ Future<void> storeReceivedEvent(
   );
 }
 
-nostr.EncryptedDirectMessage nostrEvent(NostrKey npub, DbEvent event) {
+nostr.EncryptedDirectMessage nostrEvent(String pubkey, DbEvent event) {
   nostr.Event nEvent = nostr.Event.partial();
   nEvent.id = event.eventId;
-  nEvent.pubkey = npub.pubkey;
+  nEvent.pubkey = pubkey;
   nEvent.content = event.content;
   nEvent.createdAt = event.createdAt.millisecondsSinceEpoch;
   nEvent.kind = event.kind;
@@ -263,12 +239,15 @@ Future<List<MessageEntry>> getMessagesHELPER(
 ) async {
   List<MessageEntry> messages = [];
   for (final event in events) {
-    NostrKey npub = await getKeyFromId(event.pubkeyRef);
-    NostrKey receiver = await getKeyFromId(event.receiverRef);
-    Contact? from = await getContactFromKey(npub.pubkey);
-    Contact? to = await getContactFromKey(receiver.pubkey);
-    messages
-        .add(MessageEntry(npub, event, nostrEvent(npub, event), from!, to!));
+    final fromContact = await getContactFromId(event.fromContact);
+    messages.add(
+      MessageEntry(
+        event,
+        nostrEvent(fromContact.pubkey, event),
+        fromContact,
+        await getContactFromId(event.toContact),
+      )
+    );
   }
   return messages;
 }
@@ -348,54 +327,10 @@ Stream<List<MessageEntry>> watchMessages(Contact user, Contact peer) async* {
   }
 }
 
-Future<NostrKey> getKeyFromNpub(String publickey) async {
-  return (database.select(database.nostrKeys)
-        ..where((n) => n.pubkey.equals(publickey)))
-      .getSingle();
-}
-
-Future<List<NostrKey>> getKeys() async {
-  return database.select(database.nostrKeys).get();
-}
-
-Future<NostrKey> getKeyFromId(int id) async {
-  return (database.select(database.nostrKeys)..where((n) => n.id.equals(id)))
-      .getSingle();
-}
-
 Future<List<DbContact>> getContactsWithName(String name) async {
   return (database.select(database.dbContacts)
         ..where((c) => c.name.equals(name)))
       .get();
-}
-
-Future<int> insertKey(String pubkey, String label, {String? privkey}) async {
-  NostrKeysCompanion npub = NostrKeysCompanion.insert(
-    pubkey: pubkey,
-    label: label,
-    privkey: privkey ?? "",
-  );
-
-  return database.into(database.nostrKeys).insert(
-        npub,
-        onConflict: DoUpdate(
-          (old) {
-            return NostrKeysCompanion.custom(
-              privkey: privkey == null ? old.privkey : Constant(privkey),
-              label: Constant(label),
-            );
-          },
-          target: [database.nostrKeys.pubkey],
-        ),
-      );
-}
-
-Future<void> writeContact(Contact entry) async {
-  DbContact contact = entry.contact;
-
-  await database
-      .into(database.dbContacts)
-      .insert(contact, mode: InsertMode.replace);
 }
 
 Stream<Contact> watchContact(int id) async* {
@@ -403,7 +338,7 @@ Stream<Contact> watchContact(int id) async* {
     ..where((contact) => contact.id.equals(id));
 
   await for (final contact in contactQuery.watchSingle()) {
-    yield Contact(contact, await(getKeyFromId(contact.keyRef)), []);
+    yield Contact(contact, []);
   }
 }
 
@@ -421,19 +356,8 @@ Stream<List<DbContact>> watchAllDbContacts() {
 }
 
 Future<Contact?> getContactFromKey(String publickey) async {
-  final keyQuery = database.select(database.nostrKeys)
-    ..where((n) => n.pubkey.equals(publickey));
-
-  NostrKey npub;
-  try {
-    npub = await keyQuery.getSingle();
-  } catch (error) {
-    print("key not in db, return null: $publickey");
-    return null;
-  }
-
   final contactsQuery = database.select(database.dbContacts)
-    ..where((c) => c.keyRef.equals(npub.id));
+    ..where((c) => c.pubkey.equals(publickey));
 
   DbContact? contact;
   try {
@@ -443,7 +367,7 @@ Future<Contact?> getContactFromKey(String publickey) async {
   }
 
   if (contact != null) {
-    return Contact(contact, npub, []);
+    return Contact(contact, []);
   }
 }
 
@@ -503,9 +427,7 @@ Future<List<Contact>> getAllContacts() async {
 Future<Contact> getContact(DbContact contact) async {
   final contactQuery = database.select(database.dbContacts)
     ..where((c) => c.id.equals(contact.id));
-  final keyQuery = await database.select(database.nostrKeys)
-    ..where((k) => k.id.equals(contact.keyRef));
-  return Contact(contact, await keyQuery.getSingle(), []);
+  return Contact(contact, []);
 }
 
 Future<int> insertRelay({

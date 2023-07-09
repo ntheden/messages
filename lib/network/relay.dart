@@ -10,10 +10,9 @@ import '../db/db.dart' as db;
 
 class DeferredEvent {
   nostr.Event event;
-  String receiver;
   db.Contact toContact;
 
-  DeferredEvent(this.event, this.receiver, this.toContact);
+  DeferredEvent(this.event, this.toContact);
 }
 
 class Relay {
@@ -64,7 +63,11 @@ class Relay {
 
   void subscribe() {
     // TODO: query supported nips
+    // TODO: make consistent with listen, like accept filter as arg
+    // and re-subscribe if it changed or something
+    print('@@@@@@@@@@ SUBSCRIBE CALLED $url');
     if (read == false ||  _filters.isEmpty) {
+      print('@@@@@@@@@@ NOT SUBSCRIBING NOW');
       return;
     }
     nostr.Request requestWithFilter =
@@ -74,7 +77,9 @@ class Relay {
   }
 
   void listen(void Function(dynamic)? func) {
+    print('@@@@@@@@@@ LISTEN CALLED $url $func');
     if (_listening) {
+      print('@@@@@@@@@@ ALREADY LISTENING');
       return;
     }
     func ??= (data) {
@@ -120,12 +125,13 @@ class Relay {
 
     String? receiver = (event as nostr.EncryptedDirectMessage).receiver;
     if (receiver == null) {
-      // Filter: event destination (tag p) is not present
+      // Filter: event destination (tag p) is not present, required for NIP04
       return;
     }
     db.Contact? toContact = await getContactFromKey(receiver!);
     if (toContact == null || !toContact.isLocal) {
       // TODO: This must be optimized, avoid db lookup every rx
+      print("TODO: receiver pubkey list");
       return;
     }
     print('#################################');
@@ -138,36 +144,35 @@ class Relay {
     String pubkey = event.pubkey;
     db.Contact? fromContact = await getContactFromKey(pubkey);
     if (fromContact != null) {
-      return receiveBottom(event, fromContact, toContact, receiver!);
+      return receiveBottom(event, fromContact, toContact);
     }
     if (queues.containsKey(pubkey)) {
-      queues[pubkey]?.add(DeferredEvent(event, receiver, toContact));
+      queues[pubkey]?.add(DeferredEvent(event, toContact));
     } else {
       queues[pubkey] = Queue<DeferredEvent>();
-      queues[pubkey]?.add(DeferredEvent(event, receiver, toContact));
+      queues[pubkey]?.add(DeferredEvent(event, toContact));
       // TODO: Look up name from directory
       // TODO: SPAM/DOS Protection
-      createContact(pubkey, "Unnamed", DateTime.fromMillisecondsSinceEpoch(event.createdAt * 1000),
+      createContact(pubkey, "Unnamed",
           ).then((_) => getContactFromKey(pubkey).then((fromContact) {
                 // TODO: batch these
                 Queue<DeferredEvent> q = queues[pubkey]!;
                 while (q.isNotEmpty) {
                   DeferredEvent ev = q.removeFirst();
-                  receiveBottom(
-                      ev.event, fromContact!, ev.toContact, ev.receiver);
+                  receiveBottom(ev.event, fromContact!, ev.toContact);
                 }
               }));
     }
   }
 
   void receiveBottom(nostr.Event event, db.Contact fromContact,
-      db.Contact toContact, String receiver) async {
-    db.NostrKey receiveNpub = await getKeyFromNpub(receiver);
+      db.Contact toContact) async {
     String? plaintext = null;
     bool decryptError = false;
+    assert(toContact.privkey.isNotEmpty);
     try {
       plaintext = (event as nostr.EncryptedDirectMessage)
-          .getPlaintext(receiveNpub.privkey);
+          .getPlaintext(toContact.privkey);
     } catch (error) {
       decryptError = true;
     }
