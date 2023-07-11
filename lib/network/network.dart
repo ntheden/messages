@@ -57,8 +57,9 @@ class Network {
         since: 0,//1681878751,
         limit: 450,
         //authors: recipients.toList(),
-        p: recipients.toList(),
+        //p: recipients.toList(),
       ),
+      /*
       nostr.Filter(
         //kinds: [0, 1, 4, 2, 7],
         kinds: [4],
@@ -70,6 +71,7 @@ class Network {
         authors: recipients.toList(),
         //p: recipients.toList(),
       ),
+      */
     ];
   }
 

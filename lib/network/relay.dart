@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:io';
-import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:nostr/nostr.dart' as nostr;
 
@@ -57,7 +56,7 @@ class Relay {
     if (!host.startsWith(RegExp(r'^(wss?://)'))) {
       host = 'wss://' + host.split('//').last;
     }
-    _channel = IOWebSocketChannel.connect(Uri.parse(host));
+    _channel = WebSocketChannel.connect(Uri.parse(host));
     _connected = true;
   }
 
@@ -72,15 +71,11 @@ class Relay {
     }
     if (_subscriptionId == network.subscriptionId) {
       // we already have this subscription
-      print('$url ALREADY HAVE THIS SUBSCRIPTION');
-      return;
-    }
-    if (_subscriptionId.isNotEmpty) {
-      // TODO: cancel previous subscription id
+      print('$url ALREADY HAVE THIS SUBSCRIPTION (subscribing anyways)');
+      //return;
     }
     _subscriptionId = network.subscriptionId;
-    List<nostr.Filter> filters = (network.filters.sublist(1) as List<nostr.Filter>);
-    nostr.Request requestWithFilter = nostr.Request(_subscriptionId, filters);
+    nostr.Request requestWithFilter = nostr.Request(_subscriptionId, network.filters);
     print('TO $url: ${requestWithFilter.serialize()}');
     _channel.sink.add(requestWithFilter.serialize());
   }
