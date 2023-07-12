@@ -1,9 +1,9 @@
 {
   "relays": [
     {
-      "url": "ws://192.168.50.144:8081",
+      "url": "relay.damus.io",
       "read": true,
-      "write": false
+      "write": true
     }
   ],
 	"timezone": "Europe/Brussels"
