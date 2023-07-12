@@ -181,12 +181,6 @@ Future<void> storeReceivedEvent(
     print('Filter: event destination is not a local user: ${receiver}');
     return;
   }
-  print('#################################');
-  print('Received event ${event.id}');
-  print('receiver ${event.receiver}');
-  print('sender ${event.pubkey}');
-  print('#################################');
-
   Contact? fromContact = await getContactFromKey(event.pubkey);
   if (fromContact == null) {
     // TODO: SPAM/DOS Protection

@@ -140,12 +140,6 @@ class Relay {
       print("TODO: receiver pubkey list");
       return;
     }
-    print('#################################');
-    print(url);
-    print('Received event ${event.id}');
-    print('receiver ${event.receiver}');
-    print('sender ${event.pubkey}');
-    print('#################################');
 
     String pubkey = event.pubkey;
     db.Contact? fromContact = await getContactFromKey(pubkey);
