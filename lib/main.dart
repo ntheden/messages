@@ -2,10 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'constants/color.dart';
-import 'pages/contact_list_page.dart';
-import 'pages/contact_page.dart';
-import 'pages/edit_contact_page.dart';
-import 'pages/groups_page.dart';
 import 'screens/login.dart';
 import 'screens/chat.dart';
 import 'screens/chats_list.dart';
