@@ -8,6 +8,7 @@ import 'drawer_list_tile.dart';
 import 'drawer_user_list_tile.dart';
 import '../../router/delegate.dart';
 import '../../config/preferences.dart';
+import '../modal/qr.dart';
 
 class DrawerScreen extends StatefulWidget {
   DrawerScreen({Key? key}) : super(key: key);
@@ -88,20 +89,18 @@ class DrawerScreenState extends State<DrawerScreen> {
             ),
             currentAccountPictureSize: Size(60, 60),
             otherAccountsPictures: [
-              Switch(
-                // FIXME: fix it later, consider animated switch
-                value: themeChange.darkTheme,
-                onChanged: (bool? value) {
-                  themeChange.darkTheme = value!;
-                },
-                /*
-                icon: Icon(
-                  Icons.dark_mode_rounded,
-                  // Icons.light_mode_rounded
-                  color: Colors.white,
+              InkWell(
+                onTap: () => showQrPopUp(context, currentUser),
+                child: Icon(
+                  Icons.qr_code_scanner_rounded,
                 ),
-                */
-              )
+              ),
+              InkWell(
+                onTap: () => setState(() => themeChange.darkTheme = !themeChange.darkTheme),
+                child: Icon(
+                  themeChange.darkTheme ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                ),
+              ),
             ],
           ),
           if (showOtherUsersFlag)

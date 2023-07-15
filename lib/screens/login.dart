@@ -129,20 +129,6 @@ class _LoginState extends State<Login> {
                 ),
               ),
               Container(
-                padding: EdgeInsets.all(10),
-                child: Focus(
-                  onFocusChange: (hasFocus) {},
-                  child: TextField(
-                    focusNode: nameFocus,
-                    controller: nameController,
-                    onChanged: (value) {
-                      setState(() => _title = value);
-                    },
-                    decoration: borderDecoration,
-                  ),
-                ),
-              ),
-              Container(
                 padding: EdgeInsets.all(16),
                 child: Focus(
                   onFocusChange: (hasFocus) {
@@ -165,6 +151,20 @@ class _LoginState extends State<Login> {
                             ),
                           )
                         : borderDecoration.copyWith(labelText: "Nsec"),
+                  ),
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.all(10),
+                child: Focus(
+                  onFocusChange: (hasFocus) {},
+                  child: TextField(
+                    focusNode: nameFocus,
+                    controller: nameController,
+                    onChanged: (value) {
+                      setState(() => _title = value);
+                    },
+                    decoration: borderDecoration,
                   ),
                 ),
               ),
